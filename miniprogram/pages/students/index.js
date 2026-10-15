@@ -1,39 +1,95 @@
-const { studentList } = require('../../utils/mock')
-const { syncRoleBar, setRole } = require('../../utils/role')
-
-function withAvatar(list) {
-  return list.map((item) => ({
-    ...item,
-    avatar: item.name[0]
-  }))
-}
+const { syncRoleBar } = require('../../utils/role')
+const { requireCoachRole } = require('../../utils/guard')
+const { canCoachReadStudent } = require('../../utils/permission')
+const bindingApi = require('../../services/bindingApi')
 
 Page({
   data: {
     role: 'coach',
     keyword: '',
-    all: withAvatar(studentList),
-    filtered: withAvatar(studentList)
+    all: [],
+    filtered: [],
+    probeId: '',
+    probeResult: ''
   },
 
   onShow() {
+    if (!requireCoachRole(this)) return
     syncRoleBar(this)
+    this.reload()
   },
 
-  onRole(e) {
-    setRole(this, e.currentTarget.dataset.role)
+  reload() {
+    const app = getApp()
+    const bound = bindingApi.listBoundStudentsForCoach(
+      app,
+      app.globalData.session.user.userId
+    )
+    const all = bound.map((b) => ({
+      name: b.name,
+      studentId: b.studentId,
+      avatar: b.name[0],
+      desc: '已绑定 · 按授权可见',
+      progress: null,
+      scopes: b.scopes
+    }))
+    this.setData({
+      all,
+      filtered: all,
+      keyword: '',
+      probeResult: ''
+    })
   },
 
   onSearch(e) {
     const keyword = e.detail.value || ''
+    // AC02：搜索仅在有权管理的学员集合内
     const filtered = this.data.all.filter((item) => {
       if (!keyword) return true
-      return (item.name + item.desc).indexOf(keyword) !== -1
+      return (item.name + item.desc + item.studentId).indexOf(keyword) !== -1
     })
     this.setData({ keyword, filtered })
   },
 
+  onOpenStudent(e) {
+    const app = getApp()
+    const studentId = e.currentTarget.dataset.id
+    const check = canCoachReadStudent(
+      app,
+      app.globalData.session.user.userId,
+      studentId
+    )
+    if (!check.ok) {
+      app.toast(check.message || '无权访问')
+      return
+    }
+    app.globalData.activeSubjectId = studentId
+    app.globalData.student = e.currentTarget.dataset.name
+    app.persist()
+    wx.redirectTo({ url: '/pages/record/index' })
+  },
+
   onContact() {
-    getApp().toast('已发送模拟消息')
+    getApp().toast('消息服务未接入，未实际发送')
+  },
+
+  /** AC02 测例：查询未绑定学员 ID */
+  onProbe() {
+    const app = getApp()
+    const studentId = (this.data.probeId || '').trim() || 'u_stu_unbound_999'
+    const check = canCoachReadStudent(
+      app,
+      app.globalData.session.user.userId,
+      studentId
+    )
+    this.setData({
+      probeResult: check.ok
+        ? '异常：不应可访问'
+        : 'AC02 通过 · ' + check.code + ' · ' + check.message
+    })
+  },
+
+  onProbeInput(e) {
+    this.setData({ probeId: e.detail.value })
   }
 })

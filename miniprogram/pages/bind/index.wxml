@@ -1,0 +1,50 @@
+<view class="page page-solo">
+  <view class="eyebrow">BINDING · INVITE</view>
+  <view class="title">绑定教练</view>
+  <view class="sub">邀请码不含训练内容。确认授权范围后建立服务关系。</view>
+
+  <view class="head">
+    <view class="head-title">邀请码</view>
+    <text class="tag">演示 LINYE7D</text>
+  </view>
+  <input
+    class="field"
+    placeholder="输入教练邀请码"
+    value="{{token}}"
+    maxlength="16"
+    bindinput="onToken"
+  />
+  <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onPreview">查看教练信息</button>
+
+  <block wx:if="{{preview}}">
+    <view class="card flex" style="margin-top:24rpx">
+      <view class="ico">教练</view>
+      <view class="grow">
+        <view class="card-title">{{preview.coachName}}</view>
+        <view class="sub">{{preview.intro || '私教服务'}}</view>
+      </view>
+    </view>
+
+    <view class="head">
+      <view class="head-title">授权范围</view>
+      <text class="tag">可随时撤回</text>
+    </view>
+    <view class="sub">首次绑定至少确认类别；原始照片不会因报告授权自动共享。</view>
+
+    <view
+      class="scope-row"
+      wx:for="{{scopeList}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="onToggleScope"
+    >
+      <view class="check {{scopes[item.key] ? 'on' : ''}}">{{scopes[item.key] ? '✓' : ''}}</view>
+      <view class="grow">
+        <view class="card-title">{{item.label}}</view>
+        <view class="sub" wx:if="{{item.key === 'raw_photo'}}">默认关闭 · 需单独授权</view>
+      </view>
+    </view>
+
+    <button class="primary" style="width:100%;margin-top:28rpx" bindtap="onAccept">确认绑定</button>
+  </block>
+</view>

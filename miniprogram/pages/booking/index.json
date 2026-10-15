@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "约课",
   "usingComponents": {
-    "bottom-nav": "/components/bottom-nav/index"
+    "bottom-nav": "/components/bottom-nav/index",
+    "role-switcher": "/components/role-switcher/index"
   }
 }

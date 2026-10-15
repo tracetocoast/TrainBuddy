@@ -6,10 +6,7 @@
     </view>
   </view>
 
-  <view class="role">
-    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
-    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
-  </view>
+  <role-switcher />
 
   <view class="eyebrow">POST-SESSION · COACH NOTES</view>
   <view class="title">下课别忙走，<br/>记录交给我。</view>
@@ -19,7 +16,7 @@
     <view class="head-title">选择学员</view>
     <text class="tag">TODAY</text>
   </view>
-  <scroll-view class="dates" scroll-x>
+  <scroll-view class="dates" scroll-x wx:if="{{students.length}}">
     <button
       wx:for="{{students}}"
       wx:key="*this"
@@ -28,6 +25,7 @@
       bindtap="onPickStudent"
     >{{item}}</button>
   </scroll-view>
+  <view class="card sub" wx:else>暂无绑定学员，无法录入课后表。请先生成邀请码。</view>
 
   <view class="head">
     <view class="head-title">课后记录</view>

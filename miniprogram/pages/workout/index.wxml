@@ -6,10 +6,7 @@
     </view>
   </view>
 
-  <view class="role">
-    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
-    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
-  </view>
+  <role-switcher />
 
   <view class="eyebrow">WORKOUT SESSION · A01</view>
   <view class="title">下肢力量<br/>开练。</view>

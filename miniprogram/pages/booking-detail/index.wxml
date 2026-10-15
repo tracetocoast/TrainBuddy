@@ -1,0 +1,94 @@
+<view class="page page-solo" wx:if="{{booking}}">
+  <view class="eyebrow">BOOKING · DETAIL</view>
+  <view class="title">{{booking.course_name}}</view>
+  <view class="sub">状态以服务端为准 · 取消确认弹层不会改动预约</view>
+
+  <view class="card">
+    <view class="row"><text class="k">状态</text><text class="v">{{statusLabel}}</text></view>
+    <view class="row"><text class="k">日期</text><text class="v">{{booking.dateKey}}</text></view>
+    <view class="row"><text class="k">时间</text><text class="v">{{booking.startLabel}}–{{booking.endLabel}}</text></view>
+    <view class="row"><text class="k">地点</text><text class="v">{{booking.location}}</text></view>
+    <view class="row" wx:if="{{booking.student_name}}"><text class="k">学员</text><text class="v">{{booking.student_name}}</text></view>
+    <view class="row"><text class="k">版本</text><text class="v">rev {{booking.revision}}</text></view>
+    <view class="row" wx:if="{{booking.status === 'pending' && booking.expiresAt}}">
+      <text class="k">待确认超时</text>
+      <text class="v">{{expireText}}</text>
+    </view>
+  </view>
+
+  <view class="card sub">
+    取消须提前 {{cancelHours}} 小时；改期将保留原课直至教练接受新时段。
+  </view>
+
+  <!-- 学员操作 -->
+  <block wx:if="{{isStudent}}">
+    <button
+      class="secondary"
+      style="width:100%;margin-top:16rpx"
+      wx:if="{{booking.status === 'pending' || booking.status === 'confirmed'}}"
+      bindtap="onCancel"
+    >取消预约</button>
+    <button
+      class="primary"
+      style="width:100%;margin-top:16rpx"
+      wx:if="{{booking.status === 'confirmed'}}"
+      bindtap="onChange"
+    >申请改期</button>
+  </block>
+
+  <!-- 教练操作 -->
+  <block wx:if="{{isCoach}}">
+    <view class="twobtn" wx:if="{{booking.status === 'pending'}}">
+      <button class="secondary" bindtap="onReject">拒绝</button>
+      <button class="primary" bindtap="onAccept">接受</button>
+    </view>
+    <view class="twobtn" wx:if="{{booking.status === 'confirmed'}}">
+      <button class="secondary" data-st="no_show" bindtap="onAttend">缺席</button>
+      <button class="primary" data-st="in_progress" bindtap="onAttend">开始上课</button>
+    </view>
+    <button
+      class="primary"
+      style="width:100%;margin-top:16rpx"
+      wx:if="{{booking.status === 'in_progress'}}"
+      data-st="completed"
+      bindtap="onAttend"
+    >确认结束</button>
+  </block>
+
+  <!-- 改期选时段 -->
+  <block wx:if="{{changing}}">
+    <view class="head">
+      <view class="head-title">选择新时段</view>
+      <button class="link" bindtap="closeChange">取消</button>
+    </view>
+    <scroll-view class="dates" scroll-x>
+      <button
+        wx:for="{{dateList}}"
+        wx:key="dateKey"
+        class="date-btn {{changeDate === item.dateKey ? 'chosen' : ''}}"
+        data-key="{{item.dateKey}}"
+        bindtap="onChangeDate"
+      >{{item.weekday}}<b>{{item.day}}</b></button>
+    </scroll-view>
+    <view class="card" wx:for="{{changeSlots}}" wx:key="startAt">
+      <view class="slot">
+        <view class="time">{{item.startLabel}}</view>
+        <view class="slotmain">
+          <view class="card-title">{{item.courseName}}</view>
+          <view class="sub">{{item.startLabel}}–{{item.endLabel}}</view>
+        </view>
+        <button
+          class="primary"
+          disabled="{{item.status !== 'open'}}"
+          data-start="{{item.startAt}}"
+          bindtap="submitChange"
+        >选择</button>
+      </view>
+    </view>
+    <view class="card sub" wx:if="{{!changeSlots.length}}">该日暂无空档</view>
+  </block>
+</view>
+
+<view class="page page-solo" wx:else>
+  <view class="card sub">预约不存在或无权查看</view>
+</view>

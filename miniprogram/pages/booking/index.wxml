@@ -6,57 +6,187 @@
     </view>
   </view>
 
-  <view class="role">
-    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
-    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
-  </view>
+  <role-switcher />
 
-  <view class="eyebrow">{{role === 'student' ? 'FIND YOUR SESSION' : 'STUDIO SCHEDULE'}}</view>
-  <view class="title">{{role === 'student' ? '约一场，状态拉满。' : '排课清晰，节奏在线。'}}</view>
-  <view class="sub">{{role === 'student' ? '选择适合你的时间，剩下的交给训练。' : '查看可约时段，管理今日课程安排。'}}</view>
+  <!-- ========== 学员约课 ========== -->
+  <block wx:if="{{role === 'student'}}">
+    <view class="eyebrow">FIND YOUR SESSION</view>
+    <view class="title">约一场，状态拉满。</view>
+    <view class="sub" wx:if="{{coachName}}">教练 · {{coachName}} · 确认后才会占用时段</view>
+    <view class="sub" wx:else>请先绑定教练后再预约</view>
 
-  <view class="head">
-    <view class="head-title">10 月 · 本周</view>
-    <text class="tag">2026</text>
-  </view>
-
-  <scroll-view class="dates" scroll-x>
-    <button
-      wx:for="{{dates}}"
-      wx:key="*this"
-      class="date-btn {{dateIndex === index ? 'chosen' : ''}}"
-      data-index="{{index}}"
-      bindtap="onPickDate"
-    >{{item[0]}}<b>{{item[1]}}</b></button>
-  </scroll-view>
-
-  <view class="head">
-    <view class="head-title">可选时段</view>
-    <text class="sub">教练 · 林野</text>
-  </view>
-
-  <view class="card" wx:for="{{slots}}" wx:key="time">
-    <view class="slot">
-      <view class="time">{{item.time}}</view>
-      <view class="slotmain">
-        <view class="card-title">{{item.name}}</view>
-        <view class="sub">{{item.desc}}</view>
+    <view class="card flex" wx:if="{{!hasBinding}}">
+      <view class="grow">
+        <view class="card-title">尚未绑定教练</view>
+        <view class="sub">绑定后可查看可约时段</view>
       </view>
-      <text class="statuspill">{{booked === item.time ? '已预约' : item.status}}</text>
+      <button class="primary" bindtap="goBind">去绑定</button>
     </view>
-    <view class="head" style="margin:20rpx 0 0">
-      <text class="sub">私教工作室 · 可改期</text>
-      <button
-        class="{{item.disabled ? 'secondary' : 'primary'}}"
-        disabled="{{item.disabled}}"
-        data-time="{{item.time}}"
-        data-name="{{item.name}}"
-        bindtap="onBook"
-      >{{booked === item.time ? '已预约' : (role === 'student' ? '预约课程' : '添加排课')}}</button>
-    </view>
-  </view>
 
-  <view class="sub" style="margin-top:26rpx">预约成功后会同步到训练日程。此处使用模拟数据。</view>
+    <block wx:if="{{hasBinding}}">
+      <view class="head">
+        <view class="head-title">{{monthTitle}}</view>
+        <text class="tag">未来 {{openDays}} 天</text>
+      </view>
+
+      <scroll-view class="dates" scroll-x>
+        <button
+          wx:for="{{dateList}}"
+          wx:key="dateKey"
+          class="date-btn {{selectedDate === item.dateKey ? 'chosen' : ''}}"
+          data-key="{{item.dateKey}}"
+          bindtap="onPickDate"
+        >{{item.weekday}}<b>{{item.day}}</b></button>
+      </scroll-view>
+
+      <view class="head">
+        <view class="head-title">可选时段</view>
+        <text class="sub">{{selectedDate}}</text>
+      </view>
+
+      <view class="card" wx:for="{{daySlots}}" wx:key="startAt">
+        <view class="slot">
+          <view class="time">{{item.startLabel}}</view>
+          <view class="slotmain">
+            <view class="card-title">{{item.courseName}}</view>
+            <view class="sub">{{item.startLabel}}–{{item.endLabel}} · {{item.location}}</view>
+          </view>
+          <text class="statuspill">{{item.displayStatus}}</text>
+        </view>
+        <view class="head" style="margin:20rpx 0 0">
+          <text class="sub">需教练确认 · 未确认前可撤回</text>
+          <button
+            class="{{item.status === 'open' ? 'primary' : 'secondary'}}"
+            disabled="{{item.status !== 'open' || submitting}}"
+            data-start="{{item.startAt}}"
+            data-course="{{item.courseTypeId}}"
+            data-name="{{item.courseName}}"
+            data-label="{{item.startLabel}}"
+            bindtap="onRequestBook"
+          >预约</button>
+        </view>
+      </view>
+      <view class="card sub" wx:if="{{!daySlots.length}}">该日暂无可约时段</view>
+
+      <view class="head">
+        <view class="head-title">我的预约</view>
+        <text class="tag">{{myBookings.length || '暂无'}}</text>
+      </view>
+      <view
+        class="card"
+        wx:for="{{myBookings}}"
+        wx:key="booking_id"
+        data-id="{{item.booking_id}}"
+        bindtap="goDetail"
+      >
+        <view class="slot">
+          <view class="time">{{item.startLabel}}</view>
+          <view class="slotmain">
+            <view class="card-title">{{item.dateKey}} · {{item.course_name}}</view>
+            <view class="sub">{{item.startLabel}}–{{item.endLabel}} · {{item.location}}</view>
+          </view>
+          <text class="statuspill">{{item.statusLabel}}</text>
+        </view>
+      </view>
+      <view class="card sub" wx:if="{{!myBookings.length}}">暂无预约记录</view>
+    </block>
+  </block>
+
+  <!-- ========== 教练排课 ========== -->
+  <block wx:elif="{{role === 'coach'}}">
+    <view class="eyebrow">STUDIO SCHEDULE</view>
+    <view class="title">排课清晰，节奏在线。</view>
+    <view class="sub">待处理置顶 · 日/周视图 · 规则与例外</view>
+
+    <view class="seg">
+      <button class="seg-btn {{coachTab === 'day' ? 'on' : ''}}" data-tab="day" bindtap="onCoachTab">日视图</button>
+      <button class="seg-btn {{coachTab === 'week' ? 'on' : ''}}" data-tab="week" bindtap="onCoachTab">周视图</button>
+      <button class="seg-btn {{coachTab === 'pending' ? 'on' : ''}}" data-tab="pending" bindtap="onCoachTab">待处理{{pendingCount ? '(' + pendingCount + ')' : ''}}</button>
+    </view>
+
+    <view class="head">
+      <view class="head-title">排班设置</view>
+      <button class="link" bindtap="goRules">周规则 / 例外 ↗</button>
+    </view>
+
+    <!-- 待处理 -->
+    <block wx:if="{{coachTab === 'pending'}}">
+      <view class="card" wx:for="{{pendingList}}" wx:key="booking_id">
+        <view class="slot">
+          <view class="time">{{item.startLabel}}</view>
+          <view class="slotmain">
+            <view class="card-title">{{item.student_name || '学员'}} · 待确认</view>
+            <view class="sub">{{item.dateKey}} {{item.startLabel}}–{{item.endLabel}}</view>
+          </view>
+          <text class="statuspill">pending</text>
+        </view>
+        <view class="twobtn" style="margin-top:16rpx">
+          <button class="secondary" data-id="{{item.booking_id}}" data-rev="{{item.revision}}" bindtap="onReject">拒绝</button>
+          <button class="primary" data-id="{{item.booking_id}}" data-rev="{{item.revision}}" bindtap="onAccept">接受</button>
+        </view>
+      </view>
+
+      <view class="head" wx:if="{{changeList.length}}">
+        <view class="head-title">改期申请</view>
+      </view>
+      <view class="card" wx:for="{{changeList}}" wx:key="change_id">
+        <view class="card-title">{{item.booking.student_name}} 申请改期</view>
+        <view class="sub">原：{{item.booking.dateKey}} {{item.booking.startLabel}}</view>
+        <view class="sub">新：{{item.proposedDateKey}} {{item.proposedStartLabel}}–{{item.proposedEndLabel}}</view>
+        <view class="twobtn" style="margin-top:16rpx">
+          <button class="secondary" data-id="{{item.change_id}}" bindtap="onRejectChange">拒绝</button>
+          <button class="primary" data-id="{{item.change_id}}" bindtap="onAcceptChange">接受</button>
+        </view>
+      </view>
+
+      <view class="card sub" wx:if="{{!pendingList.length && !changeList.length}}">暂无待处理事项</view>
+    </block>
+
+    <!-- 日视图 -->
+    <block wx:if="{{coachTab === 'day'}}">
+      <scroll-view class="dates" scroll-x>
+        <button
+          wx:for="{{dateList}}"
+          wx:key="dateKey"
+          class="date-btn {{selectedDate === item.dateKey ? 'chosen' : ''}}"
+          data-key="{{item.dateKey}}"
+          bindtap="onPickDate"
+        >{{item.weekday}}<b>{{item.day}}</b></button>
+      </scroll-view>
+
+      <view class="card" wx:for="{{coachDayBookings}}" wx:key="booking_id" data-id="{{item.booking_id}}" bindtap="goDetail">
+        <view class="slot">
+          <view class="time">{{item.startLabel}}</view>
+          <view class="slotmain">
+            <view class="card-title">{{item.student_name || '学员'}}</view>
+            <view class="sub">{{item.course_name}} · {{item.startLabel}}–{{item.endLabel}}</view>
+          </view>
+          <text class="statuspill">{{item.statusLabel}}</text>
+        </view>
+      </view>
+      <view class="card sub" wx:if="{{!coachDayBookings.length}}">当日暂无课程</view>
+
+      <view class="head">
+        <view class="head-title">空档示意</view>
+      </view>
+      <view class="card sub" wx:for="{{openSlotsPreview}}" wx:key="startAt">
+        {{item.startLabel}}–{{item.endLabel}} 可约
+      </view>
+      <view class="card sub" wx:if="{{!openSlotsPreview.length}}">当日无开放空档</view>
+    </block>
+
+    <!-- 周视图 -->
+    <block wx:if="{{coachTab === 'week'}}">
+      <view class="week-grid">
+        <view class="week-col" wx:for="{{weekSummary}}" wx:key="dateKey">
+          <view class="week-hd">{{item.weekday}}\n{{item.day}}</view>
+          <view class="week-n">{{item.count}}</view>
+          <view class="sub">节</view>
+        </view>
+      </view>
+      <view class="card sub">数字为当日有效占用（pending/confirmed 等）。点日视图看明细。</view>
+    </block>
+  </block>
 </view>
 
 <bottom-nav active="booking" />

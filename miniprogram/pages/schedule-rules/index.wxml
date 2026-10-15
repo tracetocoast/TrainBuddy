@@ -1,0 +1,40 @@
+<view class="page page-solo">
+  <view class="eyebrow">AVAILABILITY · RULES</view>
+  <view class="title">周规则与例外</view>
+  <view class="sub">修改周规则只影响未预约空档；已确认课程保持不动。rev {{baseRevision}}</view>
+
+  <view class="head">
+    <view class="head-title">周规则</view>
+    <text class="tag">{{rules.length}} 条</text>
+  </view>
+
+  <view class="card" wx:for="{{rules}}" wx:key="id">
+    <view class="card-title">周{{item.weekdayLabel}} · {{item.startLocal}}–{{item.endLocal}}</view>
+    <view class="sub">课时 {{item.durationMin}} 分 · 缓冲 {{item.bufferMin}} 分 · {{item.location}}</view>
+  </view>
+  <view class="card sub" wx:if="{{!rules.length}}">暂无规则</view>
+
+  <view class="head">
+    <view class="head-title">快捷添加</view>
+  </view>
+  <view class="sub">演示：追加「周日 10:00–14:00」开放</view>
+  <button class="primary" style="width:100%;margin-top:16rpx" bindtap="onAddSunday">添加周日时段</button>
+
+  <view class="head">
+    <view class="head-title">例外</view>
+  </view>
+  <view class="card" wx:for="{{exceptions}}" wx:key="id">
+    <view class="card-title">{{item.type === 'closed' ? '关闭' : '临时开放'}}</view>
+    <view class="sub">{{item.rangeText}}</view>
+    <view class="sub" wx:if="{{item.reason}}">{{item.reason}}</view>
+  </view>
+  <view class="card sub" wx:if="{{!exceptions.length}}">暂无例外</view>
+
+  <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onCloseTomorrowMorning">
+    关闭明天上午（例外）
+  </button>
+
+  <view class="card sub" style="margin-top:24rpx">
+    配置：提前 {{minBook}} 分钟可约 · 自行取消/改期提前 {{cancelH}} 小时 · pending {{pendingH}} 小时超时
+  </view>
+</view>

@@ -6,42 +6,58 @@
     </view>
   </view>
 
-  <view class="role">
-    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
-    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
-  </view>
+  <role-switcher />
 
   <view class="eyebrow">YOUR PEOPLE · COACH CRM</view>
   <view class="title">了解每位学员，<br/>不只看训练数据。</view>
+  <view class="sub">仅展示有效绑定学员，无法搜索全平台。</view>
 
   <input
     class="field"
-    placeholder="搜索学员姓名或目标…"
+    placeholder="搜索已绑定学员姓名…"
     value="{{keyword}}"
     bindinput="onSearch"
   />
 
-  <view class="card flex" wx:for="{{filtered}}" wx:key="name">
+  <view
+    class="card flex"
+    wx:for="{{filtered}}"
+    wx:key="studentId"
+    data-id="{{item.studentId}}"
+    data-name="{{item.name}}"
+    bindtap="onOpenStudent"
+  >
     <view class="ico">{{item.avatar}}</view>
     <view class="grow">
       <view class="card-title">{{item.name}}</view>
       <view class="sub">{{item.desc}}</view>
-      <view class="progress" style="margin-top:14rpx">
-        <view class="progress-bar" style="width: {{item.progress}}%;"></view>
-      </view>
     </view>
-    <text class="tag">{{item.progress}}%</text>
+    <text class="tag">打开</text>
   </view>
+  <view class="card sub" wx:if="{{!filtered.length}}">暂无绑定学员。请生成邀请码让学员绑定。</view>
+
+  <view class="head">
+    <view class="head-title">AC02 测例</view>
+    <text class="tag">未绑定不可见</text>
+  </view>
+  <input
+    class="field"
+    placeholder="输入未绑定学员 ID，如 u_stu_unbound_999"
+    value="{{probeId}}"
+    bindinput="onProbeInput"
+  />
+  <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onProbe">尝试访问</button>
+  <view class="card sub" wx:if="{{probeResult}}">{{probeResult}}</view>
 
   <view class="head">
     <view class="head-title">待跟进</view>
-    <text class="tag">2 ITEMS</text>
+    <text class="tag">示意</text>
   </view>
   <view class="card flex">
     <view class="ico">♡</view>
     <view class="grow">
-      <view class="card-title">周子墨 · 近期未打卡</view>
-      <view class="sub">主动关怀，确认本周计划。</view>
+      <view class="card-title">未授权时显示「记录不可见」</view>
+      <view class="sub">不能把「看不到」当成「没运动」。</view>
     </view>
     <button class="link" bindtap="onContact">联系</button>
   </view>

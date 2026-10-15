@@ -6,10 +6,7 @@
     </view>
   </view>
 
-  <view class="role">
-    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
-    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
-  </view>
+  <role-switcher />
 
   <view class="eyebrow ai-eye">AI LAB · BODY INSIGHT</view>
   <view class="title ai-title">看见姿态，<br/>找到下一步。</view>

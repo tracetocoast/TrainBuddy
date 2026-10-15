@@ -1,0 +1,33 @@
+.page-solo {
+  padding-bottom: 60rpx;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #eef0e9;
+  font-size: 26rpx;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.k {
+  color: #74796d;
+}
+
+.v {
+  font-weight: 700;
+}
+
+.dates {
+  white-space: nowrap;
+  margin: 16rpx 0;
+}
+
+.date-btn {
+  display: inline-flex;
+  margin-right: 12rpx;
+}

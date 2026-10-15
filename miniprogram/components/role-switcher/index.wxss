@@ -1,0 +1,35 @@
+.role {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 30rpx;
+  padding: 8rpx;
+  background: #e6e9df;
+  border-radius: 26rpx;
+  position: relative;
+}
+
+.role-btn {
+  flex: 1;
+  min-width: 40%;
+  border: 0;
+  background: transparent;
+  padding: 18rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #757a6d;
+  line-height: 1.2;
+}
+
+.role-btn.on {
+  background: #fff;
+  color: #151812;
+}
+
+.role-hint {
+  width: 100%;
+  font-size: 18rpx;
+  color: #8b9084;
+  padding: 8rpx 12rpx 4rpx;
+  line-height: 1.4;
+}

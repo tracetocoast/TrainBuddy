@@ -1,12 +1,18 @@
 {
   "pages": [
+    "pages/login/index",
     "pages/home/index",
     "pages/booking/index",
+    "pages/booking-detail/index",
+    "pages/schedule-rules/index",
     "pages/workout/index",
     "pages/ai/index",
     "pages/growth/index",
     "pages/record/index",
-    "pages/students/index"
+    "pages/students/index",
+    "pages/profile/index",
+    "pages/bind/index",
+    "pages/privacy/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#f5f6f0",

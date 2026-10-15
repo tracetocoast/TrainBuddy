@@ -1,34 +1,81 @@
 const { quickAdds } = require('../../utils/mock')
-const { syncRoleBar, setRole } = require('../../utils/role')
+const { syncRoleBar } = require('../../utils/role')
+const { requireLogin, requireCoachRole } = require('../../utils/guard')
+const { saveDraft, loadDraft, canCoachReadStudent } = require('../../utils/permission')
+const bindingApi = require('../../services/bindingApi')
 
 Page({
   data: {
     role: 'coach',
-    students: ['陈佳宁', '周子墨', '许一诺'],
-    student: '陈佳宁',
+    students: [],
+    student: '',
+    studentId: '',
     quickAdds,
     recordText: '',
     note: ''
   },
 
   onShow() {
+    if (!requireCoachRole(this)) return
     const app = getApp()
     syncRoleBar(this)
+    const bound = bindingApi.listBoundStudentsForCoach(
+      app,
+      app.globalData.session.user.userId
+    )
+    const names = bound.map((b) => b.name)
+    let student = app.globalData.student
+    let studentId = app.globalData.activeSubjectId
+    if (names.length && names.indexOf(student) === -1) {
+      student = names[0]
+      studentId = bound[0].studentId
+    }
+    if (studentId) {
+      app.globalData.activeSubjectId = studentId
+      app.globalData.student = student
+    }
+    const draft = loadDraft(app, 'coach_record', studentId || 'none')
     this.setData({
-      student: app.globalData.student || '陈佳宁'
+      students: names,
+      student: student || '',
+      studentId: studentId || '',
+      recordText: (draft && draft.payload && draft.payload.recordText) || '',
+      note: (draft && draft.payload && draft.payload.note) || ''
     })
   },
 
-  onRole(e) {
-    setRole(this, e.currentTarget.dataset.role)
+  onPickStudent(e) {
+    const app = getApp()
+    const name = e.currentTarget.dataset.name
+    const bound = bindingApi.listBoundStudentsForCoach(
+      app,
+      app.globalData.session.user.userId
+    )
+    const hit = bound.find((b) => b.name === name)
+    if (!hit) {
+      app.toast('无权访问该学员')
+      return
+    }
+    // 切换学员前提示草稿隔离（AC38）
+    app.globalData.student = name
+    app.globalData.activeSubjectId = hit.studentId
+    app.persist()
+    const draft = loadDraft(app, 'coach_record', hit.studentId)
+    this.setData({
+      student: name,
+      studentId: hit.studentId,
+      recordText: (draft && draft.payload && draft.payload.recordText) || '',
+      note: (draft && draft.payload && draft.payload.note) || ''
+    })
   },
 
-  onPickStudent(e) {
-    const student = e.currentTarget.dataset.name
+  persistDraft() {
     const app = getApp()
-    app.globalData.student = student
-    app.persist()
-    this.setData({ student })
+    if (!this.data.studentId) return
+    saveDraft(app, 'coach_record', this.data.studentId, {
+      recordText: this.data.recordText,
+      note: this.data.note
+    })
   },
 
   onVoice() {
@@ -36,6 +83,7 @@ Page({
       recordText:
         '深蹲 4 组 × 10 次 · 60 kg\n罗马尼亚硬拉 3 组 × 10 次 · 40 kg\n臀推 3 组 × 12 次 · 45 kg\n学员状态：动作整体稳定，最后一组略疲劳。'
     })
+    this.persistDraft()
     getApp().toast('已生成示例训练表，请教练核对')
   },
 
@@ -45,19 +93,31 @@ Page({
       ? this.data.recordText + '\n' + text
       : text
     this.setData({ recordText })
+    this.persistDraft()
     getApp().toast('已添加训练项')
   },
 
   onRecordInput(e) {
     this.setData({ recordText: e.detail.value })
+    this.persistDraft()
   },
 
   onNoteInput(e) {
     this.setData({ note: e.detail.value })
+    this.persistDraft()
   },
 
   onSave() {
     const app = getApp()
+    const check = canCoachReadStudent(
+      app,
+      app.globalData.session.user.userId,
+      this.data.studentId
+    )
+    if (!check.ok) {
+      app.toast(check.message || '无权保存')
+      return
+    }
     const t = (this.data.recordText || '').trim()
     if (!t) {
       app.toast('请先填写训练内容')

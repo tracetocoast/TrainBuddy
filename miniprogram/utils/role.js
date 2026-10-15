@@ -1,15 +1,36 @@
+const { switchDisplayRole } = require('./session')
+const { canActivateRole } = require('./permission')
+const { ROLE_LABEL } = require('./constants')
+
 function syncRoleBar(page) {
   const app = getApp()
+  const session = app.globalData.session
+  const grantedRoles = (session && session.grantedRoles) || app.globalData.grantedRoles || []
+  const role = app.globalData.role || 'student'
+  const roleOptions = grantedRoles.map((r) => ({
+    role: r,
+    label: r === 'student' ? '我是学员' : '我是教练',
+    short: ROLE_LABEL[r] || r
+  }))
+
   page.setData({
-    role: app.globalData.role || 'student'
+    role,
+    grantedRoles,
+    roleOptions,
+    canSwitchCoach: canActivateRole(app, 'coach'),
+    displayName: (session && session.user && session.user.displayName) || '',
+    isLoggedIn: !!(session && session.sessionToken)
   })
 }
 
 function setRole(page, role) {
   const app = getApp()
-  app.setRole(role)
-  page.setData({ role })
-  // 切角色后回到首页，避免停在对方角色专属页
+  const result = switchDisplayRole(app, role)
+  if (!result.ok) {
+    app.toast(result.message || '无法切换角色')
+    return
+  }
+  page.setData({ role: result.role })
   if (page.route !== 'pages/home/index') {
     wx.redirectTo({ url: '/pages/home/index' })
   } else if (typeof page.refreshPage === 'function') {
@@ -17,4 +38,8 @@ function setRole(page, role) {
   }
 }
 
-module.exports = { syncRoleBar, setRole }
+function goProfile() {
+  wx.navigateTo({ url: '/pages/profile/index' })
+}
+
+module.exports = { syncRoleBar, setRole, goProfile }

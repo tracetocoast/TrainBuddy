@@ -38,6 +38,12 @@ button::after {
   align-items: center;
 }
 
+.top-actions {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+}
+
 .brand {
   font-size: 46rpx;
   font-weight: 800;

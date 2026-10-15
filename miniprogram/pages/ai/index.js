@@ -1,4 +1,5 @@
-const { syncRoleBar, setRole } = require('../../utils/role')
+const { syncRoleBar } = require('../../utils/role')
+const { requireLogin } = require('../../utils/guard')
 
 Page({
   data: {
@@ -6,14 +7,11 @@ Page({
   },
 
   onShow() {
+    if (!requireLogin(this)) return
     syncRoleBar(this)
     wx.setNavigationBarTitle({
       title: getApp().globalData.role === 'coach' ? 'AI工具' : 'AI体态'
     })
-  },
-
-  onRole(e) {
-    setRole(this, e.currentTarget.dataset.role)
   },
 
   onFront() {
@@ -44,7 +42,7 @@ Page({
     setTimeout(() => {
       wx.showModal({
         title: '分析已完成 · 示例报告',
-        content: '参考分 82/100，建议关注 3 项。结果仅用于演示交互，请由教练结合动作表现复核。',
+        content: '参考分仅作演示。正式版 V1 不启用总分，结果按任务状态展示。',
         confirmText: '查看建议',
         showCancel: false
       })

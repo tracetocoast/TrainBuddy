@@ -4,18 +4,27 @@
       <text class="mark">↗</text>练搭子
       <text class="brand-sub">TRAIN BUDDY</text>
     </view>
-    <button class="msg-btn" bindtap="onMsg">♧</button>
+    <view class="top-actions">
+      <button class="msg-btn" bindtap="goProfile">{{avatarChar}}</button>
+      <button class="msg-btn" bindtap="onMsg">♧</button>
+    </view>
   </view>
 
-  <view class="role">
-    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
-    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
-  </view>
+  <role-switcher />
 
   <!-- 学员首页 -->
   <block wx:if="{{role === 'student'}}">
     <view class="eyebrow">WEDNESDAY · YOUR DAY</view>
     <view class="title">今天也要<br/>练得漂亮。</view>
+
+    <view class="card flex" wx:if="{{!hasBinding}}" style="margin-bottom:8rpx">
+      <view class="ico">🔗</view>
+      <view class="grow">
+        <view class="card-title">尚未绑定教练</view>
+        <view class="sub">绑定后可约课并按类别共享记录</view>
+      </view>
+      <button class="primary" bindtap="goBind">去绑定</button>
+    </view>
 
     <view class="hero">
       <view class="hero-ring"></view>
@@ -36,10 +45,11 @@
       <button class="link" bindtap="goGrowth">查看成长 ↗</button>
     </view>
     <view class="stats">
-      <view class="stat"><strong>{{weekCount}}</strong><span>本周训练 / 次</span></view>
-      <view class="stat"><strong>86%</strong><span>计划完成率</span></view>
-      <view class="stat"><strong>+12%</strong><span>力量进步</span></view>
+      <view class="stat"><strong>{{hasStats ? weekCount : '—'}}</strong><span>本周训练 / 次</span></view>
+      <view class="stat"><strong>—</strong><span>计划完成率</span></view>
+      <view class="stat"><strong>—</strong><span>力量进步</span></view>
     </view>
+    <view class="sub" wx:if="{{!hasStats}}" style="margin-top:8rpx">暂无训练统计</view>
 
     <view class="head">
       <view class="head-title">今天的任务</view>
@@ -49,7 +59,7 @@
       <view class="ico">🏋️</view>
       <view class="grow">
         <view class="card-title">下肢力量 · A 计划</view>
-        <view class="sub">45 分钟 · 5 个动作 · 林野教练</view>
+        <view class="sub">45 分钟 · 5 个动作 · {{coachName}}</view>
         <view style="margin-top:10rpx">
           <text class="tag">深蹲</text>
           <text class="tag" style="margin-left:8rpx">臀腿</text>
@@ -62,18 +72,20 @@
       <view class="head-title">下一次约课</view>
       <button class="link" bindtap="goBooking">全部课程 ↗</button>
     </view>
-    <view class="card flex">
+    <view class="card flex" wx:if="{{nextBooking}}" bindtap="goNextBooking">
       <view class="ico" style="background:#e8e0ff">◷</view>
       <view class="grow">
-        <view class="card-title">{{nextBook}} · 私教训练</view>
-        <view class="sub">林野教练 · 力量进阶</view>
+        <view class="card-title">{{nextBooking.dateKey}} {{nextBooking.startLabel}} · {{nextBooking.course_name}}</view>
+        <view class="sub">{{coachName}} · {{nextBooking.startLabel}}–{{nextBooking.endLabel}}</view>
       </view>
-      <text class="tag">已预约</text>
+      <text class="tag">{{nextBooking.statusLabel}}</text>
     </view>
+    <view class="card sub" wx:elif="{{hasBinding}}">暂无预约，去约课页选择时段。</view>
+    <view class="card sub" wx:else>绑定教练后可预约课程。</view>
   </block>
 
-  <!-- 教练首页 -->
-  <block wx:else>
+  <!-- 教练首页：仅已授予且切换到教练视角 -->
+  <block wx:elif="{{role === 'coach' && canSwitchCoach}}">
     <view class="eyebrow">COACH MODE · TODAY</view>
     <view class="title">今天，带他们<br/>再进步一点。</view>
 
@@ -81,13 +93,13 @@
       <view class="hero-ring"></view>
       <text class="pill">YOUR STUDIO</text>
       <view class="hero-title">把时间留给<br/>真正重要的指导。</view>
-      <view class="sub">训练记录、学员状态，一眼掌握。</view>
+      <view class="sub">仅显示有效绑定学员的数据。</view>
       <view class="herofoot">
         <view>
-          <view class="big">06<text class="big-unit"> SESSIONS</text></view>
-          <view class="sub">今日课程安排</view>
+          <view class="big">{{boundCount}}<text class="big-unit"> BOUND</text></view>
+          <view class="sub">绑定学员 · 待确认 {{pendingCoachCount}}</view>
         </view>
-        <button class="primary" bindtap="goRecord">记录一节课 ↗</button>
+        <button class="primary" bindtap="goBooking">处理排课 ↗</button>
       </view>
     </view>
 
@@ -96,33 +108,23 @@
       <button class="link" bindtap="goBooking">查看排课 ↗</button>
     </view>
 
-    <view class="card" wx:for="{{sessions}}" wx:key="time">
-      <view class="slot">
-        <view class="time">{{item.time}}</view>
-        <view class="slotmain">
-          <view class="card-title">{{item.student}}</view>
-          <view class="sub">{{item.desc}}</view>
+    <block wx:if="{{sessions.length}}">
+      <view class="card" wx:for="{{sessions}}" wx:key="studentId">
+        <view class="slot">
+          <view class="time">—</view>
+          <view class="slotmain">
+            <view class="card-title">{{item.name}}</view>
+            <view class="sub">已绑定学员 · 可记录课程</view>
+          </view>
+          <text class="statuspill">已绑定</text>
         </view>
-        <text class="statuspill">{{item.status}}</text>
+        <view class="head" style="margin:20rpx 0 0">
+          <text class="sub">按授权范围可见内容</text>
+          <button class="secondary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goRecordFor">课后记录</button>
+        </view>
       </view>
-      <view class="head" style="margin:20rpx 0 0">
-        <text class="sub">动作质量 · 稳定进阶</text>
-        <button class="secondary" data-student="{{item.student}}" bindtap="goRecordFor">{{index === 0 ? '查看记录' : '课后记录'}}</button>
-      </view>
-    </view>
-
-    <view class="head">
-      <view class="head-title">学员状态提醒</view>
-      <text class="tag">2 ITEMS</text>
-    </view>
-    <view class="card flex">
-      <view class="ico" style="background:#ffe5d5">!</view>
-      <view class="grow">
-        <view class="card-title">周子墨 · 连续 5 天未打卡</view>
-        <view class="sub">建议关怀提醒，确认训练安排。</view>
-      </view>
-      <button class="link" bindtap="onRemind">提醒</button>
-    </view>
+    </block>
+    <view class="card sub" wx:else>暂无绑定学员。请在个人中心生成邀请码。</view>
   </block>
 </view>
 

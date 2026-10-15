@@ -1,5 +1,6 @@
 const { weekBars } = require('../../utils/mock')
-const { syncRoleBar, setRole } = require('../../utils/role')
+const { syncRoleBar } = require('../../utils/role')
+const { requireLogin } = require('../../utils/guard')
 
 Page({
   data: {
@@ -11,6 +12,7 @@ Page({
   },
 
   onShow() {
+    if (!requireLogin(this)) return
     const app = getApp()
     syncRoleBar(this)
     const records = (app.globalData.records || []).slice(-3).reverse()
@@ -18,10 +20,6 @@ Page({
       sessions: 12 + (app.globalData.checkins || 0),
       records
     })
-  },
-
-  onRole(e) {
-    setRole(this, e.currentTarget.dataset.role)
   },
 
   goWorkout() {

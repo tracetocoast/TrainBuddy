@@ -1,0 +1,40 @@
+<view class="login-page">
+  <view class="brand-block">
+    <view class="mark big-mark">↗</view>
+    <view class="brand-title">练搭子</view>
+    <view class="brand-en">TRAIN BUDDY</view>
+    <view class="sub">登录后按「已授予角色」进入，前端无法自升为教练。</view>
+  </view>
+
+  <view class="card demo-card">
+    <view class="eyebrow">MOCK SESSION · 演示登录</view>
+    <view class="card-title" style="margin-top:16rpx">选择演示账号</view>
+    <view class="sub">正式版将调用微信登录；角色仅由服务端授予。</view>
+
+    <button class="account-btn" data-key="student_only" bindtap="onMockLogin">
+      <view class="account-name">学员 · 陈佳宁</view>
+      <view class="sub">已授予：学员 · 可用邀请码绑定教练</view>
+    </button>
+    <button class="account-btn" data-key="coach_approved" bindtap="onMockLogin">
+      <view class="account-name">教练 · 林野</view>
+      <view class="sub">已授予：学员 + 教练 · 可生成邀请码</view>
+    </button>
+    <button class="account-btn warn" data-key="student_claim_coach" data-claim="coach" bindtap="onMockLogin">
+      <view class="account-name">AC01 测例 · 周子墨「自称教练」</view>
+      <view class="sub">仅授予学员；请求 coach 将被拒绝</view>
+    </button>
+  </view>
+
+  <view class="card">
+    <view class="card-title">微信登录（预留）</view>
+    <view class="sub">需配置 AppID 与后端 /auth/wechat-session 后可用。</view>
+    <button class="secondary" style="width:100%;margin-top:20rpx" bindtap="onWeChatLogin">微信一键登录</button>
+  </view>
+
+  <view class="privacy-row">
+    <view class="check {{privacyOk ? 'on' : ''}}" bindtap="togglePrivacy">{{privacyOk ? '✓' : ''}}</view>
+    <view class="sub grow">我已阅读并同意隐私说明，理解健康数据按授权共享。</view>
+  </view>
+
+  <view class="sub foot-note">演示环境 · 数据仅存本机，不与正式账号混用</view>
+</view>

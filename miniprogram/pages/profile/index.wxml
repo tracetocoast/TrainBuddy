@@ -1,0 +1,67 @@
+<view class="page page-solo">
+  <view class="eyebrow">ACCOUNT · PROFILE</view>
+  <view class="title">{{displayName}}</view>
+  <view class="sub">ID {{userId}} · 展示角色不影响权限授予</view>
+
+  <role-switcher />
+
+  <view class="head">
+    <view class="head-title">已授予角色</view>
+    <text class="tag">服务端</text>
+  </view>
+  <view class="card">
+    <view class="tag-row">
+      <text class="tag" wx:for="{{grantedRoles}}" wx:key="*this">{{item === 'student' ? '学员' : '教练'}}</text>
+    </view>
+    <view class="sub" style="margin-top:12rpx">前端切换不能新增角色。申请教练需后台审核。</view>
+    <button
+      class="secondary"
+      style="width:100%;margin-top:16rpx"
+      wx:if="{{!canSwitchCoach}}"
+      bindtap="onApplyCoach"
+    >申请教练资格</button>
+  </view>
+
+  <view class="head">
+    <view class="head-title">服务关系</view>
+    <button class="link" bindtap="goBind" wx:if="{{!primaryBinding}}">去绑定 ↗</button>
+  </view>
+
+  <view class="card" wx:if="{{primaryBinding}}">
+    <view class="flex">
+      <view class="ico">教练</view>
+      <view class="grow">
+        <view class="card-title">主教练 · {{primaryBinding.coachName}}</view>
+        <view class="sub">状态 {{primaryBinding.status}} · 绑定于 {{boundAtText}}</view>
+      </view>
+    </view>
+    <view class="scope-tags">
+      <text class="tag" wx:for="{{activeScopeLabels}}" wx:key="*this">{{item}}</text>
+      <text class="tag" wx:if="{{!activeScopeLabels.length}}">暂无授权类别</text>
+    </view>
+    <view class="twobtn">
+      <button class="secondary" bindtap="goPrivacy">管理授权</button>
+      <button class="secondary" bindtap="onUnbind">解绑</button>
+    </view>
+  </view>
+  <view class="card sub" wx:else>尚未绑定教练。绑定后可约课与共享日记。</view>
+
+  <view class="head" wx:if="{{canSwitchCoach}}">
+    <view class="head-title">教练邀请</view>
+  </view>
+  <view class="card" wx:if="{{canSwitchCoach}}">
+    <view class="sub">生成一次性邀请码（约 7 天有效）。学员用码绑定。</view>
+    <button class="primary" style="width:100%;margin-top:16rpx" bindtap="onCreateInvite">生成邀请码</button>
+    <view class="invite-box" wx:if="{{inviteToken}}">
+      <view class="card-title">{{inviteToken}}</view>
+      <view class="sub">请复制发给学员 · 请勿包含训练内容</view>
+    </view>
+  </view>
+
+  <view class="head">
+    <view class="head-title">更多</view>
+  </view>
+  <view class="card menu" bindtap="goPrivacy">隐私与授权管理</view>
+  <view class="card menu" bindtap="onAc33Demo" wx:if="{{canSwitchCoach}}">AC33 测例 · 解绑后取照片</view>
+  <view class="card menu" bindtap="onLogout">退出登录</view>
+</view>

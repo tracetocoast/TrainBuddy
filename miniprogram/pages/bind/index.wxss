@@ -1,0 +1,33 @@
+.page-solo {
+  padding-bottom: 60rpx;
+}
+
+.scope-row {
+  display: flex;
+  gap: 20rpx;
+  align-items: center;
+  background: #fff;
+  border: 2rpx solid #e4e7dd;
+  border-radius: 24rpx;
+  padding: 22rpx;
+  margin-top: 12rpx;
+}
+
+.check {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 12rpx;
+  border: 2rpx solid #c5cbbd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  flex-shrink: 0;
+  background: #fff;
+  font-weight: 800;
+}
+
+.check.on {
+  background: #c8ff36;
+  border-color: #c8ff36;
+}

@@ -6,10 +6,7 @@
     </view>
   </view>
 
-  <view class="role">
-    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
-    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
-  </view>
+  <role-switcher />
 
   <view class="eyebrow">YOUR PROGRESS · NOT PERFECTION</view>
   <view class="title">每一次坚持，<br/>都有迹可循。</view>

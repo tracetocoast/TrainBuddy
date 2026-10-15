@@ -1,0 +1,39 @@
+<view class="page page-solo">
+  <view class="eyebrow">PRIVACY · CONSENT</view>
+  <view class="title">隐私与授权</view>
+  <view class="sub">授权分类独立；报告共享不自动共享原始照片。撤回后服务端立即停止读取。</view>
+
+  <block wx:if="{{binding}}">
+    <view class="head">
+      <view class="head-title">共享给 {{binding.coachName}}</view>
+      <text class="tag">{{binding.status}}</text>
+    </view>
+
+    <view
+      class="scope-row"
+      wx:for="{{scopeList}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="onToggle"
+    >
+      <view class="check {{scopes[item.key] ? 'on' : ''}}">{{scopes[item.key] ? '✓' : ''}}</view>
+      <view class="grow">
+        <view class="card-title">{{item.label}}</view>
+        <view class="sub" wx:if="{{item.key === 'raw_photo'}}">撤回后教练无法再获取签名 URL</view>
+      </view>
+    </view>
+
+    <button class="primary" style="width:100%;margin-top:28rpx" bindtap="onSave">保存授权</button>
+  </block>
+
+  <view class="card sub" wx:else>暂无有效绑定。请先绑定教练后再管理授权。</view>
+
+  <view class="head">
+    <view class="head-title">说明</view>
+  </view>
+  <view class="card sub">
+    · 上传授权、共享给教练、公开分享三种同意分别处理。
+    · 已下载的文件无法远程收回，导出前会提示。
+    · 注销将清理本机敏感草稿。
+  </view>
+</view>

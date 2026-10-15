@@ -1,5 +1,7 @@
 const { exercises } = require('../../utils/mock')
-const { syncRoleBar, setRole } = require('../../utils/role')
+const { syncRoleBar } = require('../../utils/role')
+const { requireLogin } = require('../../utils/guard')
+const { saveDraft, loadDraft, draftKey } = require('../../utils/permission')
 
 Page({
   data: {
@@ -7,17 +9,21 @@ Page({
     exercises,
     sets: 0,
     progress: 0,
-    progressPercent: 0
+    progressPercent: 0,
+    draftKeyText: ''
   },
 
   onShow() {
+    if (!requireLogin(this)) return
     const app = getApp()
     syncRoleBar(this)
-    this.updateProgress(app.globalData.sets || 0)
-  },
-
-  onRole(e) {
-    setRole(this, e.currentTarget.dataset.role)
+    const key = draftKey(app, 'workout_session', 'current')
+    const draft = loadDraft(app, 'workout_session', 'current')
+    const sets = draft && draft.payload && typeof draft.payload.sets === 'number'
+      ? draft.payload.sets
+      : app.globalData.sets || 0
+    this.updateProgress(sets)
+    this.setData({ draftKeyText: key })
   },
 
   updateProgress(sets) {
@@ -31,8 +37,10 @@ Page({
 
   completeSet() {
     const app = getApp()
-    const sets = Math.min(10, (app.globalData.sets || 0) + 1)
+    const sets = Math.min(10, (this.data.sets || 0) + 1)
     app.globalData.sets = sets
+    // AC38：草稿按 账户+角色+学员 隔离
+    saveDraft(app, 'workout_session', 'current', { sets })
     app.persist()
     this.updateProgress(sets)
     app.toast('漂亮！已记录一组')
@@ -40,11 +48,12 @@ Page({
 
   finish() {
     const app = getApp()
-    const doneSets = app.globalData.sets || 0
+    const doneSets = this.data.sets || 0
     app.globalData.checkins = (app.globalData.checkins || 0) + 1
     app.globalData.records = app.globalData.records || []
     app.globalData.records.push('下肢力量训练 · 完成 ' + doneSets + ' 组')
     app.globalData.sets = 0
+    saveDraft(app, 'workout_session', 'current', { sets: 0 })
     app.persist()
     this.updateProgress(0)
 
