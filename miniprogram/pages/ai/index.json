@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "AI体态",
+  "navigationBarBackgroundColor": "#111610",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#111610",
+  "usingComponents": {
+    "bottom-nav": "/components/bottom-nav/index"
+  }
+}

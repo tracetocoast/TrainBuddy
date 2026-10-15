@@ -1,0 +1,53 @@
+<view class="page">
+  <view class="top">
+    <view class="brand">
+      <text class="mark">↗</text>练搭子
+      <text class="brand-sub">TRAIN BUDDY</text>
+    </view>
+  </view>
+
+  <view class="role">
+    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
+    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
+  </view>
+
+  <view class="eyebrow">WORKOUT SESSION · A01</view>
+  <view class="title">下肢力量<br/>开练。</view>
+  <view class="sub">目标：动作稳定、节奏可控。每完成一组，点击打卡。</view>
+
+  <view class="head">
+    <view class="head-title">训练进度</view>
+    <text><b>{{progress}}/10 组</b></text>
+  </view>
+  <view class="progress">
+    <view class="progress-bar" style="width: {{progressPercent}}%;"></view>
+  </view>
+
+  <view class="exercise" wx:for="{{exercises}}" wx:key="name">
+    <view class="flex">
+      <view class="ico">{{item.icon}}</view>
+      <view class="grow">
+        <view class="card-title">{{item.name}}</view>
+        <view class="sub">{{item.plan}}</view>
+      </view>
+      <text class="tag">{{item.weight}}</text>
+    </view>
+    <view class="setgrid">
+      <view class="set"><small>目标组数</small><b>{{item.sets}} 组</b></view>
+      <view class="set"><small>每组次数</small><b>{{item.reps}} 次</b></view>
+      <button class="primary {{sets > index ? 'done' : ''}}" bindtap="completeSet">
+        {{sets > index ? '✓ 已完成' : '完成一组 +'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="card flex" style="margin-top:28rpx">
+    <view class="grow">
+      <view class="card-title">训练进行中</view>
+      <view class="sub">已完成 {{sets}} 组 · 记得保持呼吸</view>
+    </view>
+    <button class="primary" bindtap="finish">结束训练 ↗</button>
+  </view>
+</view>
+
+<bottom-nav active="workout" />

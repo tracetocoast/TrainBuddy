@@ -1,0 +1,10 @@
+.dates {
+  white-space: nowrap;
+  margin: 26rpx 0;
+  width: 100%;
+}
+
+.date-btn {
+  display: inline-flex;
+  margin-right: 12rpx;
+}

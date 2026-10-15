@@ -1,0 +1,50 @@
+<view class="page">
+  <view class="top">
+    <view class="brand">
+      <text class="mark">↗</text>练搭子
+      <text class="brand-sub">TRAIN BUDDY</text>
+    </view>
+  </view>
+
+  <view class="role">
+    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
+    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
+  </view>
+
+  <view class="eyebrow">YOUR PEOPLE · COACH CRM</view>
+  <view class="title">了解每位学员，<br/>不只看训练数据。</view>
+
+  <input
+    class="field"
+    placeholder="搜索学员姓名或目标…"
+    value="{{keyword}}"
+    bindinput="onSearch"
+  />
+
+  <view class="card flex" wx:for="{{filtered}}" wx:key="name">
+    <view class="ico">{{item.avatar}}</view>
+    <view class="grow">
+      <view class="card-title">{{item.name}}</view>
+      <view class="sub">{{item.desc}}</view>
+      <view class="progress" style="margin-top:14rpx">
+        <view class="progress-bar" style="width: {{item.progress}}%;"></view>
+      </view>
+    </view>
+    <text class="tag">{{item.progress}}%</text>
+  </view>
+
+  <view class="head">
+    <view class="head-title">待跟进</view>
+    <text class="tag">2 ITEMS</text>
+  </view>
+  <view class="card flex">
+    <view class="ico">♡</view>
+    <view class="grow">
+      <view class="card-title">周子墨 · 近期未打卡</view>
+      <view class="sub">主动关怀，确认本周计划。</view>
+    </view>
+    <button class="link" bindtap="onContact">联系</button>
+  </view>
+</view>
+
+<bottom-nav active="students" />

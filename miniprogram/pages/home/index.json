@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "练搭子",
+  "usingComponents": {
+    "bottom-nav": "/components/bottom-nav/index"
+  }
+}

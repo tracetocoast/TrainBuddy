@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "学员",
+  "usingComponents": {
+    "bottom-nav": "/components/bottom-nav/index"
+  }
+}

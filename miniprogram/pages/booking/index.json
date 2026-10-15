@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "约课",
+  "usingComponents": {
+    "bottom-nav": "/components/bottom-nav/index"
+  }
+}

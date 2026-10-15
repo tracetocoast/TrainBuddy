@@ -1,0 +1,70 @@
+<view class="page">
+  <view class="top">
+    <view class="brand">
+      <text class="mark">↗</text>练搭子
+      <text class="brand-sub">TRAIN BUDDY</text>
+    </view>
+  </view>
+
+  <view class="role">
+    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
+    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
+  </view>
+
+  <view class="eyebrow">YOUR PROGRESS · NOT PERFECTION</view>
+  <view class="title">每一次坚持，<br/>都有迹可循。</view>
+
+  <view class="hero">
+    <view class="hero-ring"></view>
+    <text class="pill">OCTOBER CHECK-IN</text>
+    <view class="herofoot" style="margin-top:54rpx">
+      <view>
+        <view class="big">{{sessions}}<text class="big-unit"> SESSIONS</text></view>
+        <view class="sub">本月累计训练</view>
+      </view>
+      <text style="font-size:70rpx">🏆</text>
+    </view>
+  </view>
+
+  <view class="head">
+    <view class="head-title">本周训练节奏</view>
+    <text class="tag">4 / 5 DAYS</text>
+  </view>
+  <view class="card chart">
+    <view class="bar-col" wx:for="{{bars}}" wx:key="index">
+      <view class="bar" style="height: {{item}}rpx; background: {{index < 5 ? '#a6e61b' : '#dce1d3'}};"></view>
+      <text class="sub">{{weekLabels[index]}}</text>
+    </view>
+  </view>
+
+  <view class="head">
+    <view class="head-title">最近的里程碑</view>
+  </view>
+  <view class="card flex">
+    <view class="ico">⚡</view>
+    <view class="grow">
+      <view class="card-title">连续打卡 7 天</view>
+      <view class="sub">习惯正在形成，继续保持节奏。</view>
+    </view>
+    <text class="tag">已达成</text>
+  </view>
+  <view class="card flex">
+    <view class="ico">🏋️</view>
+    <view class="grow">
+      <view class="card-title">深蹲重量稳步提升</view>
+      <view class="sub">下一步：优先保持动作质量。</view>
+    </view>
+    <text class="tag">成长中</text>
+  </view>
+
+  <view class="head">
+    <view class="head-title">训练记录</view>
+    <button class="link" bindtap="goWorkout">继续训练 ↗</button>
+  </view>
+  <block wx:if="{{records.length}}">
+    <view class="card" wx:for="{{records}}" wx:key="*this">{{item}}</view>
+  </block>
+  <view class="sub" wx:else>完成一次训练后，你的记录会显示在这里。</view>
+</view>
+
+<bottom-nav active="growth" />

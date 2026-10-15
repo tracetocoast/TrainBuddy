@@ -1,0 +1,84 @@
+<view class="page">
+  <view class="top">
+    <view class="brand">
+      <text class="mark">↗</text>练搭子
+      <text class="brand-sub">TRAIN BUDDY</text>
+    </view>
+  </view>
+
+  <view class="role">
+    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
+    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
+  </view>
+
+  <view class="eyebrow">POST-SESSION · COACH NOTES</view>
+  <view class="title">下课别忙走，<br/>记录交给我。</view>
+  <view class="sub">用语音或快速填写，生成学员看得懂、下次用得上的训练记录。</view>
+
+  <view class="head">
+    <view class="head-title">选择学员</view>
+    <text class="tag">TODAY</text>
+  </view>
+  <scroll-view class="dates" scroll-x>
+    <button
+      wx:for="{{students}}"
+      wx:key="*this"
+      class="date-btn student-chip {{student === item ? 'chosen' : ''}}"
+      data-name="{{item}}"
+      bindtap="onPickStudent"
+    >{{item}}</button>
+  </scroll-view>
+
+  <view class="head">
+    <view class="head-title">课后记录</view>
+    <text class="sub">语音转结构化表格</text>
+  </view>
+  <view class="card flex">
+    <view class="ico">🎙️</view>
+    <view class="grow">
+      <view class="card-title">用语音快速记录</view>
+      <view class="sub">例如：深蹲四组，每组十次，六十公斤。</view>
+    </view>
+    <button class="primary" bindtap="onVoice">模拟语音</button>
+  </view>
+
+  <view class="sub" style="display:block;margin:28rpx 0 12rpx">训练内容 / AI 整理结果</view>
+  <textarea
+    class="field"
+    value="{{recordText}}"
+    placeholder="输入训练动作、组数、次数、重量和学员状态…"
+    maxlength="-1"
+    auto-height
+    bindinput="onRecordInput"
+  />
+
+  <view class="head">
+    <view class="head-title">快速添加训练项</view>
+  </view>
+  <view class="quick-row">
+    <button
+      class="secondary quick-btn"
+      wx:for="{{quickAdds}}"
+      wx:key="*this"
+      data-text="{{item}}"
+      bindtap="onAppend"
+    >＋ {{item}}</button>
+  </view>
+
+  <view class="head">
+    <view class="head-title">教练点评</view>
+  </view>
+  <textarea
+    class="field"
+    value="{{note}}"
+    placeholder="本次表现与下次训练重点…"
+    maxlength="-1"
+    auto-height
+    bindinput="onNoteInput"
+  />
+
+  <button class="primary" style="width:100%;margin-top:28rpx" bindtap="onSave">保存并同步给学员 ↗</button>
+  <view class="sub" style="margin-top:20rpx">演示版本只在当前页面状态中保存，不会真实发送消息。</view>
+</view>
+
+<bottom-nav active="record" />

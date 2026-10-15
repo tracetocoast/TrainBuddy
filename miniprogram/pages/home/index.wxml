@@ -1,0 +1,129 @@
+<view class="page">
+  <view class="top">
+    <view class="brand">
+      <text class="mark">↗</text>练搭子
+      <text class="brand-sub">TRAIN BUDDY</text>
+    </view>
+    <button class="msg-btn" bindtap="onMsg">♧</button>
+  </view>
+
+  <view class="role">
+    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
+    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
+  </view>
+
+  <!-- 学员首页 -->
+  <block wx:if="{{role === 'student'}}">
+    <view class="eyebrow">WEDNESDAY · YOUR DAY</view>
+    <view class="title">今天也要<br/>练得漂亮。</view>
+
+    <view class="hero">
+      <view class="hero-ring"></view>
+      <text class="pill">WEEK 04 · BUILD MODE</text>
+      <view class="hero-title">你的节奏，<br/>由你定义。</view>
+      <view class="sub">稳定训练，比完美计划更重要。</view>
+      <view class="herofoot">
+        <view>
+          <view class="big">{{streak}}<text class="big-unit"> DAYS</text></view>
+          <view class="sub">连续训练记录</view>
+        </view>
+        <button class="primary" bindtap="goWorkout">开始今日训练 ↗</button>
+      </view>
+    </view>
+
+    <view class="head">
+      <view class="head-title">本周状态</view>
+      <button class="link" bindtap="goGrowth">查看成长 ↗</button>
+    </view>
+    <view class="stats">
+      <view class="stat"><strong>{{weekCount}}</strong><span>本周训练 / 次</span></view>
+      <view class="stat"><strong>86%</strong><span>计划完成率</span></view>
+      <view class="stat"><strong>+12%</strong><span>力量进步</span></view>
+    </view>
+
+    <view class="head">
+      <view class="head-title">今天的任务</view>
+      <text class="tag">COACH PICK</text>
+    </view>
+    <view class="card flex">
+      <view class="ico">🏋️</view>
+      <view class="grow">
+        <view class="card-title">下肢力量 · A 计划</view>
+        <view class="sub">45 分钟 · 5 个动作 · 林野教练</view>
+        <view style="margin-top:10rpx">
+          <text class="tag">深蹲</text>
+          <text class="tag" style="margin-left:8rpx">臀腿</text>
+        </view>
+      </view>
+      <button class="primary" bindtap="goWorkout">开练</button>
+    </view>
+
+    <view class="head">
+      <view class="head-title">下一次约课</view>
+      <button class="link" bindtap="goBooking">全部课程 ↗</button>
+    </view>
+    <view class="card flex">
+      <view class="ico" style="background:#e8e0ff">◷</view>
+      <view class="grow">
+        <view class="card-title">{{nextBook}} · 私教训练</view>
+        <view class="sub">林野教练 · 力量进阶</view>
+      </view>
+      <text class="tag">已预约</text>
+    </view>
+  </block>
+
+  <!-- 教练首页 -->
+  <block wx:else>
+    <view class="eyebrow">COACH MODE · TODAY</view>
+    <view class="title">今天，带他们<br/>再进步一点。</view>
+
+    <view class="hero">
+      <view class="hero-ring"></view>
+      <text class="pill">YOUR STUDIO</text>
+      <view class="hero-title">把时间留给<br/>真正重要的指导。</view>
+      <view class="sub">训练记录、学员状态，一眼掌握。</view>
+      <view class="herofoot">
+        <view>
+          <view class="big">06<text class="big-unit"> SESSIONS</text></view>
+          <view class="sub">今日课程安排</view>
+        </view>
+        <button class="primary" bindtap="goRecord">记录一节课 ↗</button>
+      </view>
+    </view>
+
+    <view class="head">
+      <view class="head-title">今日安排</view>
+      <button class="link" bindtap="goBooking">查看排课 ↗</button>
+    </view>
+
+    <view class="card" wx:for="{{sessions}}" wx:key="time">
+      <view class="slot">
+        <view class="time">{{item.time}}</view>
+        <view class="slotmain">
+          <view class="card-title">{{item.student}}</view>
+          <view class="sub">{{item.desc}}</view>
+        </view>
+        <text class="statuspill">{{item.status}}</text>
+      </view>
+      <view class="head" style="margin:20rpx 0 0">
+        <text class="sub">动作质量 · 稳定进阶</text>
+        <button class="secondary" data-student="{{item.student}}" bindtap="goRecordFor">{{index === 0 ? '查看记录' : '课后记录'}}</button>
+      </view>
+    </view>
+
+    <view class="head">
+      <view class="head-title">学员状态提醒</view>
+      <text class="tag">2 ITEMS</text>
+    </view>
+    <view class="card flex">
+      <view class="ico" style="background:#ffe5d5">!</view>
+      <view class="grow">
+        <view class="card-title">周子墨 · 连续 5 天未打卡</view>
+        <view class="sub">建议关怀提醒，确认训练安排。</view>
+      </view>
+      <button class="link" bindtap="onRemind">提醒</button>
+    </view>
+  </block>
+</view>
+
+<bottom-nav active="home" />

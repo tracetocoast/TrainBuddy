@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/booking/index",
+    "pages/workout/index",
+    "pages/ai/index",
+    "pages/growth/index",
+    "pages/record/index",
+    "pages/students/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#f5f6f0",
+    "navigationBarTitleText": "练搭子",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f6f0",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

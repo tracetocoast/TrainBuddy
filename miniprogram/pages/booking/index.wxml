@@ -1,0 +1,62 @@
+<view class="page">
+  <view class="top">
+    <view class="brand">
+      <text class="mark">↗</text>练搭子
+      <text class="brand-sub">TRAIN BUDDY</text>
+    </view>
+  </view>
+
+  <view class="role">
+    <button class="role-btn {{role === 'student' ? 'on' : ''}}" data-role="student" bindtap="onRole">我是学员</button>
+    <button class="role-btn {{role === 'coach' ? 'on' : ''}}" data-role="coach" bindtap="onRole">我是教练</button>
+  </view>
+
+  <view class="eyebrow">{{role === 'student' ? 'FIND YOUR SESSION' : 'STUDIO SCHEDULE'}}</view>
+  <view class="title">{{role === 'student' ? '约一场，状态拉满。' : '排课清晰，节奏在线。'}}</view>
+  <view class="sub">{{role === 'student' ? '选择适合你的时间，剩下的交给训练。' : '查看可约时段，管理今日课程安排。'}}</view>
+
+  <view class="head">
+    <view class="head-title">10 月 · 本周</view>
+    <text class="tag">2026</text>
+  </view>
+
+  <scroll-view class="dates" scroll-x>
+    <button
+      wx:for="{{dates}}"
+      wx:key="*this"
+      class="date-btn {{dateIndex === index ? 'chosen' : ''}}"
+      data-index="{{index}}"
+      bindtap="onPickDate"
+    >{{item[0]}}<b>{{item[1]}}</b></button>
+  </scroll-view>
+
+  <view class="head">
+    <view class="head-title">可选时段</view>
+    <text class="sub">教练 · 林野</text>
+  </view>
+
+  <view class="card" wx:for="{{slots}}" wx:key="time">
+    <view class="slot">
+      <view class="time">{{item.time}}</view>
+      <view class="slotmain">
+        <view class="card-title">{{item.name}}</view>
+        <view class="sub">{{item.desc}}</view>
+      </view>
+      <text class="statuspill">{{booked === item.time ? '已预约' : item.status}}</text>
+    </view>
+    <view class="head" style="margin:20rpx 0 0">
+      <text class="sub">私教工作室 · 可改期</text>
+      <button
+        class="{{item.disabled ? 'secondary' : 'primary'}}"
+        disabled="{{item.disabled}}"
+        data-time="{{item.time}}"
+        data-name="{{item.name}}"
+        bindtap="onBook"
+      >{{booked === item.time ? '已预约' : (role === 'student' ? '预约课程' : '添加排课')}}</button>
+    </view>
+  </view>
+
+  <view class="sub" style="margin-top:26rpx">预约成功后会同步到训练日程。此处使用模拟数据。</view>
+</view>
+
+<bottom-nav active="booking" />

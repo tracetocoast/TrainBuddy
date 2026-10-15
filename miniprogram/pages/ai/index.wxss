@@ -1,0 +1,126 @@
+.ai-page {
+  margin: 0;
+  background: #111610;
+  color: #fff;
+  padding: 0 38rpx 180rpx;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.ai-brand {
+  color: #fff;
+}
+
+.ai-sub {
+  color: #9aa590 !important;
+}
+
+.ai-eye {
+  color: #bdc7ae;
+}
+
+.ai-title {
+  color: #fff;
+}
+
+.ai-desc {
+  color: #bfc7b5;
+}
+
+.aibox {
+  background: #1b2119;
+  border: 2rpx solid #394333;
+  border-radius: 40rpx;
+  padding: 28rpx;
+  margin-top: 28rpx;
+}
+
+.scan {
+  height: 450rpx;
+  margin-top: 24rpx;
+  border-radius: 30rpx;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #39482e, #1c2619 60%, #151a14);
+}
+
+.scan::before {
+  content: '';
+  position: absolute;
+  top: 34rpx;
+  right: 34rpx;
+  bottom: 34rpx;
+  left: 34rpx;
+  border: 2rpx solid rgba(200, 255, 54, 0.27);
+  border-radius: 45% 45% 40% 40%;
+}
+
+.silhouette {
+  font-size: 204rpx;
+  filter: drop-shadow(0 0 28rpx rgba(200, 255, 54, 0.33));
+  position: relative;
+  z-index: 1;
+}
+
+.scan-line {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  height: 2rpx;
+  background: #c8ff36;
+  box-shadow: 0 0 30rpx 6rpx rgba(200, 255, 54, 0.5);
+  animation: sweep 2.7s ease-in-out infinite alternate;
+  z-index: 2;
+}
+
+@keyframes sweep {
+  from { top: 22%; }
+  to { top: 78%; }
+}
+
+.scanlabel {
+  position: absolute;
+  bottom: 24rpx;
+  left: 24rpx;
+  right: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  font-size: 18rpx;
+  letter-spacing: 2rpx;
+  color: #d6e8c1;
+  z-index: 2;
+}
+
+.aimetrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.ai-stat {
+  background: #22291f !important;
+  border-color: #394333 !important;
+}
+
+.ai-stat strong {
+  color: #c8ff36;
+}
+
+.ai-stat span {
+  color: #b7c1ad;
+}
+
+.note {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  border-left: 6rpx solid #c8ff36;
+  border-radius: 0 20rpx 20rpx 0;
+  background: #242d20;
+  color: #d4ddca;
+  font-size: 22rpx;
+  line-height: 1.6;
+}

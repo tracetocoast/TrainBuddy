@@ -1,0 +1,12 @@
+<view class="nav">
+  <view
+    wx:for="{{items}}"
+    wx:key="path"
+    class="nav-item {{active === item.key ? 'active' : ''}}"
+    data-path="{{item.path}}"
+    bindtap="onSwitch"
+  >
+    <view class="nav-icon">{{item.icon}}</view>
+    <text class="nav-text">{{item.text}}</text>
+  </view>
+</view>
