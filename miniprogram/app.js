@@ -1,14 +1,15 @@
 const store = require('./utils/store')
 const { getDefaultSessionState } = require('./utils/session')
+const bindingApi = require('./services/bindingApi')
 
 App({
   globalData: Object.assign(
     {
-      sets: 0,
-      checkins: 0,
-      records: [],
-      student: '陈佳宁',
-      schedule: null
+      student: '',
+      drafts: {},
+      _boundStudentsCache: [],
+      _meCache: null
+      // schedule / training / diary / bindings 不再本地持久化
     },
     getDefaultSessionState()
   ),
@@ -18,14 +19,23 @@ App({
     if (cached) {
       Object.assign(this.globalData, cached)
     }
-    // 启动时若无有效会话，首页会经 guard 跳登录
   },
 
   persist() {
     store.save(this.globalData)
   },
 
-  /** @deprecated 请使用 utils/session.switchDisplayRole，保留兼容 */
+  /** 登录后刷新 /me 与学员列表缓存 */
+  refreshServerCaches() {
+    return bindingApi.refreshMe(this).then((me) => {
+      if (me && me.grantedRoles) {
+        this.globalData.session.grantedRoles = me.grantedRoles
+        this.globalData.grantedRoles = me.grantedRoles
+      }
+      return bindingApi.listBoundStudentsForCoachAsync(this)
+    })
+  },
+
   setRole(role) {
     const { switchDisplayRole } = require('./utils/session')
     const result = switchDisplayRole(this, role)

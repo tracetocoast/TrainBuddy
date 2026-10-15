@@ -17,12 +17,14 @@ Page({
   refresh() {
     const app = getApp()
     const user = app.globalData.session.user
-    const binding = bindingApi.getActivePrimaryCoach(app, user.userId)
-    this.setData({
-      binding: binding || null,
-      scopes: binding
-        ? Object.assign({}, binding.scopes)
-        : bindingApi.normalizeScopes()
+    bindingApi.refreshMe(app).then((me) => {
+      const binding = (me && me.primaryBinding) || bindingApi.getActivePrimaryCoach(app, user.userId)
+      this.setData({
+        binding: binding || null,
+        scopes: binding
+          ? Object.assign({}, binding.scopes)
+          : bindingApi.normalizeScopes()
+      })
     })
   },
 

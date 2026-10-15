@@ -1,0 +1,26 @@
+.page-solo {
+  padding-bottom: 60rpx;
+}
+
+.chip-row {
+  white-space: nowrap;
+  margin: 20rpx 0;
+}
+
+.chip {
+  display: inline-flex;
+  margin-right: 12rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: #fff;
+  border: 2rpx solid #e4e7dd;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #74796d;
+}
+
+.chip.on {
+  background: #c8ff36;
+  border-color: #c8ff36;
+  color: #151812;
+}

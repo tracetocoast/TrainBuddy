@@ -1,4 +1,7 @@
-const KEY = 'lianzida_state_v3'
+/**
+ * 本地仅保留会话与草稿（业务数据走服务端）
+ */
+const KEY = 'lianzida_state_v6'
 
 function load() {
   try {
@@ -12,20 +15,14 @@ function save(data) {
   try {
     wx.setStorageSync(KEY, {
       role: data.role,
-      sets: data.sets,
-      checkins: data.checkins,
-      records: data.records,
       student: data.student,
       session: data.session,
       grantedRoles: data.grantedRoles,
-      bindings: data.bindings,
-      inviteCatalog: data.inviteCatalog,
       drafts: data.drafts,
-      coachMediaCache: data.coachMediaCache,
-      signedMediaUrls: data.signedMediaUrls,
       activeSubjectId: data.activeSubjectId,
       privacyAcceptedAt: data.privacyAcceptedAt,
-      schedule: data.schedule
+      _boundStudentsCache: data._boundStudentsCache,
+      _meCache: data._meCache
     })
   } catch (e) {
     // ignore

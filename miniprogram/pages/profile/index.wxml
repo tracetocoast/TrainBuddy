@@ -59,6 +59,13 @@
   </view>
 
   <view class="head">
+    <view class="head-title">训练与日记</view>
+  </view>
+  <view class="card menu" bindtap="goDiary">每日日记 · 分类授权共享</view>
+  <view class="card menu" bindtap="goExercises">动作库 · 已审核内容</view>
+  <view class="card menu" bindtap="goGrowth">成长日历与指标</view>
+
+  <view class="head">
     <view class="head-title">更多</view>
   </view>
   <view class="card menu" bindtap="goPrivacy">隐私与授权管理</view>

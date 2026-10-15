@@ -8,43 +8,106 @@
 
   <role-switcher />
 
-  <view class="eyebrow">WORKOUT SESSION · A01</view>
-  <view class="title">下肢力量<br/>开练。</view>
-  <view class="sub">目标：动作稳定、节奏可控。每完成一组，点击打卡。</view>
+  <view class="eyebrow">WORKOUT SESSION</view>
+  <view class="title" wx:if="{{session}}">{{session.title}}</view>
+  <view class="title" wx:else>选择计划<br/>开练。</view>
+  <view class="sub">每组独立记录重量与次数。结束训练幂等，不会重复累计。</view>
 
-  <view class="head">
-    <view class="head-title">训练进度</view>
-    <text><b>{{progress}}/10 组</b></text>
-  </view>
-  <view class="progress">
-    <view class="progress-bar" style="width: {{progressPercent}}%;"></view>
+  <view class="twobtn" wx:if="{{!session}}">
+    <button class="secondary" bindtap="goExercises">动作库</button>
+    <button class="secondary" bindtap="goDiary">每日日记</button>
   </view>
 
-  <view class="exercise" wx:for="{{exercises}}" wx:key="name">
-    <view class="flex">
-      <view class="ico">{{item.icon}}</view>
-      <view class="grow">
-        <view class="card-title">{{item.name}}</view>
-        <view class="sub">{{item.plan}}</view>
+  <!-- 无进行中会话：选计划 -->
+  <block wx:if="{{!session}}">
+    <view class="head">
+      <view class="head-title">可执行计划</view>
+      <button class="link" bindtap="goPlans">全部计划 ↗</button>
+    </view>
+    <view class="card" wx:for="{{plans}}" wx:key="plan_id">
+      <view class="card-title">{{item.published.title}}</view>
+      <view class="sub">{{item.published.goal || '已发布计划'}} · v{{item.published.version}}</view>
+      <button class="primary" style="width:100%;margin-top:16rpx" data-id="{{item.plan_id}}" bindtap="onStart">开始训练</button>
+    </view>
+    <view class="card sub" wx:if="{{!plans.length}}">暂无已发布计划，将为你准备默认下肢模板。</view>
+    <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onEnsureDefault" wx:if="{{!plans.length}}">使用默认计划开练</button>
+  </block>
+
+  <!-- 进行中 -->
+  <block wx:else>
+    <view class="head">
+      <view class="head-title">训练进度</view>
+      <text><b>{{session.done_sets}}/{{session.total_sets}} 组</b></text>
+    </view>
+    <view class="progress">
+      <view class="progress-bar" style="width: {{session.progress_percent}}%;"></view>
+    </view>
+    <view class="sub" style="margin-top:8rpx">计划快照 v{{session.plan_revision || '—'}} · 状态 {{session.status}}</view>
+
+    <view class="exercise" wx:for="{{session.exercises}}" wx:key="id">
+      <view class="flex">
+        <view class="ico">{{item.icon}}</view>
+        <view class="grow">
+          <view class="card-title">{{item.name}}</view>
+          <view class="sub">{{item.sets.length}} 组 · 逐组打卡</view>
+        </view>
       </view>
-      <text class="tag">{{item.weight}}</text>
-    </view>
-    <view class="setgrid">
-      <view class="set"><small>目标组数</small><b>{{item.sets}} 组</b></view>
-      <view class="set"><small>每组次数</small><b>{{item.reps}} 次</b></view>
-      <button class="primary {{sets > index ? 'done' : ''}}" bindtap="completeSet">
-        {{sets > index ? '✓ 已完成' : '完成一组 +'}}
-      </button>
-    </view>
-  </view>
 
-  <view class="card flex" style="margin-top:28rpx">
-    <view class="grow">
-      <view class="card-title">训练进行中</view>
-      <view class="sub">已完成 {{sets}} 组 · 记得保持呼吸</view>
+      <view class="aset" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
+        <view class="aset-main">
+          <text class="aset-no">第 {{set.setNo}} 组</text>
+          <text class="sub">目标 {{set.targetWeight != null ? set.targetWeight + 'kg' : '—'}} × {{set.targetReps || '—'}}</text>
+          <view class="aset-inputs">
+            <input
+              class="mini-field"
+              type="digit"
+              placeholder="kg"
+              value="{{set.actualWeight}}"
+              data-sid="{{set.id}}"
+              data-field="actualWeight"
+              bindblur="onSetField"
+            />
+            <text class="sub">kg ×</text>
+            <input
+              class="mini-field"
+              type="number"
+              placeholder="次"
+              value="{{set.actualReps}}"
+              data-sid="{{set.id}}"
+              data-field="actualReps"
+              bindblur="onSetField"
+            />
+            <text class="sub">次</text>
+          </view>
+        </view>
+        <view class="aset-actions">
+          <button
+            class="primary {{set.state === 'done' ? 'done' : ''}}"
+            data-sid="{{set.id}}"
+            data-state="done"
+            bindtap="onSetState"
+          >{{set.state === 'done' ? '✓' : '完成'}}</button>
+          <button
+            class="secondary"
+            data-sid="{{set.id}}"
+            data-state="skipped"
+            bindtap="onSetState"
+            wx:if="{{set.state !== 'skipped'}}"
+          >跳过</button>
+          <text class="tag" wx:if="{{set.state === 'skipped'}}">已跳过</text>
+        </view>
+      </view>
     </view>
-    <button class="primary" bindtap="finish">结束训练 ↗</button>
-  </view>
+
+    <view class="card flex" style="margin-top:28rpx">
+      <view class="grow">
+        <view class="card-title">{{session.done_sets ? '训练进行中' : '尚未完成组'}}</view>
+        <view class="sub">已完成 {{session.done_sets}} 组 · 草稿已自动保存</view>
+      </view>
+      <button class="primary" bindtap="onFinish" disabled="{{finishing}}">结束训练 ↗</button>
+    </view>
+    <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onAbandon">放弃本次（不计次数）</button>
+  </block>
 </view>
 
 <bottom-nav active="workout" />

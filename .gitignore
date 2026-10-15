@@ -11,3 +11,8 @@ project.private.config.json
 # 依赖（若后续引入 npm）
 node_modules/
 miniprogram_npm/
+
+# API 本地数据
+server/data/
+server/data/*.json
+*.tmp

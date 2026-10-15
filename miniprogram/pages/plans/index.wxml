@@ -1,0 +1,23 @@
+<view class="page page-solo">
+  <view class="eyebrow">TRAINING PLANS</view>
+  <view class="title">计划列表</view>
+  <view class="sub">已发布计划可开练；草稿仅作者可见直至发布。</view>
+
+  <view class="card" wx:for="{{plans}}" wx:key="plan_id">
+    <view class="card-title">
+      {{item.published ? item.published.title : (item.latest_draft && item.latest_draft.title) || '未命名计划'}}
+    </view>
+    <view class="sub">来源 {{item.source_type}} · 学员计划 ID {{item.plan_id}}</view>
+    <view class="tag-row">
+      <text class="tag" wx:if="{{item.published}}">已发布 v{{item.published.version}}</text>
+      <text class="tag" wx:if="{{item.latest_draft}}">草稿 v{{item.latest_draft.version}}</text>
+    </view>
+    <view class="twobtn" style="margin-top:16rpx">
+      <button class="secondary" data-id="{{item.plan_id}}" bindtap="goEdit" wx:if="{{isCoach || item.latest_draft}}">编辑</button>
+      <button class="primary" data-id="{{item.plan_id}}" bindtap="goStart" wx:if="{{item.published && isStudent}}">开练</button>
+    </view>
+  </view>
+  <view class="card sub" wx:if="{{!plans.length}}">暂无计划</view>
+
+  <button class="secondary" style="width:100%;margin-top:20rpx" bindtap="onEnsureDefault" wx:if="{{isStudent}}">创建默认下肢计划</button>
+</view>

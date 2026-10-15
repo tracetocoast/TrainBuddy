@@ -25,21 +25,27 @@ function canActivateRole(app, role) {
 }
 
 /**
- * AC02：教练读取学员资源
+ * AC02：教练读取学员资源（前端预检；最终以服务端 403 为准）
  */
 function canCoachReadStudent(app, coachUserId, studentId, category) {
-  const bindings = app.globalData.bindings || []
-  const b = bindings.find(
-    (x) =>
-      x.coachUserId === coachUserId &&
-      x.studentId === studentId &&
-      x.status === 'active'
-  )
-  if (!b) return { ok: false, code: 'FORBIDDEN', message: '无权访问该学员' }
-  if (category && !b.scopes[category]) {
-    return { ok: false, code: 'CONSENT_REQUIRED', message: '学员未授权该类内容' }
+  const bound = app.globalData._boundStudentsCache || []
+  const row = bound.find((x) => x.studentId === studentId)
+  if (row) {
+    if (category && row.scopes && !row.scopes[category]) {
+      return { ok: false, code: 'CONSENT_REQUIRED', message: '学员未授权该类内容' }
+    }
+    return {
+      ok: true,
+      binding: {
+        coachUserId,
+        studentId,
+        status: 'active',
+        scopes: row.scopes || {}
+      }
+    }
   }
-  return { ok: true, binding: b }
+  // 无缓存时不假装有权；页面应先 refreshServerCaches
+  return { ok: false, code: 'FORBIDDEN', message: '无权访问该学员' }
 }
 
 /**

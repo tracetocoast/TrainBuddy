@@ -1,0 +1,31 @@
+.page-solo {
+  padding-bottom: 60rpx;
+}
+
+.aset {
+  margin-top: 12rpx;
+  padding: 12rpx;
+  background: #f2f4ed;
+  border-radius: 14rpx;
+}
+
+.aset-line {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.aset-no {
+  font-weight: 800;
+}
+
+.mini-field {
+  width: 110rpx;
+  padding: 8rpx 10rpx;
+  background: #fff;
+  border: 2rpx solid #e4e7dd;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  text-align: center;
+}

@@ -38,7 +38,10 @@ function applyLoginResult(app, result) {
 
 function loginMock(app, accountKey, claimRole) {
   return authApi.mockLogin({ accountKey, claimRole }).then((result) => {
-    return applyLoginResult(app, result)
+    applyLoginResult(app, result)
+    return app.refreshServerCaches
+      ? app.refreshServerCaches().then(() => app.globalData.session)
+      : app.globalData.session
   })
 }
 
@@ -55,7 +58,13 @@ function loginWithWeChat(app) {
         }
         authApi
           .wechatLogin(res.code)
-          .then((result) => resolve(applyLoginResult(app, result)))
+          .then((result) => {
+            applyLoginResult(app, result)
+            return app.refreshServerCaches
+              ? app.refreshServerCaches().then(() => app.globalData.session)
+              : app.globalData.session
+          })
+          .then(resolve)
           .catch(reject)
       },
       fail(err) {

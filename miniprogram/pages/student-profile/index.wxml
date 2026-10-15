@@ -1,0 +1,97 @@
+<view class="page page-solo">
+  <view class="eyebrow">STUDENT PROFILE · COACH</view>
+  <view class="title">{{studentName}}</view>
+  <view class="sub">仅展示学员已共享且绑定授权开启的内容。看不到 ≠ 没运动。</view>
+
+  <scroll-view class="dates" scroll-x>
+    <button
+      wx:for="{{dateList}}"
+      wx:key="dateKey"
+      class="date-btn {{localDate === item.dateKey ? 'chosen' : ''}}"
+      data-key="{{item.dateKey}}"
+      bindtap="onPickDate"
+    >{{item.weekday}}<b>{{item.day}}</b></button>
+  </scroll-view>
+
+  <view class="card" wx:if="{{shared}}">
+    <view class="card-title">{{localDate}}</view>
+    <view class="sub" wx:if="{{shared.visible.restDay}}">学员标记为休息日</view>
+  </view>
+
+  <!-- 训练 -->
+  <view class="head"><view class="head-title">自主训练</view></view>
+  <block wx:if="{{shared.canSee.workout}}">
+    <view class="card" wx:for="{{shared.visible.sessions}}" wx:key="id">
+      <view class="card-title">{{item.title}}</view>
+      <view class="sub">状态 {{item.status}}</view>
+    </view>
+    <view class="card sub" wx:if="{{!shared.visible.sessions.length}}">当日无完成训练</view>
+  </block>
+  <view class="card hidden" wx:else>
+    <view class="card-title">记录不可见</view>
+    <view class="sub">{{shared.hiddenReasons.workout_self || '未共享'}}</view>
+  </view>
+
+  <!-- 饮食 -->
+  <view class="head"><view class="head-title">饮食 / 饮水</view></view>
+  <block wx:if="{{shared.canSee.meal}}">
+    <view class="card" wx:for="{{shared.visible.meals}}" wx:key="id">
+      <view class="card-title">{{item.mealType}} · {{item.foodText}}</view>
+      <view class="sub">{{item.portionText || '份量未填'}}</view>
+    </view>
+    <view class="card sub">饮水合计 {{shared.visible.waterTotalMl || 0}} ml</view>
+    <view class="card sub" wx:if="{{!shared.visible.meals.length}}">当日无饮食记录</view>
+  </block>
+  <view class="card hidden" wx:else>
+    <view class="card-title">记录不可见</view>
+    <view class="sub">{{shared.hiddenReasons.meal || '未共享饮食'}}</view>
+  </view>
+
+  <!-- 身体状态 -->
+  <view class="head"><view class="head-title">身体状态</view></view>
+  <block wx:if="{{shared.canSee.body}}">
+    <view class="card" wx:if="{{shared.visible.bodyState}}">
+      <view class="sub">睡眠 {{shared.visible.bodyState.sleepHours != null ? shared.visible.bodyState.sleepHours + 'h' : '未填'}}</view>
+      <view class="sub">疲劳 {{shared.visible.bodyState.fatigue != null ? shared.visible.bodyState.fatigue : '未填（≠良好）'}}</view>
+      <view class="sub">酸痛 {{shared.visible.bodyState.soreness || '未填'}}</view>
+    </view>
+    <view class="card sub" wx:else>当日未填写状态</view>
+  </block>
+  <view class="card hidden" wx:else>
+    <view class="card-title">记录不可见</view>
+    <view class="sub">{{shared.hiddenReasons.body_state || '未共享状态'}}</view>
+  </view>
+
+  <!-- 特殊情况 -->
+  <view class="head"><view class="head-title">特殊情况</view></view>
+  <block wx:if="{{shared.canSee.special}}">
+    <view class="card" wx:if="{{shared.visible.special && (shared.visible.special.specialType || shared.visible.special.specialNote)}}">
+      <view class="card-title">{{shared.visible.special.specialType || '已备注'}}</view>
+      <view class="sub">{{shared.visible.special.specialNote || '无文字说明'}}</view>
+    </view>
+    <view class="card sub" wx:else>当日无特殊情况</view>
+  </block>
+  <view class="card hidden" wx:else>
+    <view class="card-title">记录不可见</view>
+    <view class="sub">{{shared.hiddenReasons.special || '未授权特殊情况'}}</view>
+  </view>
+
+  <!-- 点评 -->
+  <view class="head">
+    <view class="head-title">教练点评</view>
+    <text class="tag">可写</text>
+  </view>
+  <textarea class="field" placeholder="针对当日已共享内容点评（学员可见）" value="{{feedbackText}}" bindinput="onFeedbackInput" />
+  <button class="primary" style="width:100%;margin-top:12rpx" bindtap="onSubmitFeedback">提交点评</button>
+
+  <view class="card" wx:for="{{feedbacks}}" wx:key="id">
+    <view class="card-title">{{item.authorName || '教练'}}</view>
+    <view class="sub">{{item.text}}</view>
+  </view>
+  <view class="card sub" wx:if="{{!feedbacks.length}}">暂无点评</view>
+
+  <view class="twobtn" style="margin-top:24rpx">
+    <button class="secondary" bindtap="goRecord">课后记录</button>
+    <button class="secondary" bindtap="goBack">返回学员列表</button>
+  </view>
+</view>

@@ -8,75 +8,183 @@
 
   <role-switcher />
 
-  <view class="eyebrow">POST-SESSION · COACH NOTES</view>
+  <view class="eyebrow">POST-SESSION · C04 · 7.3</view>
   <view class="title">下课别忙走，<br/>记录交给我。</view>
-  <view class="sub">用语音或快速填写，生成学员看得懂、下次用得上的训练记录。</view>
+  <view class="sub">录音→转写→候选→确认合并。缺字段不擅自补全；冲突保留人工值。无麦克风仍可手填。</view>
 
   <view class="head">
     <view class="head-title">选择学员</view>
-    <text class="tag">TODAY</text>
+    <text class="tag">{{session ? session.status : '—'}}</text>
   </view>
   <scroll-view class="dates" scroll-x wx:if="{{students.length}}">
     <button
       wx:for="{{students}}"
-      wx:key="*this"
-      class="date-btn student-chip {{student === item ? 'chosen' : ''}}"
-      data-name="{{item}}"
+      wx:key="studentId"
+      class="date-btn student-chip {{studentId === item.studentId ? 'chosen' : ''}}"
+      data-id="{{item.studentId}}"
+      data-name="{{item.name}}"
       bindtap="onPickStudent"
-    >{{item}}</button>
+    >{{item.name}}</button>
   </scroll-view>
-  <view class="card sub" wx:else>暂无绑定学员，无法录入课后表。请先生成邀请码。</view>
+  <view class="card sub" wx:else>暂无绑定学员</view>
 
-  <view class="head">
-    <view class="head-title">课后记录</view>
-    <text class="sub">语音转结构化表格</text>
-  </view>
-  <view class="card flex">
-    <view class="ico">🎙️</view>
-    <view class="grow">
-      <view class="card-title">用语音快速记录</view>
-      <view class="sub">例如：深蹲四组，每组十次，六十公斤。</view>
+  <block wx:if="{{studentId && session}}">
+    <view class="head">
+      <view class="head-title">{{session.title}}</view>
+      <text class="tag">rev {{session.revision}}</text>
     </view>
-    <button class="primary" bindtap="onVoice">模拟语音</button>
-  </view>
+    <view class="sub">已完成组 {{session.done_sets}}/{{session.total_sets}} · {{session.shared_at ? '已同步学员' : '草稿未共享'}} · ASR {{asrProvider}}</view>
 
-  <view class="sub" style="display:block;margin:28rpx 0 12rpx">训练内容 / AI 整理结果</view>
-  <textarea
-    class="field"
-    value="{{recordText}}"
-    placeholder="输入训练动作、组数、次数、重量和学员状态…"
-    maxlength="-1"
-    auto-height
-    bindinput="onRecordInput"
-  />
+    <view class="head">
+      <view class="head-title">点击添加动作</view>
+    </view>
+    <view class="quick-row">
+      <button
+        class="secondary quick-btn"
+        wx:for="{{library}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onAddLib"
+        disabled="{{session.status === 'completed'}}"
+      >＋ {{item.name}}</button>
+    </view>
 
-  <view class="head">
-    <view class="head-title">快速添加训练项</view>
-  </view>
-  <view class="quick-row">
+    <!-- 语音录入 -->
+    <view class="head">
+      <view class="head-title">语音录入</view>
+      <text class="sub">最长 60 秒 · {{recording ? remainSec + 's' : '可分段'}}</text>
+    </view>
+    <view class="card" wx:if="{{!micDenied}}">
+      <view class="sub">按住说话，松手上传转写。识别中可继续改表，返回后显示差异。</view>
+      <button
+        class="primary rec-btn {{recording ? 'rec-on' : ''}}"
+        bindtouchstart="onRecStart"
+        bindtouchend="onRecEnd"
+        bindtouchcancel="onRecEnd"
+        disabled="{{session.status === 'completed' || voiceBusy}}"
+      >{{recording ? '松开结束…' : (voiceBusy ? '识别中…' : '按住录音')}}</button>
+    </view>
+    <view class="card hidden" wx:else>
+      <view class="card-title">麦克风不可用</view>
+      <view class="sub">已拒绝权限或设备不支持。可继续点击添加动作或下方文字录入（AC14）。</view>
+      <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onRequestMic">重试授权</button>
+    </view>
+
+    <!-- 文字路径（始终可用） -->
+    <view class="head">
+      <view class="head-title">文字录入</view>
+      <text class="sub">缺字段不自动补全</text>
+    </view>
+    <textarea
+      class="field"
+      value="{{textInput}}"
+      placeholder="例：深蹲 60kg 10次 4组&#10;或：50公斤 5次（将提示缺组数）"
+      maxlength="-1"
+      auto-height
+      bindinput="onTextInput"
+      disabled="{{session.status === 'completed'}}"
+    />
+    <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onParseText" disabled="{{session.status === 'completed' || voiceBusy}}">解析为候选</button>
+
+    <!-- 任务状态 -->
+    <view class="card" wx:if="{{voiceTask}}">
+      <view class="card-title">识别任务 {{voiceTask.status}}</view>
+      <view class="sub" wx:if="{{voiceTask.transcript}}">转写：{{voiceTask.transcript.text}}</view>
+      <view class="sub" wx:if="{{voiceTask.error}}">失败：{{voiceTask.error.message}} · 可重试或手填</view>
+      <view class="sub" wx:if="{{voiceTask.conflicts && voiceTask.conflicts.length}}">
+        差异 {{voiceTask.conflicts.length}} 项（冲突默认保留人工值）
+      </view>
+      <view class="conflict" wx:for="{{voiceTask.conflicts}}" wx:key="type">
+        <text class="tag">{{item.type}}</text>
+        <text class="sub">{{item.message}}</text>
+        <view class="sub" wx:if="{{item.human_value}}">人工 {{item.human_value}} · AI {{item.ai_value}}</view>
+      </view>
+    </view>
+
+    <!-- 结构化候选 -->
+    <view class="card" wx:if="{{segments.length}}">
+      <view class="card-title">结构化候选</view>
+      <view class="sub">选择合并方式后确认；同名不自动覆盖。</view>
+      <view class="quick-row" style="margin:12rpx 0">
+        <button class="chip {{mergeMode === 'append' ? 'on' : ''}}" data-m="append" bindtap="onMergeMode">新增动作</button>
+        <button class="chip {{mergeMode === 'supplement' ? 'on' : ''}}" data-m="supplement" bindtap="onMergeMode">补充现有</button>
+        <button class="chip {{mergeMode === 'replace_sets' ? 'on' : ''}}" data-m="replace_sets" bindtap="onMergeMode">替换组</button>
+      </view>
+      <view wx:for="{{segments}}" wx:key="segment_id" class="seg-row">
+        <view class="grow">
+          <view class="card-title">{{item.display_name}}</view>
+          <view class="sub">{{item.evidence_text}}</view>
+          <view class="sub">
+            {{item.set_count != null ? item.set_count + '组' : '组数?'}}
+            · {{item.candidate_reps_per_set != null ? item.candidate_reps_per_set + '次' : '次数?'}}
+            · {{item.weight_kg != null ? item.weight_kg + 'kg' : '重量?'}}
+            · 口径 {{item.load_basis || 'unknown'}}
+          </view>
+          <view class="sub warn" wx:if="{{item.requires_confirmation}}">待确认：{{item.missing_fields_label}}</view>
+          <view class="patch-row" wx:if="{{item.requires_confirmation}}">
+            <input class="mini-field" placeholder="组" type="number" data-sid="{{item.segment_id}}" data-f="set_count" bindblur="onSegPatch" />
+            <input class="mini-field" placeholder="次" type="number" data-sid="{{item.segment_id}}" data-f="candidate_reps_per_set" bindblur="onSegPatch" />
+            <input class="mini-field" placeholder="动作名" data-sid="{{item.segment_id}}" data-f="display_name" bindblur="onSegPatch" />
+          </view>
+          <view class="sub" wx:if="{{item.merged}}">已合并</view>
+        </view>
+        <button
+          class="primary"
+          wx:if="{{!item.merged}}"
+          data-sid="{{item.segment_id}}"
+          bindtap="onMergeOne"
+          disabled="{{voiceBusy}}"
+        >加入</button>
+      </view>
+      <view class="twobtn" style="margin-top:16rpx">
+        <button class="secondary" bindtap="onMergeAllReady" disabled="{{voiceBusy}}">合并全部就绪项</button>
+        <button class="secondary" bindtap="onUndoMerge">撤销上次合并</button>
+      </view>
+    </view>
+
+    <!-- 逐组编辑 -->
+    <view class="exercise" wx:for="{{session.exercises}}" wx:key="id">
+      <view class="flex">
+        <view class="ico">{{item.icon}}</view>
+        <view class="grow">
+          <view class="card-title">{{item.name}}</view>
+          <view class="sub">{{item.sets.length}} 组独立记录</view>
+        </view>
+        <button class="link" data-id="{{item.id}}" bindtap="onRemoveEx" wx:if="{{session.status !== 'completed'}}">删除</button>
+      </view>
+      <view class="aset" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
+        <view class="aset-line">
+          <text class="aset-no">#{{set.setNo}}</text>
+          <input class="mini-field" type="digit" value="{{set.actualWeight}}" data-sid="{{set.id}}" data-field="actualWeight" bindblur="onSetField" disabled="{{session.status === 'completed'}}" />
+          <text class="sub">kg</text>
+          <input class="mini-field" type="number" value="{{set.actualReps}}" data-sid="{{set.id}}" data-field="actualReps" bindblur="onSetField" disabled="{{session.status === 'completed'}}" />
+          <text class="sub">次</text>
+          <button class="primary {{set.state === 'done' ? 'done' : ''}}" data-sid="{{set.id}}" bindtap="onMarkDone" disabled="{{session.status === 'completed'}}">{{set.state === 'done' ? '✓' : '完成'}}</button>
+        </view>
+      </view>
+    </view>
+    <view class="card sub" wx:if="{{!session.exercises.length}}">请添加动作、录音或文字解析后再同步。</view>
+
+    <view class="head"><view class="head-title">可共享点评</view></view>
+    <textarea class="field" value="{{publicNote}}" placeholder="学员可见的点评…" bindinput="onPublicNote" disabled="{{session.status === 'completed'}}" />
+
+    <view class="head"><view class="head-title">私人备注</view></view>
+    <textarea class="field" value="{{privateNote}}" placeholder="不同步给学员…" bindinput="onPrivateNote" disabled="{{session.status === 'completed'}}" />
+
     <button
-      class="secondary quick-btn"
-      wx:for="{{quickAdds}}"
-      wx:key="*this"
-      data-text="{{item}}"
-      bindtap="onAppend"
-    >＋ {{item}}</button>
-  </view>
+      class="primary"
+      style="width:100%;margin-top:28rpx"
+      bindtap="onFinalize"
+      wx:if="{{session.status !== 'completed'}}"
+      disabled="{{syncing || voiceBusy}}"
+    >确认并同步给学员 ↗</button>
 
-  <view class="head">
-    <view class="head-title">教练点评</view>
-  </view>
-  <textarea
-    class="field"
-    value="{{note}}"
-    placeholder="本次表现与下次训练重点…"
-    maxlength="-1"
-    auto-height
-    bindinput="onNoteInput"
-  />
-
-  <button class="primary" style="width:100%;margin-top:28rpx" bindtap="onSave">保存并同步给学员 ↗</button>
-  <view class="sub" style="margin-top:20rpx">演示版本只在当前页面状态中保存，不会真实发送消息。</view>
+    <view class="card" wx:if="{{session.status === 'completed'}}">
+      <view class="card-title">已同步正式版</view>
+      <view class="sub">下次计划草稿已按规则生成（未自动加量）。</view>
+      <button class="primary" style="width:100%;margin-top:16rpx" bindtap="goNextPlan" wx:if="{{nextPlanId}}">编辑下次计划 C05 ↗</button>
+    </view>
+  </block>
 </view>
 
 <bottom-nav active="record" />

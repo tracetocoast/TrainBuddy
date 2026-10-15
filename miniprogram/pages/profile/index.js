@@ -28,22 +28,26 @@ Page({
     syncRoleBar(this)
     const session = app.globalData.session
     const user = session.user
-    const primary = bindingApi.getActivePrimaryCoach(app, user.userId)
-    const labels = []
-    if (primary && primary.scopes) {
-      CONSENT_CATEGORIES.forEach((c) => {
-        if (primary.scopes[c.key]) labels.push(c.label)
+    const apply = (primary) => {
+      const labels = []
+      if (primary && primary.scopes) {
+        CONSENT_CATEGORIES.forEach((c) => {
+          if (primary.scopes[c.key]) labels.push(c.label)
+        })
+      }
+      this.setData({
+        displayName: user.displayName,
+        userId: user.userId,
+        grantedRoles: session.grantedRoles || [],
+        canSwitchCoach: canActivateRole(app, 'coach'),
+        primaryBinding: primary || null,
+        boundAtText: primary ? formatDate(primary.boundAt) : '',
+        activeScopeLabels: labels
       })
     }
-    this.setData({
-      displayName: user.displayName,
-      userId: user.userId,
-      grantedRoles: session.grantedRoles || [],
-      canSwitchCoach: canActivateRole(app, 'coach'),
-      primaryBinding: primary || null,
-      boundAtText: primary ? formatDate(primary.boundAt) : '',
-      activeScopeLabels: labels
-    })
+    bindingApi.refreshMe(app).then((me) => {
+      apply(me && me.primaryBinding)
+    }).catch(() => apply(bindingApi.getActivePrimaryCoach(app, user.userId)))
   },
 
   goBind() {
@@ -52,6 +56,18 @@ Page({
 
   goPrivacy() {
     wx.navigateTo({ url: '/pages/privacy/index' })
+  },
+
+  goDiary() {
+    wx.navigateTo({ url: '/pages/diary/index' })
+  },
+
+  goExercises() {
+    wx.navigateTo({ url: '/pages/exercises/index' })
+  },
+
+  goGrowth() {
+    wx.redirectTo({ url: '/pages/growth/index' })
   },
 
   onApplyCoach() {

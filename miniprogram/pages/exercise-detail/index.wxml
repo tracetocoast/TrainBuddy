@@ -1,0 +1,27 @@
+<view class="page page-solo" wx:if="{{ex}}">
+  <view class="eyebrow">EXERCISE · DETAIL</view>
+  <view class="title">{{ex.icon}} {{ex.name}}</view>
+  <view class="sub">{{ex.muscleGroup}} · {{ex.equipment}} · {{ex.difficulty}}</view>
+
+  <view class="head"><view class="head-title">步骤</view></view>
+  <view class="card">
+    <view class="sub" wx:for="{{ex.instructions}}" wx:key="*this">{{index + 1}}. {{item}}</view>
+  </view>
+
+  <view class="head"><view class="head-title">关键要点</view></view>
+  <view class="card">
+    <view class="sub" wx:for="{{ex.cues}}" wx:key="*this">· {{item}}</view>
+  </view>
+
+  <view class="head"><view class="head-title">常见错误</view></view>
+  <view class="card">
+    <view class="sub" wx:for="{{ex.commonErrors}}" wx:key="*this">· {{item}}</view>
+  </view>
+
+  <view class="card sub">审核：{{ex.reviewer || '—'}} · 更新 {{ex.updatedAt}}</view>
+
+  <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onFav">
+    {{ex.favorited ? '取消收藏' : '收藏动作'}}
+  </button>
+  <button class="primary" style="width:100%;margin-top:12rpx" bindtap="onAddPlan">加入个人计划草稿 ↗</button>
+</view>

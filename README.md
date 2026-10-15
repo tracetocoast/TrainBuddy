@@ -4,12 +4,26 @@
 
 ## 快速开始
 
-1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
-2. 选择「导入项目」，目录选本仓库根目录（含 `project.config.json`）
-3. AppID 可用测试号，或保持 `touristappid` 游客模式预览
-4. 编译后即可点击体验
+### 1. 启动统一业务 API（必做）
 
-`miniprogramRoot` 已指向 `miniprogram/`。
+```bash
+cd server
+npm install
+npm start
+# http://127.0.0.1:8787/api/v1
+npm test   # AC03–09 / AC10 / AC15–25
+```
+
+契约见 `docs/API-server.md`。演示邀请码：`LINYE7D`。
+
+### 2. 打开小程序
+
+1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
+2. 导入本仓库根目录（含 `project.config.json`）
+3. **详情 → 本地设置 → 勾选「不校验合法域名」**
+4. `miniprogram/config.js` 中 `API_BASE_URL` 默认指向本机 `8787`
+
+业务数据在服务端；本地仅缓存登录会话与编辑草稿。
 
 ## 功能对照
 
@@ -35,12 +49,42 @@
 - 区间冲突（含缓冲）；无数据不展示示例数字
 - Mock 契约见 `docs/API-booking-mock.md`
 
-顶部角色切换仅展示已授予角色。预约、打卡、绑定等写入本地缓存。
+### 已实现：计划与实际训练（文档第 7 节）
+
+- TrainingPlan / WorkoutSession，每组独立 ActualSet
+- 教练课后表草稿不共享，「确认并同步」发正式版
+- 规则版下次计划（不默认 +5kg），C05 可编辑发布
+- 学员逐组打卡、幂等结束、草稿恢复；修正全局计数问题
+- 契约见 `docs/API-training-mock.md`
+
+### 已实现：动作库 / 日记 / 成长（文档第 8 节 · S06–S08）
+
+- **S06 动作库**：仅已审核内容；详情要点与替代；可加入个人计划草稿
+- **S07 每日日记**：饮食 / 饮水 / 状态 / 特殊情况 / 休息打卡分实体；按日+类别授权共享
+- **S08 成长**：日历同日多标记；指标按 8.4 口径，无数据显示「暂无」
+- **教练学员档案**：只读已共享内容 + 点评；看不到显示「记录不可见」
+
+### 已实现：统一业务 API（文档第 16 节）
+
+- Node 服务覆盖 **API01–22、29、31**
+- 幂等键、`REVISION_CONFLICT`、权限矩阵、Asia/Shanghai 业务日
+- 小程序 `services/*` 调真实 HTTP；本地只留草稿
+- 后端测例：`cd server && npm test`（AC03–09、AC10、AC15–25 等）
+
+### 已实现：课后表语音（文档 7.3 · AC11–14）
+
+- 录音 → 可切换转写适配器（`mock` / `wechat`）→ 结构化候选 → 教练确认合并
+- 缺字段不擅自补全；冲突保留人工值；同 `segment_id` 不重复；无麦克风可手填
+- 详见 `docs/API-voice.md`
+
+顶部角色切换仅展示已授予角色。
 
 ## 目录结构
 
 ```
 ├── project.config.json
+├── server/                             # 统一业务 API（Node）
+├── docs/API-server.md
 ├── lianzida_clickable_prototype.html   # 原始可点击原型
 ├── miniprogram/
 │   ├── app.js / app.json / app.wxss
@@ -49,12 +93,17 @@
 │   │   ├── home/                       # 学员今天 / 教练工作台
 │   │   ├── booking/                    # 约课 / 排课
 │   │   ├── workout/                    # 训练打卡
+│   │   ├── exercises/                  # 动作库（S06）
+│   │   ├── diary/                      # 每日日记（S07）
 │   │   ├── ai/                         # AI 体态
-│   │   ├── growth/                     # 成长档案
+│   │   ├── growth/                     # 成长日历与指标（S08）
 │   │   ├── record/                     # 课后记录（教练）
-│   │   └── students/                   # 学员列表（教练）
-│   └── utils/                          # mock 数据与本地状态
+│   │   ├── students/                   # 学员列表（教练）
+│   │   └── student-profile/            # 学员档案只读+点评
+│   ├── services/                       # mock API
+│   └── utils/                          # 会话、权限、时间、本地状态
 ```
+
 
 ## 说明
 

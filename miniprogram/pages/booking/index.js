@@ -64,41 +64,44 @@ Page({
   refreshStudent() {
     const app = getApp()
     const user = app.globalData.session.user
-    const primary = bindingApi.getActivePrimaryCoach(app, user.userId)
-    if (!primary) {
+    bindingApi.refreshMe(app).then((me) => {
+      const primary =
+        (me && me.primaryBinding) || bindingApi.getActivePrimaryCoach(app, user.userId)
+      if (!primary) {
+        this.setData({
+          hasBinding: false,
+          coachName: '',
+          coachId: '',
+          daySlots: [],
+          myBookings: []
+        })
+        return
+      }
       this.setData({
-        hasBinding: false,
-        coachName: '',
-        coachId: '',
-        daySlots: [],
-        myBookings: []
+        hasBinding: true,
+        coachName: primary.coachName,
+        coachId: primary.coachId
       })
-      return
-    }
-    this.setData({
-      hasBinding: true,
-      coachName: primary.coachName,
-      coachId: primary.coachId
+
+      bookingApi
+        .getSlots(app, {
+          coachId: primary.coachId,
+          fromDate: this.data.selectedDate,
+          toDate: this.data.selectedDate
+        })
+        .then((res) => {
+          this.setData({ daySlots: res.data.slots || [] })
+        })
+
+      bookingApi
+        .listBookings(app, { studentId: user.userId })
+        .then((res) => {
+          const myBookings = (res.data || []).map((b) =>
+            Object.assign({}, b, { statusLabel: bookingApi.statusLabel(b.status) })
+          )
+          this.setData({ myBookings })
+        })
     })
-
-    bookingApi
-      .getSlots(app, {
-        coachId: primary.coachId,
-        fromDate: this.data.selectedDate,
-        toDate: this.data.selectedDate
-      })
-      .then((res) => {
-        this.setData({ daySlots: res.data.slots || [] })
-      })
-
-    bookingApi
-      .listBookings(app, { studentId: user.userId })
-      .then((res) => {
-        const myBookings = (res.data || []).map((b) =>
-          Object.assign({}, b, { statusLabel: bookingApi.statusLabel(b.status) })
-        )
-        this.setData({ myBookings })
-      })
   },
 
   refreshCoach() {

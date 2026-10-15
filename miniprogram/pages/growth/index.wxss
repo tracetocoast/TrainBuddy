@@ -19,4 +19,113 @@
   max-width: 50rpx;
   border-radius: 14rpx 14rpx 6rpx 6rpx;
   margin-bottom: 10rpx;
+  min-height: 8rpx;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.leg {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 22rpx;
+  color: #74796d;
+}
+
+.dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #c8ff36;
+}
+
+.dot-workout {
+  background: #a6e61b;
+}
+
+.dot-rest {
+  background: #9b7cff;
+}
+
+.dot-meal {
+  background: #ffb347;
+}
+
+.dot-body {
+  background: #5ec8ff;
+}
+
+.dot-incomplete {
+  background: #e85d5d;
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 22rpx;
+  color: #74796d;
+  margin-bottom: 8rpx;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8rpx;
+}
+
+.cal-cell {
+  min-height: 88rpx;
+  border-radius: 16rpx;
+  background: #fff;
+  border: 2rpx solid #e4e7dd;
+  padding: 8rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cal-cell.empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.cal-cell.today {
+  border-color: #c8ff36;
+}
+
+.cal-cell.selected {
+  background: #eef8d0;
+  border-color: #a6e61b;
+}
+
+.cal-day {
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.cal-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4rpx;
+  justify-content: center;
+  margin-top: 6rpx;
+}
+
+.cal-dots .dot {
+  width: 10rpx;
+  height: 10rpx;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 8rpx;
 }

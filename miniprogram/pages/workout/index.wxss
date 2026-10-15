@@ -1,1 +1,40 @@
-/* 训练页沿用全局样式 */
+.aset {
+  margin-top: 16rpx;
+  padding: 16rpx;
+  background: #f2f4ed;
+  border-radius: 16rpx;
+}
+
+.aset-main {
+  margin-bottom: 12rpx;
+}
+
+.aset-no {
+  font-weight: 800;
+  font-size: 26rpx;
+  margin-right: 12rpx;
+}
+
+.aset-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 12rpx;
+  flex-wrap: wrap;
+}
+
+.mini-field {
+  width: 120rpx;
+  padding: 10rpx 12rpx;
+  background: #fff;
+  border: 2rpx solid #e4e7dd;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.aset-actions {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+}

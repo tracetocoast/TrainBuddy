@@ -45,10 +45,21 @@ Page({
         wx.redirectTo({ url: '/pages/home/index' })
       })
       .catch((err) => {
-        // AC01：拒绝自授教练
+        const code = err && err.code
         const msg = (err && err.message) || '登录失败'
+        // 网络失败与 AC01 角色拒绝分开提示
+        if (code === 'NETWORK') {
+          wx.showModal({
+            title: '连不上 API',
+            content:
+              msg +
+              '\n\n请在项目 server 目录执行 npm start，并在开发者工具勾选「不校验合法域名」。',
+            showCancel: false
+          })
+          return
+        }
         wx.showModal({
-          title: '无法获取角色',
+          title: code === 'ROLE_NOT_GRANTED' ? '无法获取角色' : '登录失败',
           content:
             msg +
             (err && err.grantedRoles

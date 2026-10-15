@@ -8,50 +8,104 @@
 
   <role-switcher />
 
-  <view class="eyebrow">YOUR PROGRESS · NOT PERFECTION</view>
+  <view class="eyebrow">YOUR PROGRESS · S08</view>
   <view class="title">每一次坚持，<br/>都有迹可循。</view>
 
+  <!-- 8.4 指标 -->
   <view class="hero">
     <view class="hero-ring"></view>
-    <text class="pill">OCTOBER CHECK-IN</text>
-    <view class="herofoot" style="margin-top:54rpx">
+    <text class="pill">METRICS · 8.4</text>
+    <view class="herofoot" style="margin-top:40rpx">
       <view>
-        <view class="big">{{sessions}}<text class="big-unit"> SESSIONS</text></view>
-        <view class="sub">本月累计训练</view>
+        <view class="big">
+          {{summary && !summary.empty.sessionCount ? summary.sessionCount : '—'}}
+          <text class="big-unit"> SESSIONS</text>
+        </view>
+        <view class="sub">{{summary && !summary.empty.sessionCount ? '区间完成训练次数' : '暂无'}}</view>
       </view>
-      <text style="font-size:70rpx">🏆</text>
+      <button class="secondary" bindtap="goDiary">每日日记</button>
     </view>
   </view>
 
+  <view class="stats">
+    <view class="stat">
+      <strong>{{summary ? (summary.trainingDays || '—') : '—'}}</strong>
+      <span>训练天数</span>
+    </view>
+    <view class="stat">
+      <strong>{{summary && summary.planCompletionRate != null ? summary.planCompletionRate + '%' : '暂无'}}</strong>
+      <span>计划完成率</span>
+    </view>
+    <view class="stat">
+      <strong>{{summary && summary.diaryStreak ? summary.diaryStreak : '—'}}</strong>
+      <span>日记连续天</span>
+    </view>
+  </view>
+  <view class="stats" style="margin-top:12rpx">
+    <view class="stat">
+      <strong>{{summary && !summary.empty.volume ? summary.volumeKg : '暂无'}}</strong>
+      <span>训练量 kg×次</span>
+    </view>
+    <view class="stat">
+      <strong>暂无</strong>
+      <span>力量进步%</span>
+    </view>
+    <view class="stat">
+      <strong>—</strong>
+      <span>需同动作口径</span>
+    </view>
+  </view>
+
+  <!-- 本周柱状 -->
   <view class="head">
     <view class="head-title">本周训练节奏</view>
-    <text class="tag">4 / 5 DAYS</text>
+    <text class="tag">{{summary && !summary.empty.sessionCount ? '有数据' : '暂无'}}</text>
   </view>
-  <view class="card chart">
-    <view class="bar-col" wx:for="{{bars}}" wx:key="index">
-      <view class="bar" style="height: {{item}}rpx; background: {{index < 5 ? '#a6e61b' : '#dce1d3'}};"></view>
-      <text class="sub">{{weekLabels[index]}}</text>
+  <view class="card chart" wx:if="{{summary && summary.bars && summary.bars.length}}">
+    <view class="bar-col" wx:for="{{summary.bars}}" wx:key="date">
+      <view class="bar" style="height: {{item.height || 8}}rpx; background: {{item.sets ? '#a6e61b' : '#dce1d3'}};"></view>
+      <text class="sub">{{item.label}}</text>
+    </view>
+  </view>
+  <view class="card sub" wx:else>完成训练后将按业务日汇总展示节奏。</view>
+
+  <!-- 多标记日历 -->
+  <view class="head">
+    <view class="head-title">{{monthLabel}} 日历</view>
+    <button class="link" bindtap="goExercises">动作库 ↗</button>
+  </view>
+  <view class="legend">
+    <view class="leg" wx:for="{{legend}}" wx:key="key">
+      <view class="dot {{item.cls}}"></view>
+      <text>{{item.label}}</text>
+    </view>
+  </view>
+  <view class="cal-weekdays">
+    <text wx:for="{{['一','二','三','四','五','六','日']}}" wx:key="*this">{{item}}</text>
+  </view>
+  <view class="cal-grid">
+    <view
+      class="cal-cell {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}"
+      wx:for="{{calendarCells}}"
+      wx:key="key"
+      data-date="{{item.date}}"
+      bindtap="onPickDay"
+    >
+      <text class="cal-day" wx:if="{{!item.empty}}">{{item.day}}</text>
+      <view class="cal-dots" wx:if="{{item.hasAny}}">
+        <view class="dot dot-{{d}}" wx:for="{{item.dots}}" wx:for-item="d" wx:key="*this"></view>
+      </view>
     </view>
   </view>
 
-  <view class="head">
-    <view class="head-title">最近的里程碑</view>
-  </view>
-  <view class="card flex">
-    <view class="ico">⚡</view>
-    <view class="grow">
-      <view class="card-title">连续打卡 7 天</view>
-      <view class="sub">习惯正在形成，继续保持节奏。</view>
+  <view class="card" style="margin-top:16rpx" wx:if="{{dayDetail}}">
+    <view class="card-title">{{dayDetail.date}}</view>
+    <view class="sub" wx:if="{{dayDetail.empty}}">当日暂无标记</view>
+    <view class="tag-row" wx:else>
+      <text class="tag" wx:for="{{dayDetail.markers}}" wx:key="*this">{{item}}</text>
     </view>
-    <text class="tag">已达成</text>
-  </view>
-  <view class="card flex">
-    <view class="ico">🏋️</view>
-    <view class="grow">
-      <view class="card-title">深蹲重量稳步提升</view>
-      <view class="sub">下一步：优先保持动作质量。</view>
-    </view>
-    <text class="tag">成长中</text>
+    <view class="sub" wx:for="{{dayDetail.sessions}}" wx:key="id">{{item.title}} · {{item.doneSets}} 组</view>
+    <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="goDiary">打开日记编辑</button>
   </view>
 
   <view class="head">
@@ -59,7 +113,7 @@
     <button class="link" bindtap="goWorkout">继续训练 ↗</button>
   </view>
   <block wx:if="{{records.length}}">
-    <view class="card" wx:for="{{records}}" wx:key="*this">{{item}}</view>
+    <view class="card" wx:for="{{records}}" wx:key="id">{{item.text}}</view>
   </block>
   <view class="sub" wx:else>完成一次训练后，你的记录会显示在这里。</view>
 </view>

@@ -1,0 +1,22 @@
+.page-solo {
+  padding-bottom: 60rpx;
+}
+
+.dates {
+  white-space: nowrap;
+  margin: 20rpx 0;
+}
+
+.date-btn {
+  display: inline-flex;
+  margin-right: 12rpx;
+}
+
+.hidden {
+  background: #eceee6;
+  border-style: dashed;
+}
+
+.hidden .card-title {
+  color: #74796d;
+}

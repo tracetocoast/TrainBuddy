@@ -3,6 +3,7 @@ const { requireLogin } = require('../../utils/guard')
 const { canActivateRole } = require('../../utils/permission')
 const bindingApi = require('../../services/bindingApi')
 const bookingApi = require('../../services/bookingApi')
+const growthApi = require('../../services/growthApi')
 
 Page({
   data: {
@@ -10,6 +11,7 @@ Page({
     canSwitchCoach: false,
     streak: 0,
     weekCount: 0,
+    planRateText: '暂无',
     nextBooking: null,
     pendingCoachCount: 0,
     sessions: [],
@@ -29,50 +31,70 @@ Page({
     const app = getApp()
     syncRoleBar(this)
     const user = app.globalData.session.user
-    const primary = bindingApi.getActivePrimaryCoach(app, user.userId)
-    const bound = bindingApi.listBoundStudentsForCoach(app, user.userId)
-    const checkins = app.globalData.checkins || 0
-
     this.setData({
       canSwitchCoach: canActivateRole(app, 'coach'),
-      streak: checkins > 0 ? 3 + checkins : 0,
-      weekCount: checkins > 0 ? 4 + checkins : 0,
-      hasStats: checkins > 0,
-      hasBinding: !!primary,
-      coachName: primary ? primary.coachName : '教练',
-      sessions: bound,
-      boundCount: bound.length,
       avatarChar: (user.displayName || '我').slice(0, 1)
     })
 
-    if (app.globalData.role === 'student' && primary) {
-      bookingApi
-        .listBookings(app, {
-          studentId: user.userId,
-          status: ['pending', 'confirmed']
-        })
-        .then((res) => {
-          const list = (res.data || []).slice().sort((a, b) => a.startAt - b.startAt)
-          const next = list[0] || null
+    app
+      .refreshServerCaches()
+      .then(() => {
+        const primary = bindingApi.getActivePrimaryCoach(app, user.userId)
+        return bindingApi.listBoundStudentsForCoachAsync(app).then((bound) => {
           this.setData({
-            nextBooking: next
-              ? Object.assign({}, next, {
-                  statusLabel: bookingApi.statusLabel(next.status)
-                })
-              : null
+            hasBinding: !!primary,
+            coachName: primary ? primary.coachName : '教练',
+            sessions: bound || [],
+            boundCount: (bound || []).length
+          })
+          return primary
+        })
+      })
+      .then((primary) => {
+        growthApi.getSummary(app, user.userId).then((res) => {
+          const s = res.data
+          this.setData({
+            streak: s.diaryStreak || s.trainingDays || 0,
+            weekCount: s.sessionCount,
+            hasStats: !s.empty.sessionCount,
+            planRateText:
+              s.planCompletionRate != null ? s.planCompletionRate + '%' : '暂无'
           })
         })
-    } else {
-      this.setData({ nextBooking: null })
-    }
 
-    if (app.globalData.role === 'coach') {
-      const coachId =
-        (user.coachProfile && user.coachProfile.coachId) || 'coach_001'
-      bookingApi.listBookings(app, { coachId, status: ['pending'] }).then((res) => {
-        this.setData({ pendingCoachCount: (res.data || []).length })
+        if (app.globalData.role === 'student' && primary) {
+          bookingApi
+            .listBookings(app, {
+              studentId: user.userId,
+              status: ['pending', 'confirmed']
+            })
+            .then((res) => {
+              const list = (res.data || []).slice().sort((a, b) => a.startAt - b.startAt)
+              const next = list[0] || null
+              this.setData({
+                nextBooking: next
+                  ? Object.assign({}, next, {
+                      statusLabel: bookingApi.statusLabel(next.status)
+                    })
+                  : null
+              })
+            })
+            .catch(() => this.setData({ nextBooking: null }))
+        } else {
+          this.setData({ nextBooking: null })
+        }
+
+        if (app.globalData.role === 'coach') {
+          const coachId =
+            (user.coachProfile && user.coachProfile.coachId) || 'coach_001'
+          bookingApi
+            .listBookings(app, { coachId, status: ['pending'] })
+            .then((res) => {
+              this.setData({ pendingCoachCount: (res.data || []).length })
+            })
+        }
       })
-    }
+      .catch((err) => app.toast((err && err.message) || '同步失败'))
   },
 
   goProfile,
@@ -91,6 +113,26 @@ Page({
 
   goGrowth() {
     wx.redirectTo({ url: '/pages/growth/index' })
+  },
+
+  goDiary() {
+    wx.navigateTo({ url: '/pages/diary/index' })
+  },
+
+  goExercises() {
+    wx.navigateTo({ url: '/pages/exercises/index' })
+  },
+
+  goStudentProfile(e) {
+    const studentId = e.currentTarget.dataset.id
+    const name = e.currentTarget.dataset.student || ''
+    wx.navigateTo({
+      url:
+        '/pages/student-profile/index?studentId=' +
+        studentId +
+        '&name=' +
+        encodeURIComponent(name)
+    })
   },
 
   goBooking() {

@@ -21,23 +21,21 @@ Page({
 
   reload() {
     const app = getApp()
-    const bound = bindingApi.listBoundStudentsForCoach(
-      app,
-      app.globalData.session.user.userId
-    )
-    const all = bound.map((b) => ({
-      name: b.name,
-      studentId: b.studentId,
-      avatar: b.name[0],
-      desc: '已绑定 · 按授权可见',
-      progress: null,
-      scopes: b.scopes
-    }))
-    this.setData({
-      all,
-      filtered: all,
-      keyword: '',
-      probeResult: ''
+    bindingApi.listBoundStudentsForCoachAsync(app).then((bound) => {
+      const all = (bound || []).map((b) => ({
+        name: b.name,
+        studentId: b.studentId,
+        avatar: (b.name || '?')[0],
+        desc: '已绑定 · 按授权可见',
+        progress: null,
+        scopes: b.scopes
+      }))
+      this.setData({
+        all,
+        filtered: all,
+        keyword: '',
+        probeResult: ''
+      })
     })
   },
 
@@ -66,7 +64,13 @@ Page({
     app.globalData.activeSubjectId = studentId
     app.globalData.student = e.currentTarget.dataset.name
     app.persist()
-    wx.redirectTo({ url: '/pages/record/index' })
+    wx.navigateTo({
+      url:
+        '/pages/student-profile/index?studentId=' +
+        studentId +
+        '&name=' +
+        encodeURIComponent(e.currentTarget.dataset.name || '')
+    })
   },
 
   onContact() {

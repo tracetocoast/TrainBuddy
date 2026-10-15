@@ -1,0 +1,67 @@
+<view class="page page-solo" wx:if="{{plan}}">
+  <view class="eyebrow">NEXT PLAN · C05</view>
+  <view class="title">下次计划</view>
+  <view class="sub">规则草稿沿用上次完成值，不默认加 5kg。发布前须确认。</view>
+
+  <view class="card" wx:if="{{draft}}">
+    <view class="sub">草稿 v{{draft.version}} · {{draft.reason}}</view>
+    <view class="sub" wx:if="{{draft.missing_notes && draft.missing_notes.length}}">
+      待确认：{{draft.missing_notes.join('；')}}
+    </view>
+  </view>
+  <view class="card sub" wx:else>暂无草稿。可基于已发布版创建新草稿。</view>
+
+  <view class="head">
+    <view class="head-title">标题</view>
+  </view>
+  <input class="field" value="{{title}}" bindinput="onTitle" disabled="{{!draft}}" />
+
+  <view class="head">
+    <view class="head-title">目标</view>
+  </view>
+  <input class="field" value="{{goal}}" bindinput="onGoal" disabled="{{!draft}}" />
+
+  <view class="head">
+    <view class="head-title">计划日期</view>
+  </view>
+  <input class="field" value="{{plannedDate}}" bindinput="onDate" disabled="{{!draft}}" />
+
+  <view class="exercise" wx:for="{{exercises}}" wx:key="id">
+    <view class="card-title">{{item.name}}</view>
+    <view class="aset" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
+      <view class="aset-line">
+        <text class="aset-no">#{{set.setNo}}</text>
+        <input
+          class="mini-field"
+          type="digit"
+          value="{{set.targetWeight}}"
+          data-eid="{{item.id}}"
+          data-sid="{{set.id}}"
+          data-field="targetWeight"
+          bindblur="onSet"
+          disabled="{{!draft}}"
+        />
+        <text class="sub">kg ×</text>
+        <input
+          class="mini-field"
+          type="number"
+          value="{{set.targetReps}}"
+          data-eid="{{item.id}}"
+          data-sid="{{set.id}}"
+          data-field="targetReps"
+          bindblur="onSet"
+          disabled="{{!draft}}"
+        />
+        <text class="sub">次</text>
+      </view>
+    </view>
+  </view>
+
+  <button class="secondary" style="width:100%;margin-top:20rpx" bindtap="onSaveMeta" wx:if="{{draft}}">保存草稿</button>
+  <button class="primary" style="width:100%;margin-top:12rpx" bindtap="onPublish" wx:if="{{draft}}">确认发布给学员 ↗</button>
+
+  <view class="card" wx:if="{{plan.published}}">
+    <view class="card-title">当前学员可见：v{{plan.published.version}}</view>
+    <view class="sub">{{plan.published.title}} · {{plan.published.planned_date}}</view>
+  </view>
+</view>

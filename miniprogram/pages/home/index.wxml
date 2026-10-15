@@ -33,8 +33,8 @@
       <view class="sub">稳定训练，比完美计划更重要。</view>
       <view class="herofoot">
         <view>
-          <view class="big">{{streak}}<text class="big-unit"> DAYS</text></view>
-          <view class="sub">连续训练记录</view>
+          <view class="big">{{hasStats ? streak : '—'}}<text class="big-unit"> DAYS</text></view>
+          <view class="sub">{{hasStats ? '训练天数' : '暂无打卡'}}</view>
         </view>
         <button class="primary" bindtap="goWorkout">开始今日训练 ↗</button>
       </view>
@@ -46,10 +46,19 @@
     </view>
     <view class="stats">
       <view class="stat"><strong>{{hasStats ? weekCount : '—'}}</strong><span>本周训练 / 次</span></view>
-      <view class="stat"><strong>—</strong><span>计划完成率</span></view>
-      <view class="stat"><strong>—</strong><span>力量进步</span></view>
+      <view class="stat"><strong>{{planRateText}}</strong><span>计划完成率</span></view>
+      <view class="stat"><strong>暂无</strong><span>力量进步</span></view>
     </view>
     <view class="sub" wx:if="{{!hasStats}}" style="margin-top:8rpx">暂无训练统计</view>
+
+    <view class="head">
+      <view class="head-title">日常</view>
+      <button class="link" bindtap="goDiary">写日记 ↗</button>
+    </view>
+    <view class="twobtn">
+      <button class="secondary" bindtap="goDiary">每日日记</button>
+      <button class="secondary" bindtap="goExercises">动作库</button>
+    </view>
 
     <view class="head">
       <view class="head-title">今天的任务</view>
@@ -120,7 +129,10 @@
         </view>
         <view class="head" style="margin:20rpx 0 0">
           <text class="sub">按授权范围可见内容</text>
-          <button class="secondary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goRecordFor">课后记录</button>
+          <view class="twobtn">
+            <button class="secondary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goStudentProfile">学员档案</button>
+            <button class="secondary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goRecordFor">课后记录</button>
+          </view>
         </view>
       </view>
     </block>

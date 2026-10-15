@@ -1,0 +1,22 @@
+{
+  "name": "trainbuddy-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "练搭子统一业务 API（对齐设计文档第 16 节 API01–22 / 29 / 31）",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/*.test.js",
+    "seed": "node src/seed-cli.js",
+    "reset": "rm -f data/store.json && node src/seed-cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "uuid": "^11.1.0"
+  }
+}
