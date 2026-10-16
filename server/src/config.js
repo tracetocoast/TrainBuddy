@@ -8,6 +8,32 @@ module.exports = {
   /** mock 会话 token 前缀；正式环境换微信 code 换 session */
   sessionTtlMs: 7 * 24 * 3600 * 1000,
   idempotencyTtlMs: 24 * 3600 * 1000,
+  /**
+   * AI 供应商：unavailable（默认，真实任务不得伪造成功）| mock（本地/演示）
+   * 演示任务（mode=demo）始终走 mock，与真实任务隔离。
+   */
+  aiProvider: process.env.AI_PROVIDER || 'unavailable',
+  /**
+   * 功能开关：支付未决策前默认关闭，不开放真实付款成功路径。
+   * PAYMENT_ENABLED=true 仍需另行接入支付渠道；当前仅打开“可调用占位接口”的门闩。
+   */
+  features: {
+    paymentEnabled: String(process.env.PAYMENT_ENABLED || '').toLowerCase() === 'true'
+  },
+  media: {
+    maxBytes: 10 * 1024 * 1024,
+    allowedMime: ['image/jpeg', 'image/png', 'image/webp'],
+    accessTtlSec: 300,
+    watermarkText: 'AI 目标效果模拟，非训练结果保证'
+  },
+  entitlements: {
+    /** 试用默认额度（后台可再发放／补偿） */
+    trialDefaults: {
+      posture_scan: 5,
+      goal_image: 9,
+      voice_structure: 30
+    }
+  },
   schedule: {
     timezone: 'Asia/Shanghai',
     defaultDurationMin: 60,

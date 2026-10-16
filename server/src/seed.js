@@ -2,6 +2,7 @@ const crypto = require('crypto')
 const time = require('./lib/time')
 const config = require('./config')
 const { makeId } = require('./lib/ids')
+const entitlementService = require('./services/entitlementService')
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex')
@@ -51,6 +52,14 @@ function seed(store) {
         approvalStatus: 'approved'
       },
       createdAt: time.nowMs()
+    },
+    {
+      userId: 'u_ops_001',
+      displayName: '平台运营',
+      wechatSubject: 'mock_openid_ops_001',
+      status: 'active',
+      coachProfile: null,
+      createdAt: time.nowMs()
     }
   ]
   state.users = users
@@ -60,8 +69,14 @@ function seed(store) {
     { userId: 'u_coach_001', role: 'student', status: 'active', grantedBy: 'system' },
     { userId: 'u_coach_001', role: 'coach', status: 'active', grantedBy: 'system' },
     { userId: 'u_coach_002', role: 'student', status: 'active', grantedBy: 'system' },
-    { userId: 'u_coach_002', role: 'coach', status: 'active', grantedBy: 'system' }
+    { userId: 'u_coach_002', role: 'coach', status: 'active', grantedBy: 'system' },
+    { userId: 'u_ops_001', role: 'ops', status: 'active', grantedBy: 'system' }
   ]
+
+  // 试用权益（非付款成功）
+  ;['u_stu_001', 'u_stu_002', 'u_coach_001', 'u_coach_002'].forEach((uid) => {
+    entitlementService.seedTrialForUser(state, uid)
+  })
 
   // 演示邀请码 LINYE7D
   const inviteToken = 'LINYE7D'

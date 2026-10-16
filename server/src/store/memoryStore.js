@@ -36,6 +36,18 @@ function emptyState() {
     },
     notifications: [],
     voice: { tasks: [], mergeLog: [] },
+    media: { assets: [], cleanupTasks: [] },
+    ai: { tasks: [], ledger: [], callbackDedup: {} },
+    posture: { reports: [] },
+    goals: { groups: [] },
+    consultations: [],
+    entitlements: {
+      balances: [],
+      ledger: [],
+      subscriptions: []
+    },
+    outbox: [],
+    ops: { audits: [], config: {} },
     idempotency: {},
     exerciseMeta: { favorites: {} },
     seeded: false

@@ -8,7 +8,8 @@ const ACCOUNT_MAP = {
   student_only: 'u_stu_001',
   coach_approved: 'u_coach_001',
   student_claim_coach: 'u_stu_002',
-  coach_b: 'u_coach_002'
+  coach_b: 'u_coach_002',
+  ops_admin: 'u_ops_001'
 }
 
 function createSession(state, userId) {

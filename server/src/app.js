@@ -1,3 +1,4 @@
+const path = require('path')
 const express = require('express')
 const cors = require('cors')
 const { MemoryStore } = require('./store/memoryStore')
@@ -17,7 +18,18 @@ function createApp(options = {}) {
   app.use(attachRequestId)
 
   app.get('/health', (req, res) => {
-    res.json({ ok: true, timezone: 'Asia/Shanghai', service: 'trainbuddy-api' })
+    res.json({
+      ok: true,
+      timezone: 'Asia/Shanghai',
+      service: 'trainbuddy-api',
+      payment_enabled: require('./config').features.paymentEnabled
+    })
+  })
+
+  // 最小运营后台静态页
+  app.use('/ops', express.static(path.join(__dirname, '..', 'public')))
+  app.get('/ops', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'))
   })
 
   app.use('/api/v1', buildRouter())

@@ -8,44 +8,122 @@
 
   <role-switcher />
 
-  <view class="eyebrow ai-eye">AI LAB · BODY INSIGHT</view>
-  <view class="title ai-title">看见姿态，<br/>找到下一步。</view>
-  <view class="sub ai-desc">用记录帮助你理解身体变化。AI 建议仅供训练参考。</view>
+  <view class="eyebrow ai-eye">AI LAB · TASK CENTER</view>
+  <view class="title ai-title">体态观察与目标模拟</view>
+  <view class="sub ai-desc">AI 建议仅供训练参考，不能替代医疗诊断。未接入能力不会显示成功。</view>
+
+  <view class="mode-row">
+    <text class="mode-label">任务模式</text>
+    <radio-group class="mode-group" bindchange="onModeChange">
+      <label class="mode-item">
+        <radio value="real" checked="{{mode === 'real'}}" color="#c8ff36" />真实
+      </label>
+      <label class="mode-item">
+        <radio value="demo" checked="{{mode === 'demo'}}" color="#c8ff36" />演示
+      </label>
+    </radio-group>
+  </view>
+  <view class="hint">{{statusHint}}</view>
 
   <view class="aibox">
-    <text class="pill">POSTURE SCAN 01</text>
+    <view class="row-between">
+      <text class="pill">POSTURE SCAN</text>
+      <text class="tag" wx:if="{{mode === 'demo'}}">DEMO</text>
+      <text class="tag tag-muted" wx:else>REAL</text>
+    </view>
     <view class="hero-title" style="margin:24rpx 0 0;color:#fff;">体态扫描</view>
     <view class="scan">
       <view class="silhouette">♙</view>
       <view class="scan-line"></view>
       <view class="scanlabel">
         <text>BODY ALIGNMENT</text>
-        <text>READY TO SCAN</text>
+        <text>{{busy ? 'WORKING' : 'READY'}}</text>
       </view>
     </view>
     <view class="twobtn">
-      <button class="darkbtn" bindtap="onFront">＋ 正面照片</button>
-      <button class="darkbtn" bindtap="onSide">＋ 侧面照片</button>
+      <button class="darkbtn" bindtap="onPickFront" disabled="{{busy}}">
+        {{frontMediaId ? '✓ 正面已登记' : '＋ 正面照片'}}
+      </button>
+      <button class="darkbtn" bindtap="onPickSide" disabled="{{busy}}">
+        {{sideMediaId ? '✓ 侧面已登记' : '＋ 侧面照片'}}
+      </button>
     </view>
-    <button class="primary" style="width:100%;margin-top:20rpx" bindtap="onScan">开始 AI 体态分析 ↗</button>
+    <button class="primary" style="width:100%;margin-top:20rpx" bindtap="onScan" disabled="{{busy}}">
+      提交体态分析任务 ↗
+    </button>
   </view>
 
-  <view class="aimetrics">
-    <view class="stat ai-stat"><strong>82/100</strong><span>示例姿态参考分</span></view>
-    <view class="stat ai-stat"><strong>03</strong><span>建议关注方向</span></view>
+  <view class="note">不采用「82/100」总分。项目结论为：未见明显特征／疑似需关注／无法判断。</view>
+
+  <view class="aibox" wx:if="{{postureTask}}">
+    <view class="card-title" style="color:#fff">任务状态</view>
+    <view class="sub ai-desc">
+      {{postureTask.task_id}} · {{postureTask.status}}
+      <text wx:if="{{postureTask.is_demo}}"> · DEMO</text>
+    </view>
+    <view class="sub ai-desc" wx:if="{{postureTask.error}}">{{postureTask.error.message}}</view>
   </view>
 
-  <view class="note">当前为原型示例数据，不是对真实身体的评估，也不能替代医生或专业康复人员诊断。</view>
+  <view class="aibox" wx:if="{{postureReport}}">
+    <view class="row-between">
+      <view class="card-title" style="color:#fff">观察报告</view>
+      <text class="tag" wx:if="{{postureReport.is_demo}}">DEMO</text>
+    </view>
+    <view class="sub ai-desc">状态 {{postureReport.status}} · 无总分 · 模型 {{postureReport.model_version}}</view>
+    <view class="item-row" wx:for="{{postureReport.items}}" wx:key="key">
+      <text class="item-label">{{item.label}}</text>
+      <text class="item-val">{{item.conclusion_label}}</text>
+    </view>
+    <button class="darkbtn" style="width:100%;margin-top:20rpx" bindtap="onCoachReview">教练复核</button>
+  </view>
 
-  <view class="head">
-    <view class="head-title" style="color:#fff">阶段记录</view>
-    <text class="tag">DEMO</text>
+  <view class="head" style="margin-top:40rpx">
+    <view class="head-title" style="color:#fff">目标图</view>
+    <text class="tag" wx:if="{{mode === 'demo'}}">DEMO</text>
   </view>
   <view class="aibox">
-    <view class="card-title" style="color:#fff">本阶段建议</view>
-    <view class="sub ai-desc">核心稳定 · 髋踝活动度 · 动作控制</view>
-    <button class="darkbtn" style="width:100%;margin-top:24rpx" bindtap="onReport">查看示例报告</button>
+    <view class="sub ai-desc">多节点（建议 ≤3）。水印写入导出层。部分失败可单节点重试。</view>
+    <button class="primary" style="width:100%;margin-top:20rpx" bindtap="onGoalGenerate" disabled="{{busy}}">
+      生成目标任务组 ↗
+    </button>
   </view>
+
+  <view class="aibox" wx:if="{{goalGroup}}">
+    <view class="card-title" style="color:#fff">节点结果 · {{goalGroup.status}}</view>
+    <view class="node-row" wx:for="{{goalGroup.nodes}}" wx:key="key">
+      <view class="node-main">
+        <text>{{item.months}} 个月 · {{item.status}}</text>
+        <text class="wm" wx:if="{{item.watermarked}}">含水印</text>
+      </view>
+      <view class="node-actions">
+        <button
+          wx:if="{{item.status === 'failed'}}"
+          class="mini-btn"
+          size="mini"
+          data-key="{{item.key}}"
+          bindtap="onRetryNode"
+        >重试</button>
+        <button
+          wx:if="{{item.result_media_id}}"
+          class="mini-btn"
+          size="mini"
+          data-media="{{item.result_media_id}}"
+          bindtap="onExportNode"
+        >导出</button>
+      </view>
+    </view>
+    <button class="darkbtn" style="width:100%;margin-top:24rpx" bindtap="onConsult">咨询方案</button>
+  </view>
+
+  <view class="aibox" wx:if="{{consultations.length}}">
+    <view class="card-title" style="color:#fff">我的咨询</view>
+    <view class="item-row" wx:for="{{consultations}}" wx:key="consultation_id">
+      <text class="item-label">{{item.status}}</text>
+      <text class="item-val">无订单 · {{item.consultation_id}}</text>
+    </view>
+  </view>
+
+  <view class="linkish" bindtap="onOpenApiHint">能力与隔离说明</view>
 </view>
 
 <bottom-nav active="ai" />

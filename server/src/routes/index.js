@@ -1,5 +1,5 @@
 const express = require('express')
-const { authRequired } = require('../middleware/auth')
+const { authRequired, requireRole } = require('../middleware/auth')
 const { idempotency } = require('../middleware/idempotency')
 const { ok } = require('../middleware/errors')
 const { asApp, unwrap } = require('../lib/asApp')
@@ -16,6 +16,15 @@ const exerciseService = require('../services/exerciseService')
 const voiceTaskService = require('../services/voice/voiceTaskService')
 const { listProviders } = require('../services/voice/adapters')
 const { structureText } = require('../services/voice/structure')
+const mediaService = require('../services/mediaService')
+const aiTaskService = require('../services/ai/aiTaskService')
+const { listProviders: listAiProviders } = require('../services/ai/providers')
+const postureService = require('../services/postureService')
+const consultationService = require('../services/consultationService')
+const entitlementService = require('../services/entitlementService')
+const outboxService = require('../services/outboxService')
+const opsService = require('../services/opsService')
+const paymentService = require('../services/paymentService')
 const time = require('../lib/time')
 const { makeId } = require('../lib/ids')
 
@@ -145,6 +154,248 @@ function buildRouter() {
     }
   })
 
+  // ---------- API23–24 media ----------
+  r.post('/media/upload-intents', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        mediaService.createUploadIntent(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/media/:id/complete', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        mediaService.completeUpload(state, req.actor, req.params.id, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/media/:id/access', authRequired, (req, res, next) => {
+    try {
+      ok(
+        res,
+        mediaService.getAccess(req.app.locals.store.state, req.actor, req.params.id, {
+          purpose: req.query.purpose
+        })
+      )
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.delete('/media/:id', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        mediaService.deleteMedia(state, req.actor, req.params.id)
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/media/cleanup-tasks/:id', authRequired, (req, res, next) => {
+    try {
+      ok(res, mediaService.getCleanupTask(req.app.locals.store.state, req.params.id))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/media/:id/export-watermark', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        mediaService.markExportWatermark(state, req.params.id)
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // ---------- API25–26 AI tasks ----------
+  r.get('/ai/providers', authRequired, (req, res) => {
+    ok(res, listAiProviders())
+  })
+
+  r.post('/ai-tasks', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        aiTaskService.createTask(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/ai-tasks', authRequired, (req, res, next) => {
+    try {
+      ok(
+        res,
+        aiTaskService.listTasks(req.app.locals.store.state, req.actor, {
+          mode: req.query.mode,
+          type: req.query.type
+        })
+      )
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/ai-tasks/:id', authRequired, (req, res, next) => {
+    try {
+      ok(res, aiTaskService.getTask(req.app.locals.store.state, req.actor, req.params.id))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/ai-tasks/:id/cancel', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        aiTaskService.cancelTask(state, req.actor, req.params.id, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/ai-tasks/:id/retry', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        aiTaskService.retryTask(state, req.actor, req.params.id, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/ai-tasks/:id/revoke-consent', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        aiTaskService.revokeConsentOnTask(state, req.params.id)
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/ai-tasks/:id/callbacks', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        aiTaskService.applyLateCallback(
+          state,
+          req.params.id,
+          req.body.callback_id || req.body.callbackId,
+          req.body
+        )
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/goal-groups/:id', authRequired, (req, res, next) => {
+    try {
+      ok(res, aiTaskService.getGoalGroup(req.app.locals.store.state, req.actor, req.params.id))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // ---------- API27 posture review ----------
+  r.get('/posture-reports', authRequired, (req, res, next) => {
+    try {
+      ok(
+        res,
+        postureService.listReports(req.app.locals.store.state, req.actor, {
+          student_id: req.query.student_id,
+          is_demo: req.query.is_demo === '1' ? true : req.query.is_demo === '0' ? false : undefined
+        })
+      )
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/posture-reports/:id', authRequired, (req, res, next) => {
+    try {
+      ok(res, postureService.getReport(req.app.locals.store.state, req.actor, req.params.id))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/posture-reports/:id/review', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        postureService.reviewReport(state, req.actor, req.params.id, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // ---------- API28 consultations ----------
+  r.post('/consultations', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        consultationService.createConsultation(
+          state,
+          req.actor,
+          req.body || {},
+          req.headers['idempotency-key']
+        )
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/consultations', authRequired, (req, res, next) => {
+    try {
+      ok(res, consultationService.listConsultations(req.app.locals.store.state, req.actor))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/consultations/:id', authRequired, (req, res, next) => {
+    try {
+      ok(
+        res,
+        consultationService.getConsultation(req.app.locals.store.state, req.actor, req.params.id)
+      )
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.patch('/consultations/:id', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        consultationService.patchConsultation(state, req.actor, req.params.id, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
   // ---------- API04–05 availability / slots ----------
   r.get('/coaches/:id/availability', authRequired, async (req, res, next) => {
     try {
@@ -222,7 +473,7 @@ function buildRouter() {
   // ---------- API06–10 bookings ----------
   r.post('/bookings', authRequired, idempotency(), async (req, res, next) => {
     try {
-      const data = await req.app.locals.store.tx(async () => {
+      const data = await req.app.locals.store.tx(async (state) => {
         const app = asApp(req.app.locals.store)
         const out = await unwrap(
           bookingService.createBooking(app, {
@@ -235,7 +486,23 @@ function buildRouter() {
               req.body.accepted_rules_version || req.body.acceptedRulesVersion
           })
         )
-        return out.data
+        // AC35：业务成功后写站内通知 + outbox；投递失败不影响预约
+        const booking = out.data
+        const coachUser = (state.users || []).find(
+          (u) => u.coachProfile && u.coachProfile.coachId === (req.body.coach_id || req.body.coachId)
+        )
+        if (coachUser) {
+          outboxService.enqueue(state, {
+            userId: coachUser.userId,
+            title: '新的预约请求',
+            body: (req.actor.displayName || '学员') + '发起了预约',
+            template: 'booking_requested',
+            relatedType: 'booking',
+            relatedId: booking.id || booking.booking_id,
+            failDelivery: !!req.body.fail_notify
+          })
+        }
+        return booking
       })
       ok(res, data)
     } catch (e) {
@@ -1026,23 +1293,60 @@ function buildRouter() {
     }
   })
 
-  // ---------- API31 notifications ----------
+  // ---------- API30 entitlements / usage-ledger ----------
+  r.get('/entitlements', authRequired, (req, res, next) => {
+    try {
+      ok(res, entitlementService.listEntitlements(req.app.locals.store.state, req.actor.userId))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/usage-ledger', authRequired, (req, res, next) => {
+    try {
+      ok(
+        res,
+        entitlementService.listLedger(req.app.locals.store.state, req.actor.userId, {
+          feature: req.query.feature,
+          task_id: req.query.task_id
+        })
+      )
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // ---------- 支付开关（默认关闭，不开放真实付款）----------
+  r.get('/payments/status', authRequired, (req, res) => {
+    ok(res, paymentService.getPaymentStatus())
+  })
+
+  r.post('/payments/checkout', authRequired, idempotency(), (req, res, next) => {
+    try {
+      ok(res, paymentService.createCheckout(req.actor, req.body || {}))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/payments/confirm', authRequired, (req, res, next) => {
+    try {
+      ok(res, paymentService.confirmPayment(req.actor, req.body || {}))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // ---------- API31 notifications + outbox 可见性（本人）----------
   r.get('/notifications', authRequired, (req, res) => {
-    const list = (req.app.locals.store.state.notifications || []).filter(
-      (n) => n.userId === req.actor.userId
-    )
-    ok(res, list)
+    ok(res, outboxService.listNotifications(req.app.locals.store.state, req.actor.userId))
   })
 
   r.patch('/notifications/:id', authRequired, async (req, res, next) => {
     try {
       const data = await req.app.locals.store.tx((state) => {
-        const n = (state.notifications || []).find(
-          (x) => x.id === req.params.id && x.userId === req.actor.userId
-        )
-        if (!n) throw new AppError('NOT_FOUND', '通知不存在')
-        if (req.body.read) n.readAt = time.nowMs()
-        return n
+        if (req.body.read) return outboxService.markRead(state, req.actor.userId, req.params.id)
+        throw new AppError('VALIDATION', '仅支持 read')
       })
       ok(res, data)
     } catch (e) {
@@ -1052,19 +1356,167 @@ function buildRouter() {
 
   r.post('/notifications/demo', authRequired, async (req, res, next) => {
     try {
-      const data = await req.app.locals.store.tx((state) => {
-        if (!state.notifications) state.notifications = []
-        const n = {
-          id: makeId('ntf'),
+      const data = await req.app.locals.store.tx((state) =>
+        outboxService.enqueue(state, {
           userId: req.actor.userId,
           title: req.body.title || '系统通知',
           body: req.body.body || '',
-          createdAt: time.nowMs(),
-          readAt: null
-        }
-        state.notifications.push(n)
-        return n
+          failDelivery: !!req.body.fail_delivery
+        })
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // ---------- 最小运营后台 /admin/*（ops 角色）----------
+  const opsOnly = [authRequired, requireRole('ops')]
+
+  r.get('/admin/config', ...opsOnly, (req, res) => {
+    ok(res, opsService.getConfig(req.app.locals.store.state))
+  })
+
+  r.patch('/admin/config', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.patchConfig(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/audits', ...opsOnly, (req, res) => {
+    ok(res, opsService.listAudits(req.app.locals.store.state, { ticket_id: req.query.ticket_id }))
+  })
+
+  r.post('/admin/coach-reviews', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.reviewCoach(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/accounts/disable', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.disableAccount(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/bindings/force-end', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.forceUnbind(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/exercises/review', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.reviewExercise(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/entitlements/grant', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.compensateEntitlement(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/entitlements/trial', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.grantTrial(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/subscriptions/expire', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) => {
+        opsService.audit(state, req.actor, {
+          ticketId: req.body.ticket_id,
+          action: 'subscription_expire',
+          targetType: 'user',
+          targetId: req.body.user_id,
+          reason: req.body.reason
+        })
+        return entitlementService.expireSubscription(state, req.body.user_id)
       })
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/ai-tasks/:id', ...opsOnly, (req, res, next) => {
+    try {
+      ok(res, opsService.getAiTaskMeta(req.app.locals.store.state, req.params.id))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/ai-tasks/:id/retry', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.retryAiTask(
+          state,
+          req.actor,
+          Object.assign({}, req.body || {}, { task_id: req.params.id })
+        )
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/outbox', ...opsOnly, (req, res) => {
+    ok(
+      res,
+      outboxService.listOutbox(req.app.locals.store.state, {
+        status: req.query.status || 'failed'
+      })
+    )
+  })
+
+  r.post('/admin/outbox/:id/retry', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.retryOutbox(
+          state,
+          req.actor,
+          Object.assign({}, req.body || {}, { outbox_id: req.params.id })
+        )
+      )
       ok(res, data)
     } catch (e) {
       next(e)

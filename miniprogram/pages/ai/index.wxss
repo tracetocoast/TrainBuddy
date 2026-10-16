@@ -124,3 +124,146 @@
   font-size: 22rpx;
   line-height: 1.6;
 }
+
+.mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.mode-label {
+  color: #bdc7ae;
+  font-size: 24rpx;
+}
+
+.mode-group {
+  display: flex;
+  gap: 24rpx;
+}
+
+.mode-item {
+  color: #e8f0df;
+  font-size: 24rpx;
+}
+
+.hint {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #9aa590;
+  line-height: 1.5;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tag-muted {
+  background: #2a3326;
+  color: #9aa590;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #2f3a2c;
+  font-size: 24rpx;
+}
+
+.item-label {
+  color: #d4ddca;
+}
+
+.item-val {
+  color: #c8ff36;
+}
+
+.node-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #2f3a2c;
+}
+
+.node-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  color: #e8f0df;
+  font-size: 24rpx;
+}
+
+.wm {
+  font-size: 20rpx;
+  color: #9aa590;
+}
+
+.node-actions {
+  display: flex;
+  gap: 8rpx;
+}
+
+.mini-btn {
+  background: #2a3326 !important;
+  color: #c8ff36 !important;
+  border: 1rpx solid #394333 !important;
+}
+
+.linkish {
+  margin-top: 32rpx;
+  text-align: center;
+  color: #9aa590;
+  font-size: 22rpx;
+  text-decoration: underline;
+}
+
+.twobtn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.darkbtn {
+  background: #22291f !important;
+  color: #e8f0df !important;
+  border: 2rpx solid #394333 !important;
+  border-radius: 20rpx !important;
+  font-size: 24rpx !important;
+}
+
+.pill {
+  font-size: 18rpx;
+  letter-spacing: 2rpx;
+  color: #c8ff36;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28rpx;
+}
+
+.head-title {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.tag {
+  font-size: 18rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  background: #c8ff36;
+  color: #111610;
+  font-weight: 600;
+}

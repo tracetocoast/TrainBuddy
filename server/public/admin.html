@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>练搭子 · 最小运营后台</title>
+  <style>
+    :root {
+      --bg: #f4f5f0;
+      --card: #fff;
+      --ink: #1a1f16;
+      --muted: #5c6654;
+      --line: #d8ddd0;
+      --accent: #2f6b3a;
+      --danger: #9b2c2c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+      background: linear-gradient(160deg, #eef1e6, #f7f8f3 40%, #e8ece2);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(26, 31, 22, 0.04);
+    }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+    }
+    button {
+      margin-top: 12px;
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 9px 14px;
+      cursor: pointer;
+      font: inherit;
+    }
+    button.secondary { background: #3d4638; }
+    button.danger { background: var(--danger); }
+    pre {
+      background: #1b2119;
+      color: #dce8cf;
+      padding: 12px;
+      border-radius: 10px;
+      overflow: auto;
+      font-size: 12px;
+      max-height: 320px;
+    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+    .row > div { flex: 1; min-width: 140px; }
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e5efda;
+      color: var(--accent);
+      margin-left: 8px;
+    }
+    .warn { color: var(--danger); font-size: 12px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>练搭子 · 最小运营后台<span class="pill">OPS</span></h1>
+  <p class="sub">教练审核、额度补偿、通知失败队列、参数与审计。支付默认关闭，不模拟真实付款成功。</p>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="row">
+      <div>
+        <label>API Base</label>
+        <input id="base" value="/api/v1" />
+      </div>
+      <div>
+        <label>Session Token（ops_admin 登录后粘贴）</label>
+        <input id="token" placeholder="Bearer 后的 token" />
+      </div>
+      <div>
+        <button class="secondary" type="button" onclick="loginOps()">一键登录 ops_admin</button>
+      </div>
+    </div>
+    <p class="warn" id="payHint"></p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <strong>试用／额度补偿</strong>
+      <label>工单号</label>
+      <input id="ticket" value="TKT-DEMO-001" />
+      <label>用户 ID</label>
+      <input id="userId" value="u_stu_001" />
+      <label>功能</label>
+      <select id="feature">
+        <option value="posture_scan">posture_scan</option>
+        <option value="goal_image">goal_image</option>
+        <option value="voice_structure">voice_structure</option>
+      </select>
+      <label>数量</label>
+      <input id="amount" type="number" value="3" />
+      <label>理由</label>
+      <input id="reason" value="试点补偿" />
+      <button type="button" onclick="grant()">发放额度</button>
+      <button class="secondary" type="button" onclick="grantTrial()">发放试用包</button>
+    </div>
+
+    <div class="card">
+      <strong>订阅到期（AC34 验证）</strong>
+      <label>工单号</label>
+      <input id="ticketExpire" value="TKT-EXP-001" />
+      <label>用户 ID</label>
+      <input id="expireUser" value="u_stu_001" />
+      <button class="danger" type="button" onclick="expireSub()">标记订阅到期</button>
+      <p class="warn">到期后历史仍可读；新付费 AI 任务应被拒绝。</p>
+    </div>
+
+    <div class="card">
+      <strong>通知失败队列（AC35）</strong>
+      <button type="button" onclick="loadOutbox()">刷新失败队列</button>
+      <label>Outbox ID（重试）</label>
+      <input id="outboxId" />
+      <label>工单号</label>
+      <input id="ticketOutbox" value="TKT-OBX-001" />
+      <button class="secondary" type="button" onclick="retryOutbox()">重试投递</button>
+    </div>
+
+    <div class="card">
+      <strong>支付状态</strong>
+      <button type="button" onclick="payStatus()">查看开关</button>
+      <button class="danger" type="button" onclick="tryCheckout()">尝试 checkout（应拒绝或未接入）</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <strong>响应</strong>
+    <pre id="out">{}</pre>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id)
+    function headers() {
+      const h = { 'Content-Type': 'application/json' }
+      const t = $('token').value.trim()
+      if (t) h.Authorization = 'Bearer ' + t
+      return h
+    }
+    function show(data) {
+      $('out').textContent = JSON.stringify(data, null, 2)
+    }
+    async function api(method, path, body) {
+      const res = await fetch($('base').value.replace(/\/$/, '') + path, {
+        method,
+        headers: headers(),
+        body: body ? JSON.stringify(body) : undefined
+      })
+      const json = await res.json().catch(() => ({}))
+      show({ status: res.status, body: json })
+      return { status: res.status, body: json }
+    }
+    async function loginOps() {
+      const r = await api('POST', '/auth/wechat-session', { accountKey: 'ops_admin' })
+      if (r.body && r.body.data && r.body.data.sessionToken) {
+        $('token').value = r.body.data.sessionToken
+      }
+      payStatus()
+    }
+    async function grant() {
+      await api('POST', '/admin/entitlements/grant', {
+        ticket_id: $('ticket').value,
+        user_id: $('userId').value,
+        feature: $('feature').value,
+        amount: Number($('amount').value),
+        reason: $('reason').value
+      })
+    }
+    async function grantTrial() {
+      await api('POST', '/admin/entitlements/trial', {
+        ticket_id: $('ticket').value,
+        user_id: $('userId').value,
+        reason: $('reason').value
+      })
+    }
+    async function expireSub() {
+      await api('POST', '/admin/subscriptions/expire', {
+        ticket_id: $('ticketExpire').value,
+        user_id: $('expireUser').value,
+        reason: '试点验证 AC34'
+      })
+    }
+    async function loadOutbox() {
+      const r = await api('GET', '/admin/outbox?status=failed')
+      const list = (r.body && r.body.data) || []
+      if (list[0]) $('outboxId').value = list[0].outbox_id
+    }
+    async function retryOutbox() {
+      await api('POST', '/admin/outbox/' + $('outboxId').value + '/retry', {
+        ticket_id: $('ticketOutbox').value,
+        reason: '人工重试投递'
+      })
+    }
+    async function payStatus() {
+      const r = await api('GET', '/payments/status')
+      const d = r.body && r.body.data
+      $('payHint').textContent = d
+        ? (d.payment_enabled ? '支付开关：开（仍未接入渠道）' : '支付开关：关 — 不开放真实付款')
+        : ''
+    }
+    async function tryCheckout() {
+      await api('POST', '/payments/checkout', { sku: 'posture_pack_3' })
+    }
+  </script>
+</body>
+</html>
