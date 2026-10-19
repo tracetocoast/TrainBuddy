@@ -1,142 +1,126 @@
 const { requireLogin } = require('../../utils/guard')
 const trainingApi = require('../../services/trainingApi')
+const clone = value => JSON.parse(JSON.stringify(value))
+const uid = prefix => prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 
 Page({
-  data: {
-    plan: null,
-    draft: null,
-    title: '',
-    goal: '',
-    plannedDate: '',
-    exercises: []
+  data: { plan: null, draft: null, loading: true, error: '', saving: false, changed: false, conflict: false, title: '', goal: '', plannedDate: '', reason: '', exercises: [], missingNotesText: '', today: '', bases: ['总重量（含杆）', '单侧重量', '自重', '待确认'], library: trainingApi.EXERCISE_LIBRARY },
+  onLoad(q) { this.planId = q.id },
+  onShow() { if (requireLogin(this) && !this.loaded) this.reload() },
+  onHide() { this.cache() },
+  onUnload() { this.cache() },
+  cacheKey() {
+    const app = getApp(), user = app.globalData.session.user
+    return [user.userId, app.globalData.role, this.data.plan.student_id, 'plan', this.planId].join(':')
   },
-
-  onLoad(q) {
-    this.planId = q.id
+  cache() {
+    if (!this.data.plan || !this.data.changed || !getApp().globalData.session) return
+    const app = getApp(), drafts = app.globalData.drafts || {}
+    drafts[this.cacheKey()] = { userId: app.globalData.session.user.userId, payload: this.snapshot(), updatedAt: Date.now() }
+    app.globalData.drafts = drafts
+    try { app.persist() } catch (_) { app.toast('本地草稿暂存失败，请尽快保存到服务器') }
   },
-
-  onShow() {
-    if (!requireLogin(this)) return
-    this.reload()
-  },
-
-  reload() {
+  clearCache() {
     const app = getApp()
-    trainingApi
-      .getPlan(app, this.planId)
-      .then((res) => {
-        const plan = res.data
-        const draft = plan.latest_draft
-        this.setData({
-          plan,
-          draft,
-          title: draft ? draft.title : (plan.published && plan.published.title) || '',
-          goal: draft ? draft.goal : (plan.published && plan.published.goal) || '',
-          plannedDate: draft
-            ? draft.planned_date
-            : (plan.published && plan.published.planned_date) || '',
-          exercises: draft
-            ? draft.exercises
-            : (plan.published && plan.published.exercises) || []
-        })
-      })
-      .catch(() => this.setData({ plan: null }))
+    if (app.globalData.drafts) delete app.globalData.drafts[this.cacheKey()]
+    app.persist()
   },
-
-  onTitle(e) {
-    this.setData({ title: e.detail.value })
+  snapshot() {
+    return { title: this.data.title, goal: this.data.goal, plannedDate: this.data.plannedDate, reason: this.data.reason, exercises: clone(this.data.exercises), version: this.data.draft ? this.data.draft.version : this.data.plan.current_published_revision, base_revision: this.data.draft ? this.data.draft.revision : null }
   },
-  onGoal(e) {
-    this.setData({ goal: e.detail.value })
-  },
-  onDate(e) {
-    this.setData({ plannedDate: e.detail.value })
-  },
-
-  onSaveMeta() {
-    const app = getApp()
-    const draft = this.data.draft
-    if (!draft) return
-    trainingApi
-      .updatePlanDraft(app, this.planId, {
-        version: draft.version,
-        title: this.data.title,
-        goal: this.data.goal,
-        plannedDate: this.data.plannedDate
-      })
-      .then((res) => {
-        app.toast('草稿已保存')
-        this.applyPlan(res.data)
-      })
-      .catch((err) => app.toast((err && err.message) || '保存失败'))
-  },
-
-  applyPlan(plan) {
-    const draft = plan.latest_draft
-    this.setData({
-      plan,
-      draft,
-      title: draft ? draft.title : this.data.title,
-      goal: draft ? draft.goal : this.data.goal,
-      plannedDate: draft ? draft.planned_date : this.data.plannedDate,
-      exercises: draft ? draft.exercises : this.data.exercises
-    })
-  },
-
-  onSet(e) {
-    const app = getApp()
-    const draft = this.data.draft
-    if (!draft) return
-    const field = e.currentTarget.dataset.field
-    let val = e.detail.value
-    if (val === '' || val == null) return
-    val = field === 'targetReps' ? parseInt(val, 10) : parseFloat(val)
-    if (isNaN(val)) return
-    const patch = {}
-    patch[field] = val
-    trainingApi
-      .updateDraftSet(
-        app,
-        this.planId,
-        draft.version,
-        e.currentTarget.dataset.eid,
-        e.currentTarget.dataset.sid,
-        patch
-      )
-      .then((res) => this.applyPlan(res.data))
-      .catch((err) => app.toast((err && err.message) || '更新失败'))
-  },
-
-  onPublish() {
-    const app = getApp()
-    const draft = this.data.draft
-    if (!draft) return
-    wx.showModal({
-      title: '确认发布',
-      content: '学员将看到新版本；旧已发布版归档为 superseded。已开始的训练仍用其快照。',
-      confirmText: '确认发布',
-      success: (res) => {
-        if (!res.confirm) return
-        // 先保存 meta
-        trainingApi
-          .updatePlanDraft(app, this.planId, {
-            version: draft.version,
-            title: this.data.title,
-            goal: this.data.goal,
-            plannedDate: this.data.plannedDate
-          })
-          .then(() =>
-            trainingApi.publishPlan(app, this.planId, {
-              version: draft.version,
-              reviewConfirmation: true
-            })
-          )
-          .then((resp) => {
-            app.toast('已发布')
-            this.applyPlan(resp.data)
-          })
-          .catch((err) => app.toast((err && err.message) || '发布失败'))
+  reload(ignoreCache) {
+    this.setData({ loading: true, error: '' })
+    return trainingApi.getPlan(getApp(), this.planId).then(res => {
+      this.loaded = true
+      this.applyPlan(res.data)
+      const cached = (getApp().globalData.drafts || {})[this.cacheKey()]
+      if (!ignoreCache && cached) {
+        const current = this.snapshot(), local = cached.payload
+        const conflict = current.base_revision !== local.base_revision || current.version !== local.version
+        this.setData({ title: local.title, goal: local.goal, plannedDate: local.plannedDate, reason: local.reason, exercises: local.exercises, changed: true, conflict })
+        getApp().toast(conflict ? '云端已更新，本地内容保留，请核对后重新载入' : '已恢复本地未保存内容')
       }
-    })
-  }
+    }).catch(err => this.setData({ error: err.message || '计划读取失败，请重试' }))
+      .then(() => this.setData({ loading: false }))
+  },
+  applyPlan(plan) {
+    const draft = plan.latest_draft, content = draft || plan.published || {}
+    this.setData({ plan, draft, title: content.title || '', goal: content.goal || '', plannedDate: content.planned_date || '', reason: content.reason || '', exercises: clone(content.exercises || []), changed: false, conflict: false, missingNotesText: ((draft && draft.missing_notes) || []).join('；') })
+  },
+  editable() { return this.data.plan && this.data.plan.can_edit && this.data.draft && !this.data.saving && !this.data.conflict },
+  change(values) { if (!this.editable()) return; this.setData(Object.assign({ changed: true }, values)); this.cache() },
+  onField(e) { const key = e.currentTarget.dataset.field; if (['title', 'goal', 'plannedDate', 'reason'].includes(key)) this.change({ [key]: e.detail.value }) },
+  onSet(e) {
+    if (!this.editable()) return
+    const { ei, si, field } = e.currentTarget.dataset
+    if (!['targetWeight', 'targetReps'].includes(field)) return
+    const exercises = clone(this.data.exercises)
+    exercises[Number(ei)].sets[Number(si)][field] = e.detail.value
+    this.change({ exercises })
+  },
+  onName(e) { const exercises = clone(this.data.exercises); exercises[Number(e.currentTarget.dataset.ei)].name = e.detail.value; this.change({ exercises }) },
+  onBasis(e) { const exercises = clone(this.data.exercises); exercises[Number(e.currentTarget.dataset.ei)].loadBasis = ['total', 'per_side', 'bodyweight', 'unknown'][Number(e.detail.value)]; this.change({ exercises }) },
+  onAddExercise(e) {
+    const library = trainingApi.EXERCISE_LIBRARY[Number(e.currentTarget.dataset.index)]
+    this.change({ exercises: this.data.exercises.concat({ id: uid('pex_'), exerciseId: library ? library.id : null, name: library ? library.name : '自定义动作', icon: library ? library.icon : '🏋️', loadBasis: 'unknown', sets: [{ id: uid('pset_'), setNo: 1, targetWeight: null, targetReps: null, required: true }] }) })
+  },
+  onRemoveExercise(e) { this.change({ exercises: this.data.exercises.filter((_, i) => i !== Number(e.currentTarget.dataset.ei)) }) },
+  onMove(e) {
+    const from = Number(e.currentTarget.dataset.ei), to = from + Number(e.currentTarget.dataset.step)
+    if (to < 0 || to >= this.data.exercises.length) return
+    const exercises = clone(this.data.exercises), item = exercises.splice(from, 1)[0]
+    exercises.splice(to, 0, item); this.change({ exercises })
+  },
+  onAddSet(e) {
+    const exercises = clone(this.data.exercises), sets = exercises[Number(e.currentTarget.dataset.ei)].sets
+    if (sets.length >= 30) return getApp().toast('每个动作最多 30 组')
+    const last = sets[sets.length - 1] || {}
+    sets.push({ id: uid('pset_'), setNo: sets.length + 1, targetWeight: last.targetWeight == null ? null : last.targetWeight, targetReps: last.targetReps == null ? null : last.targetReps, required: true })
+    this.change({ exercises })
+  },
+  onRemoveSet(e) {
+    const exercises = clone(this.data.exercises), ex = exercises[Number(e.currentTarget.dataset.ei)]
+    if (ex.sets.length <= 1) return getApp().toast('至少保留一组，或移除整个动作')
+    ex.sets.splice(Number(e.currentTarget.dataset.si), 1)
+    ex.sets.forEach((set, index) => { set.setNo = index + 1 }); this.change({ exercises })
+  },
+  onCreateDraft() {
+    if (this.data.saving) return
+    this.setData({ saving: true })
+    trainingApi.updatePlanDraft(getApp(), this.planId, { version: this.data.plan.current_published_revision })
+      .then(res => { this.applyPlan(res.data); getApp().toast('新草稿已创建，原发布版保持不变') })
+      .catch(err => getApp().toast(err.message || '创建失败')).then(() => this.setData({ saving: false }))
+  },
+  normalized() {
+    const payload = this.snapshot()
+    payload.exercises.forEach(ex => ex.sets.forEach(set => {
+      for (const field of ['targetWeight', 'targetReps']) {
+        const value = set[field]
+        if (value === '' || value == null) set[field] = null
+        else { const number = Number(value); if (!Number.isFinite(number)) throw Error('重量和次数必须为数字'); set[field] = number }
+      }
+    }))
+    return payload
+  },
+  save(publish) {
+    if (!this.editable()) return Promise.resolve()
+    let payload
+    try { payload = this.normalized() } catch (err) { getApp().toast(err.message); return Promise.resolve() }
+    this.setData({ saving: true })
+    return trainingApi.updatePlanDraft(getApp(), this.planId, payload).then(res => {
+      const saved = res.data
+      this.applyPlan(saved); this.clearCache()
+      if (!publish) { getApp().toast('草稿已保存'); return }
+      return trainingApi.publishPlan(getApp(), this.planId, { version: saved.latest_draft.version, baseRevision: saved.latest_draft.revision, reviewConfirmation: true }).then(result => { this.applyPlan(result.data); getApp().toast('计划已发布') })
+    }).catch(err => {
+      if (err.code === 'REVISION_CONFLICT') this.setData({ conflict: true })
+      getApp().toast(err.message || '保存失败，编辑内容仍保留')
+    }).then(() => this.setData({ saving: false }))
+  },
+  onSaveMeta() { return this.save(false) },
+  onPublish() {
+    if (!this.editable()) return
+    wx.showModal({ title: '确认发布计划', content: '将保存全部动作与组参数，再发布新版本。已开始的训练仍保留旧快照。', success: result => { if (result.confirm) this.save(true) } })
+  },
+  onReload() { wx.showModal({ title: '重新载入云端版本？', content: '本页尚未保存的修改将被放弃。', success: result => { if (result.confirm) { this.setData({ changed: false }); if (this.data.plan) this.clearCache(); this.reload(true) } } }) }
 })

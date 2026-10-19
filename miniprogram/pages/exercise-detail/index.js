@@ -3,7 +3,7 @@ const exerciseApi = require('../../services/exerciseApi')
 const trainingApi = require('../../services/trainingApi')
 
 Page({
-  data: { ex: null },
+  data: { ex: null, adding: false },
 
   onLoad(q) {
     this.id = q.id
@@ -31,12 +31,17 @@ Page({
   },
 
   onAddPlan() {
+    if (this.data.adding || !this.data.ex) return
+    this.setData({ adding: true })
+    if (!this.addKey) this.addKey = 'library_' + Date.now() + '_' + Math.random().toString(36).slice(2)
     const app = getApp()
     const user = app.globalData.session.user
     const ex = this.data.ex
     trainingApi
-      .addExerciseToPersonalPlan(app, user.userId, ex)
+      .addExerciseToPersonalPlan(app, user.userId, ex, this.addKey)
       .then((res) => {
+        this.addKey = null
+        this.setData({ adding: false })
         wx.showModal({
           title: '已加入计划草稿',
           content: '不会覆盖已发布版本。可在计划页编辑后发布。',
@@ -50,6 +55,6 @@ Page({
           }
         })
       })
-      .catch((err) => app.toast((err && err.message) || '加入失败'))
+      .catch((err) => { this.setData({ adding: false }); app.toast((err && err.message) || '加入失败') })
   }
 })

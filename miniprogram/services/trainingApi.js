@@ -145,9 +145,10 @@ function publishPlan(app, planId, opts) {
       '/plans/' + planId + '/publish',
       {
         version: opts.version,
+        base_revision: opts.baseRevision,
         review_confirmation: opts.reviewConfirmation !== false
       },
-      { idempotencyKey: 'pub_' + planId + '_' + (opts.version || '') }
+      { idempotencyKey: 'pub_' + planId + '_' + opts.version + '_' + opts.baseRevision }
     )
     .then((res) => ({ data: res.data, request_id: res.request_id }))
 }
@@ -210,12 +211,10 @@ function parseTextToExercisesRemote(app, sessionId, text) {
     .then((res) => res.data)
 }
 
-function addExerciseToPersonalPlan(app, studentId, exerciseMeta) {
-  // 简化：ensure default + 提示去计划页；完整实现需 PATCH draft exercises
-  return ensureDefaultPublishedPlan(app, { studentId }).then((plan) => ({
-    data: plan,
-    request_id: 'local'
-  }))
+function addExerciseToPersonalPlan(app, studentId, exerciseMeta, actionKey) {
+  return http.post('/plans/personal/exercises', { exercise_id: exerciseMeta.id }, {
+    idempotencyKey: actionKey || 'add_plan_' + Date.now() + '_' + Math.random().toString(36).slice(2)
+  })
 }
 
 function completedSessionStats(app, studentId) {

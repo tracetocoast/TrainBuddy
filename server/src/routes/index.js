@@ -10,6 +10,7 @@ const authService = require('../services/authService')
 const bindingService = require('../services/bindingService')
 const bookingService = require('../services/bookingService')
 const trainingService = require('../services/trainingService')
+const { presentForActor } = require('../lib/planAccess')
 const diaryService = require('../services/diaryService')
 const growthService = require('../services/growthService')
 const exerciseService = require('../services/exerciseService')
@@ -973,7 +974,12 @@ function buildRouter() {
       }
       const app = asApp(req.app.locals.store)
       const out = await unwrap(trainingService.listPlansForStudent(app, studentId))
-      ok(res, out.data)
+      const visible = []
+      for (const plan of out.data) {
+        try { visible.push(presentForActor(req.app.locals.store.state, req.actor, plan)) }
+        catch (error) { if (error.code !== 'FORBIDDEN') throw error }
+      }
+      ok(res, visible)
     } catch (e) {
       next(e)
     }
@@ -983,7 +989,7 @@ function buildRouter() {
     try {
       const app = asApp(req.app.locals.store)
       const out = await unwrap(trainingService.getPlan(app, req.params.id))
-      ok(res, out.data)
+      ok(res, presentForActor(req.app.locals.store.state, req.actor, out.data))
     } catch (e) {
       next(e)
     }
@@ -993,13 +999,17 @@ function buildRouter() {
     try {
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
+        const current = (await unwrap(trainingService.getPlan(app, req.params.id))).data
+        presentForActor(req.app.locals.store.state, req.actor, current, true)
+        if (!current.latest_draft || req.body.base_revision !== current.latest_draft.revision) throw new AppError('REVISION_CONFLICT', '请载入最新草稿后发布')
         const out = await unwrap(
           trainingService.publishPlan(app, req.params.id, {
             version: req.body.version || req.body.base_revision,
-            reviewConfirmation: req.body.review_confirmation !== false
+            reviewConfirmation: req.body.review_confirmation === true,
+            baseRevision: req.body.base_revision
           })
         )
-        return out.data
+        return presentForActor(req.app.locals.store.state, req.actor, out.data)
       })
       ok(res, data)
     } catch (e) {
@@ -1011,15 +1021,30 @@ function buildRouter() {
     try {
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
+        const current = (await unwrap(trainingService.getPlan(app, req.params.id))).data
+        presentForActor(req.app.locals.store.state, req.actor, current, true)
+        if (current.latest_draft && req.body.base_revision == null) throw new AppError('REVISION_CONFLICT', '请提供当前草稿修订号')
         const out = await unwrap(
           trainingService.updatePlanDraft(app, req.params.id, req.body)
         )
-        return out.data
+        return presentForActor(req.app.locals.store.state, req.actor, out.data)
       })
       ok(res, data)
     } catch (e) {
       next(e)
     }
+  })
+
+  r.post('/plans/personal/exercises', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(async () => {
+        const app = asApp(req.app.locals.store)
+        const exercise = (await unwrap(exerciseService.getExercise(app, req.body.exercise_id))).data
+        const out = await unwrap(trainingService.addExerciseToPersonalPlan(app, req.actor.userId, exercise))
+        return presentForActor(req.app.locals.store.state, req.actor, out.data)
+      })
+      ok(res, data)
+    } catch (error) { next(error) }
   })
 
   r.post('/plans/:id/start-session', authRequired, idempotency(), async (req, res, next) => {

@@ -5,6 +5,8 @@
 
 const time = require('../lib/time')
 const { makeId: makeIdLib } = require('../lib/ids')
+const planValidation = require('../lib/planValidation')
+const { AppError } = require('../lib/errors')
 
 const EXERCISE_LIBRARY = [
   { id: 'squat', name: '杠铃深蹲', icon: '🏋️', defaultSets: 4, defaultReps: 10, defaultWeight: 60 },
@@ -27,6 +29,7 @@ function ensureStore(app) {
       nextPlanGenKeys: {}
     }
   }
+  if (!gd.training.nextPlanGenKeys) gd.training.nextPlanGenKeys = {}
   return gd.training
 }
 
@@ -135,6 +138,7 @@ function presentPlan(store, plan) {
       latest && latest.status === 'draft'
         ? {
             version: latest.version,
+            revision: latest.revision || 1,
             title: latest.title,
             goal: latest.goal,
             planned_date: latest.plannedDate,
@@ -832,11 +836,23 @@ function getPlan(app, planId) {
   return Promise.resolve({ data: presentPlan(store, plan), request_id: makeId('req') })
 }
 
-function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exercises, reason }) {
+function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exercises, reason, base_revision }) {
   const store = ensureStore(app)
   const plan = findPlan(store, planId)
   if (!plan) return Promise.reject({ code: 'NOT_FOUND', message: '计划不存在' })
-  let rev = version != null ? findRevision(store, planId, version) : latestRevision(store, planId)
+  const latest = latestRevision(store, planId)
+  if (version != null && (!latest || version !== latest.version)) throw new AppError('REVISION_CONFLICT', '计划已有新版本，请重新载入')
+  let rev = latest
+  if (rev && rev.status === 'draft' && base_revision != null && base_revision !== (rev.revision || 1)) throw new AppError('REVISION_CONFLICT', '草稿已被更新，本地修改已保留，请重新载入后合并')
+  // Validate a detached candidate before touching the shared in-memory store.
+  const base = rev || publishedRevision(store, plan) || {}
+  const nextTitle = title != null ? title : base.title || '训练计划'
+  const nextGoal = goal != null ? goal : base.goal || ''
+  const nextReason = reason != null ? reason : base.reason || '手动编辑'
+  if (typeof nextTitle !== 'string' || !nextTitle.trim() || nextTitle.trim().length > 60) planValidation.invalid('标题需为 1–60 字')
+  if (typeof nextGoal !== 'string' || nextGoal.length > 500 || typeof nextReason !== 'string' || nextReason.length > 500) planValidation.invalid('目标和修改说明最多 500 字')
+  const nextDate = planValidation.date(plannedDate != null ? plannedDate : base.plannedDate || todayBusinessDate())
+  const nextExercises = planValidation.exercises(exercises != null ? exercises : base.exercises || [], false)
   if (!rev || rev.status !== 'draft') {
     // 基于已发布版新建草稿
     const pub = publishedRevision(store, plan) || latestRevision(store, planId)
@@ -857,11 +873,12 @@ function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exerc
     }
     store.planRevisions.push(rev)
   }
-  if (title != null) rev.title = title
-  if (goal != null) rev.goal = goal
-  if (plannedDate != null) rev.plannedDate = plannedDate
-  if (exercises != null) rev.exercises = exercises
-  if (reason != null) rev.reason = reason
+  rev.title = nextTitle.trim()
+  rev.goal = nextGoal
+  rev.plannedDate = nextDate
+  rev.exercises = nextExercises
+  rev.reason = nextReason
+  rev.revision = (rev.revision || 1) + 1
   plan.updatedAt = time.nowMs()
   persist(app)
   return Promise.resolve({ data: presentPlan(store, plan), request_id: makeId('req') })
@@ -888,7 +905,7 @@ function updateDraftSet(app, planId, version, exerciseId, setId, patch) {
   return Promise.resolve({ data: presentPlan(store, plan), request_id: makeId('req') })
 }
 
-function publishPlan(app, planId, { version, reviewConfirmation }) {
+function publishPlan(app, planId, { version, reviewConfirmation, baseRevision }) {
   const store = ensureStore(app)
   const plan = findPlan(store, planId)
   if (!plan) return Promise.reject({ code: 'NOT_FOUND', message: '计划不存在' })
@@ -899,6 +916,10 @@ function publishPlan(app, planId, { version, reviewConfirmation }) {
   if (!rev || rev.status !== 'draft') {
     return Promise.reject({ code: 'INVALID_STATE', message: '仅草稿可发布' })
   }
+  if (rev !== latestRevision(store, planId) || (baseRevision != null && baseRevision !== (rev.revision || 1))) throw new AppError('REVISION_CONFLICT', '草稿已更新，请重新核对后发布')
+  planValidation.exercises(rev.exercises, true)
+  planValidation.date(rev.plannedDate)
+  if (rev.plannedDate < todayBusinessDate()) planValidation.invalid('不能发布过去日期的训练计划')
   // 旧已发布 → superseded
   if (plan.currentPublishedRevision) {
     const old = findRevision(store, planId, plan.currentPublishedRevision)
@@ -942,17 +963,16 @@ function completedSessionStats(app, studentId) {
  * 从动作库加入学员个人计划草稿（不直接改已发布快照）
  */
 function addExerciseToPersonalPlan(app, studentId, exerciseMeta) {
-  const presented = ensureDefaultPublishedPlan(app, {
-    studentId,
-    authorId: studentId,
-    authorRole: 'student'
-  })
-  const planId = presented.plan_id
   const store = ensureStore(app)
-  const plan = findPlan(store, planId)
+  let plan = store.plans.find(p => p.studentId === studentId && p.authorId === studentId && p.sourceType === 'personal_library')
+  if (!plan) {
+    plan = { id: makeId('plan'), studentId, authorId: studentId, authorRole: 'student', sourceType: 'personal_library', currentPublishedRevision: null, createdAt: time.nowMs(), updatedAt: time.nowMs() }
+    store.plans.push(plan)
+  }
+  const planId = plan.id
   // 确保有 draft
   return updatePlanDraft(app, planId, {
-    version: presented.latest_draft ? presented.latest_draft.version : null,
+    title: (latestRevision(store, planId) || {}).title || '我的自主训练计划',
     reason: '从动作库加入'
   }).then(() => {
     const draft = latestRevision(store, planId)
@@ -960,9 +980,9 @@ function addExerciseToPersonalPlan(app, studentId, exerciseMeta) {
       return Promise.reject({ code: 'NO_DRAFT', message: '无法创建计划草稿' })
     }
     const sets = buildSetsFromTarget(
-      exerciseMeta.defaultSets || 3,
-      exerciseMeta.defaultReps || 10,
-      exerciseMeta.defaultWeight,
+      1,
+      null,
+      null,
       true
     )
     draft.exercises.push({
@@ -971,7 +991,7 @@ function addExerciseToPersonalPlan(app, studentId, exerciseMeta) {
       name: exerciseMeta.name,
       icon: exerciseMeta.icon || '🏋️',
       order: draft.exercises.length + 1,
-      loadBasis: exerciseMeta.defaultWeight == null ? 'bodyweight' : 'total',
+      loadBasis: exerciseMeta.metricType === 'reps' ? 'bodyweight' : 'unknown',
       sets
     })
     plan.updatedAt = time.nowMs()

@@ -1,67 +1,27 @@
-<view class="page page-solo" wx:if="{{plan}}">
-  <view class="eyebrow">NEXT PLAN · C05</view>
-  <view class="title">下次计划</view>
-  <view class="sub">规则草稿沿用上次完成值，不默认加 5kg。发布前须确认。</view>
-
-  <view class="card" wx:if="{{draft}}">
-    <view class="sub">草稿 v{{draft.version}} · {{draft.reason}}</view>
-    <view class="sub" wx:if="{{draft.missing_notes && draft.missing_notes.length}}">
-      待确认：{{draft.missing_notes.join('；')}}
+<view class="page page-solo">
+  <view class="eyebrow">TRAINING PLAN · C05</view>
+  <view class="title">训练计划</view>
+  <view class="card sub" wx:if="{{loading}}">正在读取计划…</view>
+  <view class="card" wx:if="{{error}}"><view class="sub">{{error}}</view><button class="secondary" bindtap="onReload">重试</button></view>
+  <block wx:if="{{plan && !loading}}">
+    <view class="sub">计划与实际训练分开保存。规则草稿沿用历史记录，发布前请核对。</view>
+    <view class="card" wx:if="{{draft}}"><view class="card-title">草稿 v{{draft.version}} · 修订 {{draft.revision}}</view><view class="sub">{{draft.reason}}</view><view class="sub" wx:if="{{missingNotesText}}">来源提示：{{missingNotesText}}</view><view class="sub">{{changed ? '有未保存修改' : '已与服务器同步'}}</view></view>
+    <view class="card" wx:if="{{conflict}}"><view class="card-title">云端版本已更新</view><view class="sub">本地编辑仍保留，请先核对或备份内容，再重新载入。</view><button class="secondary" bindtap="onReload">放弃本地修改，载入云端</button></view>
+    <button class="secondary" wx:if="{{!draft && plan.can_edit}}" bindtap="onCreateDraft" disabled="{{saving}}">基于已发布版创建新草稿</button>
+    <view class="head"><view class="head-title">标题</view></view><input class="field" value="{{title}}" data-field="title" bindinput="onField" maxlength="60" disabled="{{!draft || saving || conflict}}"/>
+    <view class="head"><view class="head-title">目标</view></view><input class="field" value="{{goal}}" data-field="goal" bindinput="onField" maxlength="500" disabled="{{!draft || saving || conflict}}"/>
+    <view class="head"><view class="head-title">计划日期</view></view><picker mode="date" value="{{plannedDate}}" data-field="plannedDate" bindchange="onField" disabled="{{!draft || saving || conflict}}"><view class="field">{{plannedDate}} ▾</view></picker>
+    <view class="exercise" wx:for="{{exercises}}" wx:for-index="ei" wx:key="id">
+      <input class="field" value="{{item.name}}" data-ei="{{ei}}" bindinput="onName" maxlength="60" disabled="{{!draft || saving || conflict}}"/>
+      <view class="tools" wx:if="{{draft}}"><button class="secondary" data-ei="{{ei}}" data-step="-1" bindtap="onMove" disabled="{{saving || conflict || ei === 0}}">上移</button><button class="secondary" data-ei="{{ei}}" data-step="1" bindtap="onMove" disabled="{{saving || conflict || ei === exercises.length - 1}}">下移</button><button class="secondary" data-ei="{{ei}}" bindtap="onRemoveExercise" disabled="{{saving || conflict}}">移除动作</button></view>
+      <picker range="{{bases}}" data-ei="{{ei}}" bindchange="onBasis" disabled="{{!draft || saving || conflict}}"><view class="sub basis">重量口径：{{item.loadBasis === 'total' ? '总重量（含杆）' : item.loadBasis === 'per_side' ? '单侧重量' : item.loadBasis === 'bodyweight' ? '自重' : '待确认'}} ▾</view></picker>
+      <view class="aset" wx:for="{{item.sets}}" wx:for-item="set" wx:for-index="si" wx:key="id"><view class="aset-line"><text class="aset-no">#{{si + 1}}</text><input class="mini-field" type="digit" value="{{set.targetWeight}}" placeholder="待填" data-ei="{{ei}}" data-si="{{si}}" data-field="targetWeight" bindinput="onSet" disabled="{{!draft || saving || conflict}}"/><text class="sub">kg ×</text><input class="mini-field" type="number" value="{{set.targetReps}}" placeholder="待填" data-ei="{{ei}}" data-si="{{si}}" data-field="targetReps" bindinput="onSet" disabled="{{!draft || saving || conflict}}"/><text class="sub">次</text><button class="secondary" wx:if="{{draft}}" data-ei="{{ei}}" data-si="{{si}}" bindtap="onRemoveSet" disabled="{{saving || conflict}}">移除</button></view></view>
+      <button class="secondary" wx:if="{{draft}}" data-ei="{{ei}}" bindtap="onAddSet" disabled="{{saving || conflict}}">＋ 添加一组（沿用上一组）</button>
     </view>
-  </view>
-  <view class="card sub" wx:else>暂无草稿。可基于已发布版创建新草稿。</view>
-
-  <view class="head">
-    <view class="head-title">标题</view>
-  </view>
-  <input class="field" value="{{title}}" bindinput="onTitle" disabled="{{!draft}}" />
-
-  <view class="head">
-    <view class="head-title">目标</view>
-  </view>
-  <input class="field" value="{{goal}}" bindinput="onGoal" disabled="{{!draft}}" />
-
-  <view class="head">
-    <view class="head-title">计划日期</view>
-  </view>
-  <input class="field" value="{{plannedDate}}" bindinput="onDate" disabled="{{!draft}}" />
-
-  <view class="exercise" wx:for="{{exercises}}" wx:key="id">
-    <view class="card-title">{{item.name}}</view>
-    <view class="aset" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
-      <view class="aset-line">
-        <text class="aset-no">#{{set.setNo}}</text>
-        <input
-          class="mini-field"
-          type="digit"
-          value="{{set.targetWeight}}"
-          data-eid="{{item.id}}"
-          data-sid="{{set.id}}"
-          data-field="targetWeight"
-          bindblur="onSet"
-          disabled="{{!draft}}"
-        />
-        <text class="sub">kg ×</text>
-        <input
-          class="mini-field"
-          type="number"
-          value="{{set.targetReps}}"
-          data-eid="{{item.id}}"
-          data-sid="{{set.id}}"
-          data-field="targetReps"
-          bindblur="onSet"
-          disabled="{{!draft}}"
-        />
-        <text class="sub">次</text>
-      </view>
-    </view>
-  </view>
-
-  <button class="secondary" style="width:100%;margin-top:20rpx" bindtap="onSaveMeta" wx:if="{{draft}}">保存草稿</button>
-  <button class="primary" style="width:100%;margin-top:12rpx" bindtap="onPublish" wx:if="{{draft}}">确认发布给学员 ↗</button>
-
-  <view class="card" wx:if="{{plan.published}}">
-    <view class="card-title">当前学员可见：v{{plan.published.version}}</view>
-    <view class="sub">{{plan.published.title}} · {{plan.published.planned_date}}</view>
-  </view>
+    <view class="card" wx:if="{{draft}}"><view class="card-title">添加动作</view><view class="tools"><button class="secondary" wx:for="{{library}}" wx:key="id" data-index="{{index}}" bindtap="onAddExercise" disabled="{{saving || conflict}}">＋ {{item.name}}</button><button class="secondary" bindtap="onAddExercise" disabled="{{saving || conflict}}">＋ 自定义动作</button></view><view class="sub">新增组留空，填写实际目标并确认重量口径后发布。</view></view>
+    <view class="head"><view class="head-title">调整说明</view></view><textarea class="field" value="{{reason}}" data-field="reason" bindinput="onField" maxlength="500" disabled="{{!draft || saving || conflict}}"/>
+    <button class="secondary" style="width:100%;margin-top:20rpx" bindtap="onSaveMeta" wx:if="{{draft}}" disabled="{{saving || conflict}}" loading="{{saving}}">保存全部草稿</button>
+    <button class="primary" style="width:100%;margin-top:12rpx" bindtap="onPublish" wx:if="{{draft}}" disabled="{{saving || conflict}}">确认发布{{plan.author_role === 'coach' ? '给学员' : '个人计划'}} ↗</button>
+    <view class="card" wx:if="{{plan.published}}"><view class="card-title">当前可用版本 v{{plan.published.version}}</view><view class="sub">{{plan.published.title}} · {{plan.published.planned_date}}</view></view>
+  </block>
 </view>

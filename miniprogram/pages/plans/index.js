@@ -21,9 +21,9 @@ Page({
       isStudent: role === 'student',
       studentId
     })
-    trainingApi.listPlansForStudent(app, studentId).then((res) => {
+    return trainingApi.listPlansForStudent(app, studentId).then((res) => {
       this.setData({ plans: res.data || [] })
-    })
+    }).catch(err => app.toast(err.message || '读取计划失败'))
   },
 
   onEnsureDefault() {
@@ -33,8 +33,7 @@ Page({
       studentId: user.userId,
       authorId: user.userId,
       authorRole: 'student'
-    })
-    this.onShow()
+    }).then(() => this.onShow()).catch(err => app.toast(err.message || '创建失败'))
   },
 
   goEdit(e) {
@@ -42,8 +41,6 @@ Page({
   },
 
   goStart(e) {
-    wx.redirectTo({ url: '/pages/workout/index' })
-    // workout 页会列出计划；也可直接 start
     const app = getApp()
     trainingApi
       .startSessionFromPlan(app, e.currentTarget.dataset.id, {
@@ -52,8 +49,9 @@ Page({
           app.globalData.session.user.userId +
           ':' +
           e.currentTarget.dataset.id +
-          ':today'
+          ':' + Date.now()
       })
-      .catch(() => {})
+      .then(() => wx.redirectTo({ url: '/pages/workout/index' }))
+      .catch(err => app.toast(err.message || '无法开始训练'))
   }
 })

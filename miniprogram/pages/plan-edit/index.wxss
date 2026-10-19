@@ -29,3 +29,8 @@
   font-size: 24rpx;
   text-align: center;
 }
+.tools { display: flex; flex-wrap: wrap; gap: 12rpx; margin: 16rpx 0; }
+.tools button { flex: 1 1 150rpx; margin: 0; }
+input.field { height: 88rpx; padding: 0 24rpx; line-height: 88rpx; }
+.basis { padding: 16rpx 0; }
+textarea.field { box-sizing: border-box; width: 100%; height: 160rpx; }
