@@ -24,15 +24,15 @@
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
   background: #fff;
-  border: 2rpx solid #e4e7dd;
+  border: 2rpx solid #e5e5e5;
   font-size: 22rpx;
   font-weight: 700;
-  color: #74796d;
+  color: #777777;
 }
 
 .chip.on {
-  background: #c8ff36;
-  border-color: #c8ff36;
+  background: #a7df78;
+  border-color: #a7df78;
   color: #151812;
 }
 
@@ -50,7 +50,7 @@
 .mini-field {
   width: 160rpx;
   padding: 12rpx;
-  background: #f2f4ed;
+  background: #f7f9fa;
   border-radius: 12rpx;
   text-align: center;
 }

@@ -3,44 +3,50 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 148rpx;
+  min-height: calc(112rpx + env(safe-area-inset-bottom));
   background: #fff;
-  border-top: 2rpx solid #e4e7dd;
+  border-top: 2rpx solid #e5e5e5;
   display: flex;
   align-items: flex-start;
   justify-content: space-around;
-  padding: 12rpx 10rpx calc(12rpx + env(safe-area-inset-bottom));
+  padding: 12rpx 8rpx calc(12rpx + env(safe-area-inset-bottom));
   z-index: 100;
   box-sizing: border-box;
 }
 
 .nav-item {
-  color: #8b9084;
+  flex: 1;
+  min-width: 0;
+  color: #888;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10rpx;
-  font-size: 18rpx;
+  gap: 6rpx;
+  font-size: 22rpx;
   font-weight: 700;
-  min-width: 106rpx;
 }
 
 .nav-icon {
+  width: 82rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 38rpx;
   line-height: 1;
-  padding: 10rpx 18rpx;
-  border-radius: 20rpx;
+  border: 2rpx solid transparent;
+  border-radius: 18rpx;
 }
 
 .nav-item.active {
-  color: #151812;
+  color: #487b21;
 }
 
 .nav-item.active .nav-icon {
-  background: #c8ff36;
-  margin-top: -10rpx;
+  background: #effbdd;
+  border-color: #bde69d;
 }
 
 .nav-text {
-  line-height: 1;
+  line-height: 1.4;
 }

@@ -5,24 +5,24 @@
 }
 
 .brand-block {
-  margin-bottom: 40rpx;
+  margin-bottom: 28rpx; text-align: center;
 }
 
 .big-mark {
   width: 80rpx;
   height: 80rpx;
   font-size: 40rpx;
-  margin-bottom: 20rpx;
+  margin: 0 auto 20rpx;
 }
 
 .brand-title {
-  font-size: 64rpx;
+  font-size: 52rpx;
   font-weight: 800;
-  letter-spacing: -2rpx;
+  letter-spacing: 0;
 }
 
 .brand-en {
-  font-size: 20rpx;
+  font-size: 22rpx;
   letter-spacing: 3rpx;
   color: #7c8175;
   margin: 8rpx 0 20rpx;
@@ -35,8 +35,8 @@
 .account-btn {
   display: block;
   width: 100%;
-  text-align: left;
-  background: #f2f4ed;
+  text-align: left; border: 2rpx solid #e5e5e5; border-bottom-width: 5rpx;
+  background: #f7f9fa;
   border-radius: 24rpx;
   padding: 24rpx;
   margin-top: 16rpx;
@@ -74,8 +74,8 @@
 }
 
 .check.on {
-  background: #c8ff36;
-  border-color: #c8ff36;
+  background: #a7df78;
+  border-color: #a7df78;
   font-weight: 800;
 }
 

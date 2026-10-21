@@ -18,7 +18,7 @@
 .invite-box {
   margin-top: 20rpx;
   padding: 20rpx;
-  background: #f2f4ed;
+  background: #f7f9fa;
   border-radius: 20rpx;
   text-align: center;
 }

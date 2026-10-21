@@ -21,10 +21,10 @@
     "pages/privacy/index"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#f5f6f0",
+    "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTitleText": "练搭子",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f6f0",
+    "backgroundColor": "#ffffff",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

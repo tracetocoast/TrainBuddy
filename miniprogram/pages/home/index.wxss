@@ -1,1 +1,160 @@
-/* 首页沿用全局样式 */
+.welcome {
+  margin: 12rpx 0 28rpx;
+}
+
+.welcome .title {
+  margin-top: 0;
+}
+
+.daily-card {
+  padding: 28rpx;
+  border: 2rpx solid #d7edbd;
+  border-bottom: 6rpx solid #c5e5a3;
+  background: #f2fbe7;
+  border-radius: 30rpx;
+}
+
+.daily-intro {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 26rpx;
+}
+
+.daily-label {
+  display: inline-block;
+  color: #547f32;
+  font-size: 23rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+}
+
+.daily-title {
+  font-size: 36rpx;
+  font-weight: 800;
+  line-height: 1.4;
+  margin-bottom: 10rpx;
+}
+
+.daily-card .primary {
+  width: 100%;
+}
+
+.buddy {
+  width: 136rpx;
+  height: 150rpx;
+  position: relative;
+  flex-shrink: 0;
+  transform: rotate(8deg);
+}
+
+.buddy-handle {
+  width: 70rpx;
+  height: 58rpx;
+  border: 14rpx solid #46a302;
+  border-radius: 26rpx;
+  position: absolute;
+  top: 0;
+  left: 33rpx;
+}
+
+.buddy-body {
+  width: 130rpx;
+  height: 112rpx;
+  position: absolute;
+  bottom: 0;
+  left: 3rpx;
+  border-radius: 44rpx 44rpx 36rpx 36rpx;
+  background: #78d834;
+  border-bottom: 10rpx solid #46a302;
+}
+
+.buddy-eye {
+  position: absolute;
+  width: 12rpx;
+  height: 20rpx;
+  top: 30rpx;
+  border-radius: 8rpx;
+  background: #315225;
+}
+
+.buddy-eye.left {
+  left: 39rpx;
+}
+.buddy-eye.right {
+  right: 39rpx;
+}
+
+.buddy-smile {
+  position: absolute;
+  width: 28rpx;
+  height: 16rpx;
+  border: 5rpx solid #315225;
+  border-top: 0;
+  border-radius: 0 0 20rpx 20rpx;
+  left: 51rpx;
+  top: 61rpx;
+}
+
+.blue {
+  background: #e8f5fe;
+  color: #1689b8;
+}
+.orange {
+  background: #fff2db;
+  color: #c47705;
+}
+.violet {
+  background: #f1eaff;
+  color: #9069cd;
+}
+
+.chevron {
+  font-size: 38rpx;
+  color: #afbec6;
+  flex-shrink: 0;
+}
+
+.quick-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.quick-card {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  border: 2rpx solid #e5e5e5;
+  border-bottom-width: 5rpx;
+  border-radius: 26rpx;
+  text-align: left;
+}
+
+.quick-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
+  font-size: 36rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.coach-counts {
+  display: flex;
+  gap: 70rpx;
+  margin: 24rpx 0;
+}
+
+.quick-card {
+  width: 100% !important;
+}
+
+.home-page .flex > .link {
+  flex: 0 0 auto;
+}

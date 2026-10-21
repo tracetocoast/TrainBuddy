@@ -1,7 +1,7 @@
 <view class="page page-solo">
   <view class="eyebrow">ACCOUNT · PROFILE</view>
   <view class="title">{{displayName}}</view>
-  <view class="sub">ID {{userId}} · 展示角色不影响权限授予</view>
+  <view class="sub">管理你的训练身份与共享设置</view>
 
   <role-switcher />
 
@@ -13,7 +13,7 @@
     <view class="tag-row">
       <text class="tag" wx:for="{{grantedRoles}}" wx:key="*this">{{item === 'student' ? '学员' : '教练'}}</text>
     </view>
-    <view class="sub" style="margin-top:12rpx">前端切换不能新增角色。申请教练需后台审核。</view>
+    <view class="sub" style="margin-top:12rpx">教练身份需要审核，通过后可以在这里切换。</view>
     <button
       class="secondary"
       style="width:100%;margin-top:16rpx"
@@ -61,14 +61,14 @@
   <view class="head">
     <view class="head-title">训练与日记</view>
   </view>
-  <view class="card menu" bindtap="goDiary">每日日记 · 分类授权共享</view>
-  <view class="card menu" bindtap="goExercises">动作库 · 已审核内容</view>
-  <view class="card menu" bindtap="goGrowth">成长日历与指标</view>
+  <view class="card menu" bindtap="goDiary">每日日记</view>
+  <view class="card menu" bindtap="goExercises">动作库</view>
+  <view class="card menu" bindtap="goGrowth">成长记录</view>
 
   <view class="head">
     <view class="head-title">更多</view>
   </view>
   <view class="card menu" bindtap="goPrivacy">隐私与授权管理</view>
-  <view class="card menu" bindtap="onAc33Demo" wx:if="{{canSwitchCoach}}">AC33 测例 · 解绑后取照片</view>
+  <view class="card menu" bindtap="onAc33Demo" wx:if="{{canSwitchCoach}}">检查照片访问权限</view>
   <view class="card menu" bindtap="onLogout">退出登录</view>
 </view>

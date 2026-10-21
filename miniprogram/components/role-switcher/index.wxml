@@ -1,4 +1,4 @@
-<view class="role" wx:if="{{roleOptions.length}}">
+<view class="role" wx:if="{{roleOptions.length > 1}}">
   <button
     wx:for="{{roleOptions}}"
     wx:key="role"
@@ -6,7 +6,4 @@
     data-role="{{item.role}}"
     bindtap="onTap"
   >{{item.label}}</button>
-  <view class="role-hint" wx:if="{{!canSwitchCoach && roleOptions.length === 1}}">
-    仅已授予角色可切换 · 申请教练请至个人中心
-  </view>
 </view>

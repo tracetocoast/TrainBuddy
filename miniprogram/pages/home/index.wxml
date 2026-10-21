@@ -1,143 +1,143 @@
-<view class="page">
+<view class="page home-page">
   <view class="top">
     <view class="brand">
-      <text class="mark">↗</text>练搭子
-      <text class="brand-sub">TRAIN BUDDY</text>
-    </view>
-    <view class="top-actions">
-      <button class="msg-btn" bindtap="goProfile">{{avatarChar}}</button>
-      <button class="msg-btn" bindtap="onMsg">♧</button>
-    </view>
+      <text class="mark">↗</text>练搭子</view>
+    <button class="msg-btn" bindtap="goProfile" aria-label="打开个人中心">{{avatarChar}}</button>
   </view>
-
   <role-switcher />
-
-  <!-- 学员首页 -->
   <block wx:if="{{role === 'student'}}">
-    <view class="eyebrow">WEDNESDAY · YOUR DAY</view>
-    <view class="title">今天也要<br/>练得漂亮。</view>
-
-    <view class="card flex" wx:if="{{!hasBinding}}" style="margin-bottom:8rpx">
-      <view class="ico">🔗</view>
-      <view class="grow">
-        <view class="card-title">尚未绑定教练</view>
-        <view class="sub">绑定后可约课并按类别共享记录</view>
-      </view>
-      <button class="primary" bindtap="goBind">去绑定</button>
+    <view class="welcome">
+      <view class="title">今天，也进步一点</view>
+      <view class="sub">跟着自己的节奏，练出好状态。</view>
     </view>
-
-    <view class="hero">
-      <view class="hero-ring"></view>
-      <text class="pill">WEEK 04 · BUILD MODE</text>
-      <view class="hero-title">你的节奏，<br/>由你定义。</view>
-      <view class="sub">稳定训练，比完美计划更重要。</view>
-      <view class="herofoot">
-        <view>
-          <view class="big">{{hasStats ? streak : '—'}}<text class="big-unit"> DAYS</text></view>
-          <view class="sub">{{hasStats ? '训练天数' : '暂无打卡'}}</view>
+    <view class="daily-card">
+      <view class="daily-intro">
+        <view class="grow">
+          <text class="daily-label">今日训练</text>
+          <view class="daily-title">准备好动起来了吗？</view>
+          <view class="sub">选择你的计划，逐组记录进步。</view>
         </view>
-        <button class="primary" bindtap="goWorkout">开始今日训练 ↗</button>
-      </view>
-    </view>
-
-    <view class="head">
-      <view class="head-title">本周状态</view>
-      <button class="link" bindtap="goGrowth">查看成长 ↗</button>
-    </view>
-    <view class="stats">
-      <view class="stat"><strong>{{hasStats ? weekCount : '—'}}</strong><span>本周训练 / 次</span></view>
-      <view class="stat"><strong>{{planRateText}}</strong><span>计划完成率</span></view>
-      <view class="stat"><strong>暂无</strong><span>力量进步</span></view>
-    </view>
-    <view class="sub" wx:if="{{!hasStats}}" style="margin-top:8rpx">暂无训练统计</view>
-
-    <view class="head">
-      <view class="head-title">日常</view>
-      <button class="link" bindtap="goDiary">写日记 ↗</button>
-    </view>
-    <view class="twobtn">
-      <button class="secondary" bindtap="goDiary">每日日记</button>
-      <button class="secondary" bindtap="goExercises">动作库</button>
-    </view>
-
-    <view class="head">
-      <view class="head-title">今天的任务</view>
-      <text class="tag">COACH PICK</text>
-    </view>
-    <view class="card flex">
-      <view class="ico">🏋️</view>
-      <view class="grow">
-        <view class="card-title">下肢力量 · A 计划</view>
-        <view class="sub">45 分钟 · 5 个动作 · {{coachName}}</view>
-        <view style="margin-top:10rpx">
-          <text class="tag">深蹲</text>
-          <text class="tag" style="margin-left:8rpx">臀腿</text>
+        <view class="buddy" aria-hidden="true">
+          <view class="buddy-handle"></view>
+          <view class="buddy-body">
+            <view class="buddy-eye left"></view>
+            <view class="buddy-eye right"></view>
+            <view class="buddy-smile"></view>
+          </view>
         </view>
       </view>
-      <button class="primary" bindtap="goWorkout">开练</button>
+      <button class="primary" bindtap="goWorkout">开始训练</button>
     </view>
-
     <view class="head">
-      <view class="head-title">下一次约课</view>
-      <button class="link" bindtap="goBooking">全部课程 ↗</button>
+      <view class="head-title">接下来的课程</view>
+      <button class="link" bindtap="goBooking">去约课 ›</button>
     </view>
     <view class="card flex" wx:if="{{nextBooking}}" bindtap="goNextBooking">
-      <view class="ico" style="background:#e8e0ff">◷</view>
+      <view class="ico blue">▦</view>
       <view class="grow">
-        <view class="card-title">{{nextBooking.dateKey}} {{nextBooking.startLabel}} · {{nextBooking.course_name}}</view>
-        <view class="sub">{{coachName}} · {{nextBooking.startLabel}}–{{nextBooking.endLabel}}</view>
+        <view class="card-title">{{nextBooking.course_name}}</view>
+        <view class="sub">{{nextBooking.dateKey}} {{nextBooking.startLabel}}–{{nextBooking.endLabel}}</view>
+        <view class="sub">{{coachName}} · {{nextBooking.statusLabel}}</view>
       </view>
-      <text class="tag">{{nextBooking.statusLabel}}</text>
+      <text class="chevron">›</text>
     </view>
-    <view class="card sub" wx:elif="{{hasBinding}}">暂无预约，去约课页选择时段。</view>
-    <view class="card sub" wx:else>绑定教练后可预约课程。</view>
-  </block>
-
-  <!-- 教练首页：仅已授予且切换到教练视角 -->
-  <block wx:elif="{{role === 'coach' && canSwitchCoach}}">
-    <view class="eyebrow">COACH MODE · TODAY</view>
-    <view class="title">今天，带他们<br/>再进步一点。</view>
-
-    <view class="hero">
-      <view class="hero-ring"></view>
-      <text class="pill">YOUR STUDIO</text>
-      <view class="hero-title">把时间留给<br/>真正重要的指导。</view>
-      <view class="sub">仅显示有效绑定学员的数据。</view>
-      <view class="herofoot">
-        <view>
-          <view class="big">{{boundCount}}<text class="big-unit"> BOUND</text></view>
-          <view class="sub">绑定学员 · 待确认 {{pendingCoachCount}}</view>
-        </view>
-        <button class="primary" bindtap="goBooking">处理排课 ↗</button>
+    <view class="card flex" wx:elif="{{!hasBinding}}">
+      <view class="ico blue">＋</view>
+      <view class="grow">
+        <view class="card-title">找到你的训练搭档</view>
+        <view class="sub">绑定教练后，即可查看时间并约课。</view>
       </view>
+      <button class="link" bindtap="goBind">绑定 ›</button>
     </view>
-
+    <view class="card flex" wx:else bindtap="goBooking">
+      <view class="ico blue">▦</view>
+      <view class="grow">
+        <view class="card-title">还没有预约课程</view>
+        <view class="sub">看看 {{coachName}} 的可约时间。</view>
+      </view>
+      <text class="chevron">›</text>
+    </view>
     <view class="head">
-      <view class="head-title">今日安排</view>
-      <button class="link" bindtap="goBooking">查看排课 ↗</button>
+      <view class="head-title">一点点，积累成改变</view>
+      <button class="link" bindtap="goGrowth">查看成长 ›</button>
     </view>
-
-    <block wx:if="{{sessions.length}}">
-      <view class="card" wx:for="{{sessions}}" wx:key="studentId">
-        <view class="slot">
-          <view class="time">—</view>
-          <view class="slotmain">
-            <view class="card-title">{{item.name}}</view>
-            <view class="sub">已绑定学员 · 可记录课程</view>
-          </view>
-          <text class="statuspill">已绑定</text>
+    <view class="stats">
+      <view class="stat">
+        <text class="stat-value">{{hasStats ? weekCount : '—'}}</text>
+        <text class="stat-label">本周训练</text>
+      </view>
+      <view class="stat">
+        <text class="stat-value">{{planRateText}}</text>
+        <text class="stat-label">计划完成率</text>
+      </view>
+      <view class="stat">
+        <text class="stat-value">{{streak || '—'}}</text>
+        <text class="stat-label">连续记录天数</text>
+      </view>
+    </view>
+    <view class="head">
+      <view class="head-title">训练之外，也照顾好自己</view>
+    </view>
+    <view class="quick-grid">
+      <button class="quick-card" bindtap="goDiary">
+        <text class="quick-icon orange">✎</text>
+        <view class="grow">
+          <view class="card-title">每日日记</view>
+          <view class="sub">饮食、饮水与状态</view>
         </view>
-        <view class="head" style="margin:20rpx 0 0">
-          <text class="sub">按授权范围可见内容</text>
-          <view class="twobtn">
-            <button class="secondary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goStudentProfile">学员档案</button>
-            <button class="secondary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goRecordFor">课后记录</button>
-          </view>
+        <text class="chevron">›</text>
+      </button>
+      <button class="quick-card" bindtap="goExercises">
+        <text class="quick-icon violet">↗</text>
+        <view class="grow">
+          <view class="card-title">学习动作</view>
+          <view class="sub">看要点，练得更稳</view>
+        </view>
+        <text class="chevron">›</text>
+      </button>
+    </view>
+  </block>
+  <block wx:elif="{{role === 'coach' && canSwitchCoach}}">
+    <view class="welcome">
+      <view class="title">今天，陪他们进步</view>
+      <view class="sub">安排课程，留下每一次训练的记录。</view>
+    </view>
+    <view class="daily-card">
+      <view class="daily-label">教练工作台</view>
+      <view class="daily-title">{{pendingCoachCount ? '有预约等你确认' : '把指导安排得更从容'}}</view>
+      <view class="coach-counts">
+        <view>
+          <text class="stat-value">{{pendingCoachCount}}</text>
+          <text class="sub">待确认预约</text>
+        </view>
+        <view>
+          <text class="stat-value">{{boundCount}}</text>
+          <text class="sub">绑定学员</text>
         </view>
       </view>
-    </block>
-    <view class="card sub" wx:else>暂无绑定学员。请在个人中心生成邀请码。</view>
+      <button class="primary" bindtap="goBooking">查看排课</button>
+    </view>
+    <view class="head">
+      <view class="head-title">我的学员</view>
+    </view>
+    <view class="card" wx:for="{{sessions}}" wx:key="studentId">
+      <view class="flex">
+        <view class="ico blue">↗</view>
+        <view class="grow">
+          <view class="card-title">{{item.name}}</view>
+          <view class="sub">训练计划与课后记录</view>
+        </view>
+      </view>
+      <view class="twobtn">
+        <button class="secondary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goStudentProfile">学员档案</button>
+        <button class="primary" data-student="{{item.name}}" data-id="{{item.studentId}}" bindtap="goRecordFor">记录训练</button>
+      </view>
+    </view>
+    <view class="card" wx:if="{{!sessions.length}}">
+      <view class="card-title">一起开始第一节课</view>
+      <view class="sub">在个人中心生成邀请码，邀请学员加入。</view>
+      <button class="secondary" style="margin-top:20rpx" bindtap="goProfile">邀请学员</button>
+    </view>
   </block>
 </view>
-
 <bottom-nav active="home" />

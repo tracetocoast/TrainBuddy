@@ -14,7 +14,7 @@
   gap: 8rpx;
   margin: 20rpx 0;
   padding: 8rpx;
-  background: #e6e9df;
+  background: #f3f5f7;
   border-radius: 20rpx;
 }
 
@@ -44,7 +44,7 @@
 .week-col {
   flex: 1;
   background: #fff;
-  border: 2rpx solid #e4e7dd;
+  border: 2rpx solid #e5e5e5;
   border-radius: 16rpx;
   padding: 16rpx 4rpx;
   text-align: center;
@@ -52,7 +52,7 @@
 
 .week-hd {
   font-size: 18rpx;
-  color: #74796d;
+  color: #777777;
   white-space: pre-line;
   line-height: 1.3;
 }

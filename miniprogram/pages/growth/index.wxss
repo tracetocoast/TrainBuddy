@@ -34,18 +34,18 @@
   align-items: center;
   gap: 8rpx;
   font-size: 22rpx;
-  color: #74796d;
+  color: #777777;
 }
 
 .dot {
   width: 14rpx;
   height: 14rpx;
   border-radius: 50%;
-  background: #c8ff36;
+  background: #a7df78;
 }
 
 .dot-workout {
-  background: #a6e61b;
+  background: #58cc02;
 }
 
 .dot-rest {
@@ -69,7 +69,7 @@
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-size: 22rpx;
-  color: #74796d;
+  color: #777777;
   margin-bottom: 8rpx;
 }
 
@@ -83,7 +83,7 @@
   min-height: 88rpx;
   border-radius: 16rpx;
   background: #fff;
-  border: 2rpx solid #e4e7dd;
+  border: 2rpx solid #e5e5e5;
   padding: 8rpx;
   box-sizing: border-box;
   display: flex;
@@ -97,12 +97,12 @@
 }
 
 .cal-cell.today {
-  border-color: #c8ff36;
+  border-color: #a7df78;
 }
 
 .cal-cell.selected {
-  background: #eef8d0;
-  border-color: #a6e61b;
+  background: #effbdd;
+  border-color: #58cc02;
 }
 
 .cal-day {
@@ -129,3 +129,9 @@
   gap: 8rpx;
   margin-top: 8rpx;
 }
+
+.growth-summary { display: flex; align-items: center; justify-content: space-between; margin: 28rpx 0 20rpx; padding: 28rpx 32rpx; background: #f2fbe7; border: 2rpx solid #d7edbd; border-radius: 28rpx; }
+.growth-total { font-size: 70rpx; font-weight: 800; color: #487b21; line-height: 1.3; margin-top: 8rpx; }
+.growth-total text { font-size: 26rpx; margin-left: 12rpx; }
+.growth-sprout { font-size: 98rpx; color: #58cc02; transform: rotate(12deg); }
+.growth-volume { margin-top: 18rpx; }

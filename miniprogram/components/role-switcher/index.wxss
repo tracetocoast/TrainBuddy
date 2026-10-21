@@ -1,35 +1,33 @@
 .role {
   display: flex;
-  flex-wrap: wrap;
-  margin-bottom: 30rpx;
-  padding: 8rpx;
-  background: #e6e9df;
-  border-radius: 26rpx;
-  position: relative;
+  gap: 8rpx;
+  padding: 6rpx;
+  margin: 4rpx 0 24rpx;
+  border: 2rpx solid #e5e5e5;
+  border-radius: 22rpx;
+  background: #f7f9fa;
 }
 
 .role-btn {
   flex: 1;
-  min-width: 40%;
-  border: 0;
-  background: transparent;
-  padding: 18rpx;
-  border-radius: 20rpx;
-  font-size: 24rpx;
+  width: 0;
+  min-height: 72rpx;
+  padding: 14rpx 12rpx;
+  border-radius: 16rpx;
+  font-size: 25rpx;
   font-weight: 700;
-  color: #757a6d;
-  line-height: 1.2;
+  line-height: 1.5;
+  color: #777;
 }
 
 .role-btn.on {
   background: #fff;
-  color: #151812;
+  color: #487b21;
+  box-shadow: 0 3rpx 0 #d9e7ce;
 }
 
-.role-hint {
-  width: 100%;
-  font-size: 18rpx;
-  color: #8b9084;
-  padding: 8rpx 12rpx 4rpx;
-  line-height: 1.4;
+.role-btn {
+  width: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
