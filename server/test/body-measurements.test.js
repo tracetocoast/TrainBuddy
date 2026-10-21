@@ -76,4 +76,53 @@ describe('Body measurements: private persistent history and trends', () => {
     assert.equal(trend(rows, 'waist').count, 0)
     assert.equal(trend(rows, 'waist').latest, '—')
   })
+
+  it('appends every measurement with a time, preserves the old format and deduplicates network retries', async () => {
+    const past = ctx.time.addDays(date, -1)
+    await save(past, { weight: 70, waist: 80 })
+    const add = (values, time, key) => ctx.request('POST', '/api/v1/body-measurements', { token: student.sessionToken, headers: { 'Idempotency-Key': key }, body: { date: past, time, values } })
+    const first = await add({ waist: 79.5 }, '09:00', 'morning')
+    const retry = await add({ waist: 79.5 }, '09:00', 'morning')
+    const second = await add({ waist: 80.2 }, '18:30', 'evening')
+    assert.equal(first.status, 200)
+    assert.equal(second.status, 200)
+    assert.equal(first.body.data.id, retry.body.data.id)
+    assert.notEqual(first.body.data.id, second.body.data.id)
+    const rows = (await list()).body.data
+    assert.equal(rows.length, 3)
+    assert.equal(rows[0].timeLabel, '时间未记录')
+    assert.deepEqual(rows[0].values, { weight: 70, waist: 80 })
+    assert.deepEqual(rows.slice(1).map(row => row.time), ['09:00', '18:30'])
+    assert.deepEqual(rows.slice(1).map(row => row.values), [{ waist: 79.5 }, { waist: 80.2 }])
+    assert.equal(rows[1].measuredAt, ctx.time.shanghaiLocalToMs(past, '09:00'))
+    const restored = new MemoryStore(ctx.store.filePath)
+    assert.equal(restored.state.bodyMeasurementEntries.length, 2)
+    const chart = trend(rows.slice(1), 'waist')
+    assert.equal(chart.dots.length, 2)
+    assert.equal(chart.dots[0].x, 10)
+    assert.equal(chart.dots[1].x, 590)
+    assert.equal(chart.latestTime, '18:30')
+    assert.equal(chart.deltaText, '+0.7 cm')
+    const concurrent = await Promise.all([
+      add({ upperArmLeft: 30, upperArmRight: 31 }, '19:00', 'concurrent'),
+      add({ upperArmLeft: 30, upperArmRight: 31 }, '19:00', 'concurrent')
+    ])
+    assert.equal(concurrent[0].status, 200)
+    assert.equal(concurrent[1].body.data.id, concurrent[0].body.data.id)
+    assert.equal((await list()).body.data.length, 4)
+  })
+
+  it('rejects future and invalid measurement times without writing an entry', async () => {
+    const past = ctx.time.addDays(date, -1)
+    for (const input of [
+      { date: past, time: '25:00', values: { waist: 80 } },
+      { date: past, time: '', values: { waist: 80 } },
+      { date: past, time: '09:00', values: { waist: null } },
+      { date: ctx.time.addDays(date, 1), time: '09:00', values: { waist: 80 } }
+    ]) {
+      const res = await ctx.request('POST', '/api/v1/body-measurements', { token: student.sessionToken, body: input, headers: { 'Idempotency-Key': JSON.stringify(input) } })
+      assert.equal(res.status, 422)
+    }
+    assert.deepEqual((await list()).body.data, [])
+  })
 })

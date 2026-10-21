@@ -26,11 +26,10 @@ Page({
     const from = this.data.range === 'all' ? '' : time.addDays(time.todayKey(), 1 - Number(this.data.range))
     const key = this.data.metric.key
     const rows = (this.rows || []).filter(row => (!from || row.date >= from) && row.values[key] != null)
-    this.setData({ chart: bodyApi.trend(rows, key), history: rows.slice().reverse().map(row => ({ date: row.date, value: row.values[key] })) })
+    this.setData({ chart: bodyApi.trend(rows, key), history: rows.slice().reverse().map(row => ({ id: row.id || row.date, date: row.date, time: row.time || '时间未记录', value: row.values[key] })) })
   },
   onRange(e) { this.setData({ range: e.currentTarget.dataset.range }); this.render() },
   onRecord(e) {
-    const date = e.currentTarget.dataset.date || ''
-    wx.navigateTo({ url: '/pages/body-record/index?key=' + this.data.metric.key + (date ? '&date=' + date : '') })
+    wx.navigateTo({ url: '/pages/body-record/index?key=' + this.data.metric.key })
   }
 })

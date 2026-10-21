@@ -1307,6 +1307,13 @@ function buildRouter() {
     catch (error) { next(error) }
   })
 
+  r.post('/body-measurements', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(state => bodyMeasurementService.append(state, req.actor, req.body || {}, req.idempotencyKey, req.idempotencyBodyHash))
+      ok(res, data)
+    } catch (error) { next(error) }
+  })
+
   r.put('/body-measurements/:date', authRequired, async (req, res, next) => {
     try {
       const data = await req.app.locals.store.tx(state => bodyMeasurementService.save(state, req.actor, req.params.date, req.body || {}))

@@ -1,0 +1,10 @@
+<view class="body-page">
+  <view class="body-page-head"><view><view class="body-heading">测量历史</view><view class="body-caption">每一次测量，都完整留存</view></view><picker range="{{metrics}}" bindchange="onTrend"><view class="history-trend-link">查看趋势 ▾</view></picker></view>
+  <view class="body-status" wx:if="{{loading}}">正在读取…</view>
+  <view class="body-status" wx:elif="{{error}}"><view>{{error}}</view><button class="link" bindtap="reload">重试</button></view>
+  <block wx:else>
+    <view class="history-measurement" wx:for="{{rows}}" wx:key="id"><view class="history-stamp"><text>{{item.date}}</text><text>{{item.time}}</text></view><view class="history-item" wx:for="{{item.items}}" wx:for-item="metric" wx:key="key"><text>{{metric.label}}</text><text>{{metric.value}} <text class="history-unit">{{metric.unit}}</text></text></view></view>
+    <view class="metric-empty" wx:if="{{!rows.length}}">还没有测量记录<text>在人体图上选择一个部位，开始第一次记录。</text></view>
+    <view class="body-privacy">同一天的多次测量分别保存，按测量时间排列。<view>早期记录缺少精确时间时，显示“时间未记录”。</view></view>
+  </block>
+</view>

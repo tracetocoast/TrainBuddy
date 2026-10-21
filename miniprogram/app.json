@@ -21,7 +21,8 @@
     "pages/student-profile/index",
     "pages/profile/index",
     "pages/bind/index",
-    "pages/privacy/index"
+    "pages/privacy/index",
+    "pages/body-history/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",

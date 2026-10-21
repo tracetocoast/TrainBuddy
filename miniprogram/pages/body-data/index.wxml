@@ -1,19 +1,36 @@
-<view class="body-page">
-  <view class="body-page-head"><view><view class="body-heading">身体数据</view><view class="body-caption">每一次记录，都有迹可循</view></view><button class="body-add" bindtap="onRecord" disabled="{{loading || error}}">＋ 记录</button></view>
+<view class="body-page map-page">
+  <view class="map-toolbar"><view class="map-title">身体数据</view><view class="unit-switch"><button class="{{unit === 'kg' ? 'on' : ''}}" data-unit="kg" bindtap="onUnit">公斤</button><button class="{{unit === 'jin' ? 'on' : ''}}" data-unit="jin" bindtap="onUnit">斤</button></view></view>
+  <view class="map-tabs"><button wx:for="{{tabs}}" wx:key="key" class="{{activeTab === item.key ? 'on' : ''}}" data-tab="{{item.key}}" bindtap="onTab">{{item.label}}</button></view>
   <view class="body-status" wx:if="{{loading}}">正在读取…</view>
   <view class="body-status" wx:elif="{{error}}"><view>{{error}}</view><button class="link" bindtap="reload">重试</button></view>
   <block wx:else>
-    <view class="body-section-label">常用指标</view>
-    <view class="metric-list">
-      <button class="metric-row" wx:for="{{common}}" wx:key="key" data-key="{{item.key}}" bindtap="onMetric">
-        <view class="grow"><view class="metric-name">{{item.label}}</view><view class="metric-date">{{item.date || '还没有记录'}}</view></view>
-        <view class="metric-number">{{item.value}}<text wx:if="{{item.date}}">{{item.unit}}</text></view><text class="metric-arrow">›</text>
-      </button>
-    </view>
-    <button class="all-metrics" bindtap="onToggle"><text>{{showAll ? '收起其他指标' : '其他身体指标'}}</text><text class="all-caption">{{showAll ? '⌃' : '围度、肌肉量、身高  ›'}}</text></button>
-    <view class="metric-list" wx:if="{{showAll}}">
-      <button class="metric-row" wx:for="{{others}}" wx:key="key" data-key="{{item.key}}" bindtap="onMetric"><view class="grow"><view class="metric-name">{{item.label}}</view><view class="metric-date">{{item.date || '还没有记录'}}</view></view><view class="metric-number">{{item.value}}<text wx:if="{{item.date}}">{{item.unit}}</text></view><text class="metric-arrow">›</text></button>
-    </view>
-    <view class="body-privacy">仅自己可见 · 点击指标查看变化趋势</view>
+    <block wx:if="{{activeTab === 'data'}}">
+      <view class="map-summaries"><button wx:for="{{summaries}}" wx:key="key" data-key="{{item.key}}" bindtap="onMetric"><view class="summary-label">{{item.label}}</view><view class="summary-date">{{item.date || '尚未记录'}}</view><view class="summary-value">{{item.value}}<text>{{item.unit}}</text></view></button></view>
+      <view class="body-map">
+        <image class="body-illustration" src="{{illustration}}" mode="aspectFit" aria-label="可点击标注的身体测量示意图" />
+        <view class="map-tag tag-{{item.side}}" wx:for="{{parts}}" wx:key="label" style="top:{{item.top}}rpx;--reach:{{item.reach}}rpx">
+          <view class="paired-label" wx:if="{{item.entries.length > 1}}">{{item.label}}</view>
+          <button class="map-value-row" wx:for="{{item.entries}}" wx:for-item="entry" wx:key="key" data-key="{{entry.key}}" bindtap="onMetric" aria-label="记录{{entry.sideLabel}}{{item.label}}">
+            <text wx:if="{{item.entries.length === 1}}">{{item.label}} </text><text>{{entry.value}}</text><text class="body-side" wx:if="{{entry.sideLabel}}"> {{entry.sideLabel}}</text>
+          </button>
+          <view class="map-connector"><view></view></view>
+        </view>
+      </view>
+      <view class="map-instruction">点击蓝色数值记录 · 围度单位 cm<view>左右按本人方向区分，肩宽与肩围分别保存。</view></view>
+      <button class="map-history-entry" bindtap="onHistory"><text>全部测量记录</text><text>时间与数值完整留存 ›</text></button>
+    </block>
+    <block wx:elif="{{activeTab === 'chart'}}">
+      <picker range="{{metricNames}}" value="{{metricIndex}}" bindchange="onChartMetric"><view class="chart-metric-picker">{{chart.metric.label}} <text>切换指标 ▾</text></view></picker>
+      <view class="metric-hero"><view class="metric-hero-value">{{chart.latest}}<text>{{chart.metric.unit}}</text></view><view class="body-caption">{{chart.latestDate}} {{chart.latestTime}}</view><view class="metric-change">{{chart.deltaText}}</view></view>
+      <view class="metric-ranges"><button wx:for="{{ranges}}" wx:key="key" class="metric-range {{range === item.key ? 'on' : ''}}" data-range="{{item.key}}" bindtap="onRange">{{item.label}}</button></view>
+      <view class="trend-wrap"><view class="body-chart" wx:if="{{chart.count}}"><view class="chart-grid grid-top"></view><view class="chart-grid grid-middle"></view><view class="chart-grid grid-bottom"></view><view class="chart-line" wx:for="{{chart.lines}}" wx:key="id" style="{{item.style}}"></view><view class="chart-dot" wx:for="{{chart.dots}}" wx:key="id" style="left:{{item.x}}rpx;top:{{item.y}}rpx"></view></view><view class="metric-empty" wx:else>还没有这项数据<text>先在人体图上记录一次测量。</text></view><view class="chart-labels" wx:if="{{chart.count}}"><text>{{chart.firstDate}}</text><text>{{chart.latestDate}}</text></view></view>
+      <button class="map-history-entry" bindtap="onHistory"><text>查看测量明细</text><text>›</text></button>
+    </block>
+    <block wx:else>
+      <picker mode="date" fields="month" value="{{month + '-01'}}" bindchange="onMonth"><view class="chart-metric-picker">{{month}} <text>选择月份 ▾</text></view></picker>
+      <view class="measurement-weekdays"><text wx:for="{{weekdays}}" wx:key="*this">{{item}}</text></view>
+      <view class="measurement-calendar"><block wx:for="{{days}}" wx:key="key"><view wx:if="{{item.empty}}"></view><button wx:else class="measurement-day {{item.selected ? 'selected' : ''}}" data-date="{{item.date}}" bindtap="onDay"><text>{{item.day}}</text><view class="calendar-measure-dot" wx:if="{{item.hasData}}"></view></button></block></view>
+      <view class="calendar-selected-date">{{selectedDate}}</view><view class="calendar-record" wx:for="{{dayRows}}" wx:key="id"><view>{{item.time}}</view><view>{{item.text}}</view></view><view class="metric-empty" wx:if="{{!dayRows.length}}">当天没有测量记录</view>
+    </block>
   </block>
 </view>
