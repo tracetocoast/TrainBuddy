@@ -1,7 +1,7 @@
 <view class="page">
   <view class="top">
     <view class="brand">
-      <text class="mark">↗</text>练搭子
+      <brand-logo class="brand-emblem-slot" />练搭子
       <text class="brand-sub">TRAIN BUDDY</text>
     </view>
   </view>

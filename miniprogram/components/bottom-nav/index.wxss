@@ -4,8 +4,8 @@
   left: 0;
   right: 0;
   min-height: calc(112rpx + env(safe-area-inset-bottom));
-  background: #fff;
-  border-top: 2rpx solid #e5e5e5;
+  background: var(--surface);
+  border-top: 2rpx solid #304351;
   display: flex;
   align-items: flex-start;
   justify-content: space-around;
@@ -39,14 +39,20 @@
 }
 
 .nav-item.active {
-  color: #487b21;
+  color: #bdd3e2;
 }
 
 .nav-item.active .nav-icon {
-  background: #effbdd;
-  border-color: #bde69d;
+  background: #203748;
+  border-color: #52718a;
 }
 
 .nav-text {
   line-height: 1.4;
 }
+
+.nav { background: #111b26; border-top: 1rpx solid #304351; }
+.nav-symbol { width: 42rpx; height: 42rpx; display: block; }
+.nav-item { color: #7e95a6; font-weight: 400; }
+.nav-item.active { color: #d9e7f0; }
+.nav-item.active .nav-icon { background: #233c4f; border: 1rpx solid #4a687f; }

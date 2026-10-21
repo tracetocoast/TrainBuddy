@@ -1,7 +1,7 @@
 <view class="page">
   <view class="top">
     <view class="brand">
-      <text class="mark">↗</text>练搭子
+      <brand-logo class="brand-emblem-slot" />练搭子
       <text class="brand-sub">TRAIN BUDDY</text>
     </view>
   </view>
@@ -14,7 +14,7 @@
       <view class="growth-total">{{summary && !summary.empty.sessionCount ? summary.sessionCount : '—'}}<text>次</text>
       </view>
     </view>
-    <view class="growth-sprout" aria-hidden="true">✿</view>
+    <view class="growth-emblem" aria-hidden="true"><brand-logo size="92" /></view>
   </view>
   <view class="stats">
     <view class="stat">
@@ -38,7 +38,7 @@
   </view>
   <view class="card chart" wx:if="{{summary && summary.bars && summary.bars.length}}">
     <view class="bar-col" wx:for="{{summary.bars}}" wx:key="date">
-      <view class="bar" style="height: {{item.height || 8}}rpx; background: {{item.sets ? '#58cc02' : '#e5e5e5'}};"></view>
+      <view class="bar" style="height: {{item.height || 8}}rpx; background: {{item.sets ? '#a5c5db' : '#304351'}};"></view>
       <text class="sub">{{item.label}}</text>
     </view>
   </view>

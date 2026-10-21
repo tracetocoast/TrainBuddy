@@ -1,7 +1,7 @@
 .aset {
   margin-top: 16rpx;
   padding: 16rpx;
-  background: #f7f9fa;
+  background: #172735;
   border-radius: 16rpx;
 }
 
@@ -26,8 +26,8 @@
 .mini-field {
   width: 120rpx;
   padding: 10rpx 12rpx;
-  background: #fff;
-  border: 2rpx solid #e5e5e5;
+  background: var(--surface);
+  border: 2rpx solid #304351;
   border-radius: 12rpx;
   font-size: 24rpx;
   text-align: center;

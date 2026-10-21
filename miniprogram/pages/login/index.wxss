@@ -24,7 +24,7 @@
 .brand-en {
   font-size: 22rpx;
   letter-spacing: 3rpx;
-  color: #7c8175;
+  color: #91a6b6;
   margin: 8rpx 0 20rpx;
 }
 
@@ -35,8 +35,8 @@
 .account-btn {
   display: block;
   width: 100%;
-  text-align: left; border: 2rpx solid #e5e5e5; border-bottom-width: 5rpx;
-  background: #f7f9fa;
+  text-align: left; border: 2rpx solid #304351; border-bottom-width: 5rpx;
+  background: #172735;
   border-radius: 24rpx;
   padding: 24rpx;
   margin-top: 16rpx;
@@ -44,7 +44,7 @@
 }
 
 .account-btn.warn {
-  background: #fff3ea;
+  background: #302e2a;
 }
 
 .account-name {
@@ -64,18 +64,18 @@
   width: 40rpx;
   height: 40rpx;
   border-radius: 10rpx;
-  border: 2rpx solid #c5cbbd;
+  border: 2rpx solid #40596d;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22rpx;
   flex-shrink: 0;
-  background: #fff;
+  background: var(--surface);
 }
 
 .check.on {
-  background: #a7df78;
-  border-color: #a7df78;
+  background: #66869e;
+  border-color: #66869e;
   font-weight: 800;
 }
 
@@ -83,3 +83,8 @@
   margin-top: 40rpx;
   text-align: center;
 }
+
+.login-emblem { display: flex; justify-content: center; margin: 12rpx 0 28rpx; }
+.brand-title { color: #e4edf3; font-weight: 500; letter-spacing: 4rpx; }
+
+.check.on { background: #38566d; border-color: #68869a; color: #e4edf3; }

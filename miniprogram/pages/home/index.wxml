@@ -1,7 +1,7 @@
 <view class="page home-page">
   <view class="top">
     <view class="brand">
-      <text class="mark">↗</text>练搭子</view>
+      <brand-logo class="brand-emblem-slot" />练搭子</view>
     <button class="msg-btn" bindtap="goProfile" aria-label="打开个人中心">{{avatarChar}}</button>
   </view>
   <role-switcher />
@@ -17,14 +17,7 @@
           <view class="daily-title">准备好动起来了吗？</view>
           <view class="sub">选择你的计划，逐组记录进步。</view>
         </view>
-        <view class="buddy" aria-hidden="true">
-          <view class="buddy-handle"></view>
-          <view class="buddy-body">
-            <view class="buddy-eye left"></view>
-            <view class="buddy-eye right"></view>
-            <view class="buddy-smile"></view>
-          </view>
-        </view>
+        <view class="training-emblem" aria-hidden="true"><brand-logo size="126" /></view>
       </view>
       <button class="primary" bindtap="goWorkout">开始训练</button>
     </view>

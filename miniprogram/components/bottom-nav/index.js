@@ -1,3 +1,4 @@
+const icons = require('../../assets/navigation-icons')
 const NAV = {
   student: [
     { key: 'home', path: '/pages/home/index', icon: '⌂', text: '今天' },
@@ -24,6 +25,7 @@ Component({
   },
 
   data: {
+    icons,
     items: NAV.student
   },
 

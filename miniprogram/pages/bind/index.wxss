@@ -6,8 +6,8 @@
   display: flex;
   gap: 20rpx;
   align-items: center;
-  background: #fff;
-  border: 2rpx solid #e4e7dd;
+  background: var(--surface);
+  border: 2rpx solid #304351;
   border-radius: 24rpx;
   padding: 22rpx;
   margin-top: 12rpx;
@@ -17,17 +17,17 @@
   width: 44rpx;
   height: 44rpx;
   border-radius: 12rpx;
-  border: 2rpx solid #c5cbbd;
+  border: 2rpx solid #40596d;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24rpx;
   flex-shrink: 0;
-  background: #fff;
+  background: var(--surface);
   font-weight: 800;
 }
 
 .check.on {
-  background: #c8ff36;
-  border-color: #c8ff36;
+  background: #28465b;
+  border-color: #52718a;
 }

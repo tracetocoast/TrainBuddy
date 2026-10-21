@@ -3,9 +3,9 @@
   gap: 8rpx;
   padding: 6rpx;
   margin: 4rpx 0 24rpx;
-  border: 2rpx solid #e5e5e5;
+  border: 2rpx solid #304351;
   border-radius: 22rpx;
-  background: #f7f9fa;
+  background: #172735;
 }
 
 .role-btn {
@@ -17,13 +17,13 @@
   font-size: 25rpx;
   font-weight: 700;
   line-height: 1.5;
-  color: #777;
+  color: #91a6b6;
 }
 
 .role-btn.on {
-  background: #fff;
-  color: #487b21;
-  box-shadow: 0 3rpx 0 #d9e7ce;
+  background: var(--surface);
+  color: #bdd3e2;
+  box-shadow: 0 3rpx 0 #2f485c;
 }
 
 .role-btn {
@@ -31,3 +31,7 @@
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
+
+.role { border-width: 1rpx; background: #142330; }
+.role-btn { font-weight: 400; color: #8fa6b7; }
+.role-btn.on { color: #deebf4; background: #263f52; box-shadow: none; }

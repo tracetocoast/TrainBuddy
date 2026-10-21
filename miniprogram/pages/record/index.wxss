@@ -24,7 +24,7 @@
 .aset {
   margin-top: 12rpx;
   padding: 12rpx;
-  background: #f7f9fa;
+  background: #172735;
   border-radius: 14rpx;
 }
 
@@ -43,8 +43,8 @@
 .mini-field {
   width: 110rpx;
   padding: 8rpx 10rpx;
-  background: #fff;
-  border: 2rpx solid #e5e5e5;
+  background: var(--surface);
+  border: 2rpx solid #304351;
   border-radius: 10rpx;
   font-size: 24rpx;
   text-align: center;
@@ -64,32 +64,32 @@
 .chip {
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
-  background: #fff;
-  border: 2rpx solid #e5e5e5;
+  background: var(--surface);
+  border: 2rpx solid #304351;
   font-size: 22rpx;
   font-weight: 700;
-  color: #777777;
+  color: #91a6b6;
 }
 
 .chip.on {
-  background: #a7df78;
-  border-color: #a7df78;
-  color: #151812;
+  background: #28465b;
+  border-color: #52718a;
+  color: #e4edf3;
 }
 
 .warn {
-  color: #b85c00;
+  color: #deb48c;
 }
 
 .conflict {
   margin-top: 10rpx;
   padding: 10rpx;
-  background: #fff8e8;
+  background: #302e2a;
   border-radius: 12rpx;
 }
 
 .hidden {
-  background: #eceee6;
+  background: #1a2935;
   border-style: dashed;
 }
 

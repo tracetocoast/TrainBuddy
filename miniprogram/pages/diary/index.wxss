@@ -23,17 +23,17 @@
 .chip {
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
-  background: #fff;
-  border: 2rpx solid #e5e5e5;
+  background: var(--surface);
+  border: 2rpx solid #304351;
   font-size: 22rpx;
   font-weight: 700;
-  color: #777777;
+  color: #91a6b6;
 }
 
 .chip.on {
-  background: #a7df78;
-  border-color: #a7df78;
-  color: #151812;
+  background: #28465b;
+  border-color: #52718a;
+  color: #e4edf3;
 }
 
 .grow-input {
@@ -50,7 +50,7 @@
 .mini-field {
   width: 160rpx;
   padding: 12rpx;
-  background: #f7f9fa;
+  background: #172735;
   border-radius: 12rpx;
   text-align: center;
 }
