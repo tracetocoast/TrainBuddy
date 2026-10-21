@@ -12,6 +12,7 @@ const CONCLUSION_LABEL = {
 Page({
   data: {
     role: 'student',
+    taskLabels: { queued: '等待处理', running: '处理中', succeeded: '已完成', failed: '未完成', partial: '部分完成', need_retake: '请补充照片', draft: '待复核', reviewed: '已复核', pending: '待处理', submitted: '已提交', cancelled: '已取消' },
     providerInfo: null,
     realProviderReady: false,
     mode: 'real',
@@ -30,7 +31,7 @@ Page({
     if (!requireLogin(this)) return
     syncRoleBar(this)
     const coach = getApp().globalData.role === 'coach'
-    wx.setNavigationBarTitle({ title: coach ? 'AI工具' : 'AI体态' })
+    wx.setNavigationBarTitle({ title: coach ? 'AI工具' : 'AI助手' })
     this.refreshMeta()
     this.loadConsultations()
   },

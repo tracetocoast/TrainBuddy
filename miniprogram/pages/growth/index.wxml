@@ -43,6 +43,31 @@
     </view>
   </view>
   <view class="card sub" wx:else>完成第一次训练后，就能看到你的训练节奏。</view>
+  <view class="head body-section-head"><view class="head-title">身体档案</view><button class="link" bindtap="onBodyOpen" disabled="{{bodyLoading || bodyError}}">＋ 记录数据</button></view>
+  <view class="sub">看见身体的变化，而不只是体重。记录仅自己可见。</view>
+  <view class="card" wx:if="{{bodyError}}"><view class="sub">{{bodyError}}</view><button class="link" bindtap="loadMeasurements">重新读取</button></view>
+  <view class="sub" wx:if="{{bodyLoading}}">正在读取身体档案…</view>
+  <view class="body-editor card" wx:if="{{bodyEditor}}">
+    <view class="card-title">记录身体数据</view>
+    <picker mode="date" value="{{bodyDate}}" start="1900-01-01" end="{{bodyToday}}" bindchange="onBodyDate" disabled="{{bodySaving}}"><view class="body-date">测量日期 <text>{{bodyDate}} ▾</text></view></picker>
+    <view class="body-form"><view class="body-form-item" wx:for="{{bodyFields}}" wx:key="key"><view class="body-field-label">{{item.label}} <text>{{item.unit}}</text></view><input class="field" type="digit" value="{{item.value}}" placeholder="选填" data-index="{{index}}" bindinput="onBodyInput" disabled="{{bodySaving || bodyConflict}}" /></view></view>
+    <view class="sub body-form-note">只填本次测量的项目；同日再次保存会更新该日记录。修改日期将载入对应日期的表单。上臂、大腿、小腿请始终记录同一侧，肩围为绕肩一周。保持相同测量条件更便于比较。</view>
+    <view class="body-conflict" wx:if="{{bodyConflict}}"><view class="sub">该日数据已在另一处更新。当前输入已保留，可先备份，再载入最新记录。</view><button class="link" bindtap="onBodyReload">载入最新记录</button></view>
+    <view class="twobtn"><button class="secondary" bindtap="onBodyClose" disabled="{{bodySaving}}">收起</button><button class="primary" bindtap="onBodySave" loading="{{bodySaving}}" disabled="{{bodySaving || bodyConflict}}">保存记录</button></view>
+  </view>
+  <view class="body-trend card">
+    <scroll-view scroll-x class="body-tabs"><button wx:for="{{bodyMetrics}}" wx:key="key" class="body-tab {{bodyKey === item.key ? 'on' : ''}}" data-key="{{item.key}}" bindtap="onBodyMetric">{{item.label}}</button></scroll-view>
+    <view class="body-trend-top"><view><view class="body-current">{{bodyTrend.latest}}<text>{{bodyTrend.metric.unit}}</text></view><view class="sub">{{bodyTrend.latestDate || '还没有这项记录'}}</view></view><view class="body-delta"><text>{{bodyTrend.deltaText}}</text><view class="sub" wx:if="{{bodyTrend.count > 1}}">所选区间首末对比</view></view></view>
+    <view class="body-ranges"><button wx:for="{{[{key:'30',label:'30天'},{key:'90',label:'90天'},{key:'all',label:'全部'}]}}" wx:key="key" class="body-range {{bodyRange === item.key ? 'on' : ''}}" data-range="{{item.key}}" bindtap="onBodyRange">{{item.label}}</button></view>
+    <view class="body-chart" wx:if="{{bodyTrend.count}}" aria-label="{{bodyTrend.metric.label}}趋势，共{{bodyTrend.count}}次记录，最新{{bodyTrend.latest}}{{bodyTrend.metric.unit}}，{{bodyTrend.deltaText}}"><view class="body-grid-line grid-top"></view><view class="body-grid-line grid-middle"></view><view class="body-grid-line grid-bottom"></view><view class="body-line" wx:for="{{bodyTrend.lines}}" wx:key="id" style="{{item.style}}"></view><view class="body-dot" wx:for="{{bodyTrend.dots}}" wx:key="date" style="left:{{item.x}}rpx;top:{{item.y}}rpx"></view></view>
+    <view class="body-chart-empty" wx:else>从一次测量开始，<view>让每一份改变都有迹可循。</view></view>
+    <view class="body-chart-labels" wx:if="{{bodyTrend.count}}"><text>{{bodyTrend.firstDate}}</text><text>{{bodyTrend.latestDate}}</text></view>
+    <view class="body-chart-labels" wx:if="{{bodyTrend.count > 1}}"><text>最低 {{bodyTrend.min}} / 最高 {{bodyTrend.max}} {{bodyTrend.metric.unit}}</text><text>{{bodyTrend.count}} 次测量</text></view>
+    <view class="sub body-form-note">{{bodyTrend.count === 1 ? '已有一次记录，再记录一次即可比较变化。' : '连线仅连接测量点；变化幅度不代表健康评价。'}}</view>
+  </view>
+  <view class="body-tiles"><button class="body-tile {{bodyKey === item.key ? 'selected' : ''}}" wx:for="{{bodyTiles}}" wx:key="key" data-key="{{item.key}}" bindtap="onBodyMetric"><view class="body-field-label">{{item.label}}</view><view class="body-tile-value">{{item.value}} <text>{{item.unit}}</text></view><view class="body-tile-date">{{item.date}}</view></button></view>
+  <view class="body-history card" wx:if="{{bodyHistory.length}}"><view class="card-title">最近测量</view><view class="body-history-row" wx:for="{{bodyHistory}}" wx:key="date"><view class="grow"><view>{{item.date}}</view><view class="sub">{{item.text}}</view></view><button class="link" data-date="{{item.date}}" bindtap="onBodyOpen">修改</button></view></view>
+
   <!-- 多标记日历 -->
   <view class="head">
     <view class="head-title">{{monthLabel}} 日历</view>

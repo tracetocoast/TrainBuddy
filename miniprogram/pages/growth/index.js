@@ -4,6 +4,7 @@ const growthApi = require('../../services/growthApi')
 const diaryApi = require('../../services/diaryApi')
 const trainingApi = require('../../services/trainingApi')
 const time = require('../../utils/time')
+const bodyApi = require('../../services/bodyMeasurementApi')
 
 Page({
   data: {
@@ -14,6 +15,21 @@ Page({
     dayDetail: null,
     summary: null,
     records: [],
+    bodyMetrics: bodyApi.METRICS,
+    bodyKey: 'weight',
+    bodyRange: '90',
+    bodyTrend: bodyApi.trend([], 'weight'),
+    bodyTiles: [],
+    bodyHistory: [],
+    bodyLoading: false,
+    bodyError: '',
+    bodyEditor: false,
+    bodySaving: false,
+    bodyDate: '',
+    bodyToday: '',
+    bodyFields: [],
+    bodyRevision: 0,
+    bodyConflict: false,
     legend: [
       { key: 'workout', label: '训练', cls: 'dot-workout' },
       { key: 'rest', label: '休息', cls: 'dot-rest' },
@@ -29,6 +45,77 @@ Page({
     const today = time.todayKey()
     this.setData({ selectedDate: this.data.selectedDate || today })
     this.reload()
+    this.loadMeasurements()
+  },
+
+  loadMeasurements() {
+    const owner = getApp().globalData.session.user.userId
+    if (this.measurementOwner !== owner) {
+      this.measurementOwner = owner
+      this.measurements = []
+      this.setData({ bodyEditor: false, bodyFields: [], bodyConflict: false })
+      this.renderMeasurements()
+    }
+    this.setData({ bodyLoading: true, bodyError: '' })
+    return bodyApi.list().then(res => {
+      const session = getApp().globalData.session
+      if (!session || session.user.userId !== owner) return
+      this.measurements = res.data || []
+      this.renderMeasurements()
+    }).catch(err => this.setData({ bodyError: err.message || '身体数据读取失败，请重试' }))
+      .then(() => this.setData({ bodyLoading: false }))
+  },
+
+  renderMeasurements() {
+    const rows = this.measurements || []
+    const from = this.data.bodyRange === 'all' ? '' : time.addDays(time.todayKey(), 1 - Number(this.data.bodyRange))
+    const tiles = bodyApi.METRICS.map(metric => {
+      const latest = rows.slice().reverse().find(row => row.values[metric.key] != null)
+      return Object.assign({}, metric, { value: latest ? latest.values[metric.key] : '—', date: latest ? latest.date : '未记录' })
+    })
+    this.setData({
+      bodyTrend: bodyApi.trend(rows, this.data.bodyKey, from), bodyTiles: tiles,
+      bodyHistory: rows.slice(-5).reverse().map(row => ({ date: row.date, text: bodyApi.METRICS.filter(metric => row.values[metric.key] != null).map(metric => metric.label + ' ' + row.values[metric.key] + metric.unit).join(' · ') }))
+    })
+  },
+
+  onBodyMetric(e) { this.setData({ bodyKey: e.currentTarget.dataset.key }); this.renderMeasurements() },
+  onBodyRange(e) { this.setData({ bodyRange: e.currentTarget.dataset.range }); this.renderMeasurements() },
+  onBodyOpen(e) {
+    this.openBodyDate(e.currentTarget.dataset.date || time.todayKey())
+  },
+  openBodyDate(date) {
+    const row = (this.measurements || []).find(item => item.date === date)
+    this.setData({ bodyEditor: true, bodyDate: date, bodyToday: time.todayKey(), bodyRevision: row ? row.revision : 0, bodyConflict: false,
+      bodyFields: bodyApi.METRICS.map(metric => Object.assign({}, metric, { value: row && row.values[metric.key] != null ? String(row.values[metric.key]) : '' })) })
+  },
+  onBodyDate(e) { this.openBodyDate(e.detail.value) },
+  onBodyInput(e) {
+    const fields = this.data.bodyFields.map(field => Object.assign({}, field))
+    fields[Number(e.currentTarget.dataset.index)].value = e.detail.value
+    this.setData({ bodyFields: fields })
+  },
+  onBodyClose() { if (!this.data.bodySaving) this.setData({ bodyEditor: false }) },
+  onBodyReload() {
+    wx.showModal({ title: '载入最新记录？', content: '当前表单尚未保存的修改将被替换。', success: result => {
+      if (result.confirm) bodyApi.list().then(res => { this.measurements = res.data || []; this.renderMeasurements(); this.openBodyDate(this.data.bodyDate) }).catch(err => getApp().toast(err.message || '读取失败'))
+    } })
+  },
+  onBodySave() {
+    if (this.data.bodySaving || this.data.bodyConflict) return
+    const values = {}
+    for (const field of this.data.bodyFields) {
+      const raw = String(field.value).trim()
+      if (raw && !Number.isFinite(Number(raw))) return getApp().toast('请填写有效数字')
+      values[field.key] = raw ? Number(raw) : null
+    }
+    if (!Object.values(values).some(value => value != null)) return getApp().toast('请至少填写一项身体数据')
+    this.setData({ bodySaving: true })
+    return bodyApi.save(this.data.bodyDate, values, this.data.bodyRevision).then(res => {
+      this.measurements = (this.measurements || []).filter(row => row.date !== res.data.date).concat(res.data).sort((a, b) => a.date.localeCompare(b.date))
+      this.renderMeasurements(); this.setData({ bodyEditor: false }); getApp().toast('身体数据已保存')
+    }).catch(err => { if (err.code === 'REVISION_CONFLICT') this.setData({ bodyConflict: true }); getApp().toast(err.message || '保存失败，填写内容仍保留') })
+      .then(() => this.setData({ bodySaving: false }))
   },
 
   studentId() {

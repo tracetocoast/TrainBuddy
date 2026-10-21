@@ -1,129 +1,30 @@
 <view class="ai-page">
-  <view class="top">
-    <view class="brand ai-brand">
-      <text class="mark">↗</text>练搭子
-      <text class="brand-sub ai-sub">TRAIN BUDDY</text>
-    </view>
-  </view>
-
+  <view class="top"><view class="brand ai-brand"><text class="ai-monogram">L</text>练搭子 <text class="ai-brand-detail">INTELLIGENCE</text></view></view>
   <role-switcher />
-
-  <view class="eyebrow ai-eye">AI LAB · TASK CENTER</view>
-  <view class="title ai-title">体态观察与目标模拟</view>
-  <view class="sub ai-desc">AI 建议仅供训练参考，不能替代医疗诊断。未接入能力不会显示成功。</view>
-
-  <view class="mode-row">
-    <text class="mode-label">任务模式</text>
-    <radio-group class="mode-group" bindchange="onModeChange">
-      <label class="mode-item">
-        <radio value="real" checked="{{mode === 'real'}}" color="#c8ff36" />真实
-      </label>
-      <label class="mode-item">
-        <radio value="demo" checked="{{mode === 'demo'}}" color="#c8ff36" />演示
-      </label>
-    </radio-group>
-  </view>
-  <view class="hint">{{statusHint}}</view>
-
-  <view class="aibox">
-    <view class="row-between">
-      <text class="pill">POSTURE SCAN</text>
-      <text class="tag" wx:if="{{mode === 'demo'}}">DEMO</text>
-      <text class="tag tag-muted" wx:else>REAL</text>
+  <view class="ai-intro"><view class="ai-kicker">PERSONAL TRAINING INTELLIGENCE</view><view class="ai-heading">更懂身体，<view>更有方向。</view></view><view class="ai-lead">从体态观察到目标预览，<view>为你的训练，提供一个新的视角。</view></view><view class="ai-orbit" aria-hidden="true"><view class="orbit-inner"></view><view class="orbit-point"></view></view></view>
+  <view class="ai-services-label"><text>你的专属工具</text><text class="ai-service-count">01 — 02</text></view>
+  <view class="aibox posture-box">
+    <view class="row-between"><text class="ai-section-number">01 / POSTURE</text><text class="ai-badge">{{mode === 'demo' ? '演示体验' : '体态观察'}}</text></view>
+    <view class="ai-service-title">读懂你的体态</view><view class="ai-desc">上传正面与侧面照片，观察肩颈、躯干与骨盆的可见特征。</view>
+    <view class="photo-grid">
+      <button class="photo-slot {{frontMediaId ? 'photo-ready' : ''}}" bindtap="onPickFront" disabled="{{busy}}"><view class="photo-frame"><text>{{frontMediaId ? '✓' : '＋'}}</text></view><view class="photo-title">正面照片</view><view class="photo-sub">{{frontMediaId ? '照片已登记 · 点击重选' : '自然站立 · 全身入镜'}}</view></button>
+      <button class="photo-slot {{sideMediaId ? 'photo-ready' : ''}}" bindtap="onPickSide" disabled="{{busy}}"><view class="photo-frame side-frame"><text>{{sideMediaId ? '✓' : '＋'}}</text></view><view class="photo-title">侧面照片</view><view class="photo-sub">{{sideMediaId ? '照片已登记 · 点击重选' : '自然侧立 · 双脚入镜'}}</view></button>
     </view>
-    <view class="hero-title" style="margin:24rpx 0 0;color:#fff;">体态扫描</view>
-    <view class="scan">
-      <view class="silhouette">♙</view>
-      <view class="scan-line"></view>
-      <view class="scanlabel">
-        <text>BODY ALIGNMENT</text>
-        <text>{{busy ? 'WORKING' : 'READY'}}</text>
-      </view>
-    </view>
-    <view class="twobtn">
-      <button class="darkbtn" bindtap="onPickFront" disabled="{{busy}}">
-        {{frontMediaId ? '✓ 正面已登记' : '＋ 正面照片'}}
-      </button>
-      <button class="darkbtn" bindtap="onPickSide" disabled="{{busy}}">
-        {{sideMediaId ? '✓ 侧面已登记' : '＋ 侧面照片'}}
-      </button>
-    </view>
-    <button class="primary" style="width:100%;margin-top:20rpx" bindtap="onScan" disabled="{{busy}}">
-      提交体态分析任务 ↗
-    </button>
+    <button class="ai-primary" bindtap="onScan" disabled="{{busy}}" loading="{{busy}}">开始体态观察 <text>↗</text></button>
+    <view class="ai-footnote">{{mode === 'demo' ? '演示结果使用示例数据，不代表你的体态。' : '结果用于训练参考，不能替代医疗诊断。'}}</view>
   </view>
-
-  <view class="note">不采用「82/100」总分。项目结论为：未见明显特征／疑似需关注／无法判断。</view>
-
-  <view class="aibox" wx:if="{{postureTask}}">
-    <view class="card-title" style="color:#fff">任务状态</view>
-    <view class="sub ai-desc">
-      {{postureTask.task_id}} · {{postureTask.status}}
-      <text wx:if="{{postureTask.is_demo}}"> · DEMO</text>
-    </view>
-    <view class="sub ai-desc" wx:if="{{postureTask.error}}">{{postureTask.error.message}}</view>
+  <view class="aibox goal-box">
+    <view class="row-between"><text class="ai-section-number">02 / VISION</text><text class="ai-badge">目标预览</text></view>
+    <view class="ai-service-title">让目标，更具体一点</view><view class="ai-desc">以本人照片为起点，探索不同阶段的身材视觉方向。</view>
+    <view class="vision-timeline"><view><text class="vision-month">02</text><text class="vision-caption">个月</text></view><view class="vision-line"></view><view><text class="vision-month">03</text><text class="vision-caption">个月</text></view><view class="vision-line"></view><view><text class="vision-month">06</text><text class="vision-caption">个月</text></view></view>
+    <button class="ai-outline" bindtap="onGoalGenerate" disabled="{{busy}}">生成目标预览 <text>↗</text></button>
+    <view class="ai-footnote">AI 效果图为视觉模拟，不是实际身材变化的预测或保证。</view>
   </view>
-
-  <view class="aibox" wx:if="{{postureReport}}">
-    <view class="row-between">
-      <view class="card-title" style="color:#fff">观察报告</view>
-      <text class="tag" wx:if="{{postureReport.is_demo}}">DEMO</text>
-    </view>
-    <view class="sub ai-desc">状态 {{postureReport.status}} · 无总分 · 模型 {{postureReport.model_version}}</view>
-    <view class="item-row" wx:for="{{postureReport.items}}" wx:key="key">
-      <text class="item-label">{{item.label}}</text>
-      <text class="item-val">{{item.conclusion_label}}</text>
-    </view>
-    <button class="darkbtn" style="width:100%;margin-top:20rpx" bindtap="onCoachReview">教练复核</button>
-  </view>
-
-  <view class="head" style="margin-top:40rpx">
-    <view class="head-title" style="color:#fff">目标图</view>
-    <text class="tag" wx:if="{{mode === 'demo'}}">DEMO</text>
-  </view>
-  <view class="aibox">
-    <view class="sub ai-desc">多节点（建议 ≤3）。水印写入导出层。部分失败可单节点重试。</view>
-    <button class="primary" style="width:100%;margin-top:20rpx" bindtap="onGoalGenerate" disabled="{{busy}}">
-      生成目标任务组 ↗
-    </button>
-  </view>
-
-  <view class="aibox" wx:if="{{goalGroup}}">
-    <view class="card-title" style="color:#fff">节点结果 · {{goalGroup.status}}</view>
-    <view class="node-row" wx:for="{{goalGroup.nodes}}" wx:key="key">
-      <view class="node-main">
-        <text>{{item.months}} 个月 · {{item.status}}</text>
-        <text class="wm" wx:if="{{item.watermarked}}">含水印</text>
-      </view>
-      <view class="node-actions">
-        <button
-          wx:if="{{item.status === 'failed'}}"
-          class="mini-btn"
-          size="mini"
-          data-key="{{item.key}}"
-          bindtap="onRetryNode"
-        >重试</button>
-        <button
-          wx:if="{{item.result_media_id}}"
-          class="mini-btn"
-          size="mini"
-          data-media="{{item.result_media_id}}"
-          bindtap="onExportNode"
-        >导出</button>
-      </view>
-    </view>
-    <button class="darkbtn" style="width:100%;margin-top:24rpx" bindtap="onConsult">咨询方案</button>
-  </view>
-
-  <view class="aibox" wx:if="{{consultations.length}}">
-    <view class="card-title" style="color:#fff">我的咨询</view>
-    <view class="item-row" wx:for="{{consultations}}" wx:key="consultation_id">
-      <text class="item-label">{{item.status}}</text>
-      <text class="item-val">无订单 · {{item.consultation_id}}</text>
-    </view>
-  </view>
-
-  <view class="linkish" bindtap="onOpenApiHint">能力与隔离说明</view>
+  <view class="ai-settings"><view class="row-between"><text class="ai-settings-title">体验模式</text><radio-group class="mode-group" bindchange="onModeChange"><label class="mode-item"><radio value="real" checked="{{mode === 'real'}}" color="#b8c9d8" disabled="{{busy}}" />正式</label><label class="mode-item"><radio value="demo" checked="{{mode === 'demo'}}" color="#b8c9d8" disabled="{{busy}}" />演示</label></radio-group></view><view class="hint">{{statusHint}}</view></view>
+  <view class="aibox" wx:if="{{postureTask}}"><view class="ai-result-title">体态分析进度</view><view class="ai-desc">{{taskLabels[postureTask.status] || postureTask.status}}<text wx:if="{{postureTask.is_demo}}"> · 演示结果</text></view><view class="ai-error" wx:if="{{postureTask.error}}">{{postureTask.error.message}}</view></view>
+  <view class="aibox" wx:if="{{postureReport}}"><view class="row-between"><view class="ai-result-title">体态观察报告</view><text class="ai-badge" wx:if="{{postureReport.is_demo}}">演示</text></view><view class="ai-desc">逐项观察特征，不以单一分数定义你的身体。</view><view class="item-row" wx:for="{{postureReport.items}}" wx:key="key"><text class="item-label">{{item.label}}</text><text class="item-val">{{item.conclusion_label}}</text></view><button class="ai-outline" bindtap="onCoachReview" wx:if="{{role === 'coach'}}">教练复核</button></view>
+  <view class="aibox" wx:if="{{goalGroup}}"><view class="ai-result-title">你的阶段目标</view><view class="ai-desc">{{taskLabels[goalGroup.status] || goalGroup.status}}<text wx:if="{{mode === 'demo'}}"> · 演示结果</text></view><view class="node-row" wx:for="{{goalGroup.nodes}}" wx:key="key"><view class="node-main"><text>{{item.months}} 个月 · {{taskLabels[item.status] || item.status}}</text><text class="wm" wx:if="{{item.watermarked}}">导出含 AI 模拟标记</text></view><view class="node-actions"><button wx:if="{{item.status === 'failed'}}" class="mini-btn" data-key="{{item.key}}" bindtap="onRetryNode" disabled="{{busy}}">重试</button><button wx:if="{{item.result_media_id}}" class="mini-btn" data-media="{{item.result_media_id}}" bindtap="onExportNode">导出</button></view></view><button class="ai-outline" bindtap="onConsult" disabled="{{busy}}">与教练聊聊训练方案</button></view>
+  <view class="aibox" wx:if="{{consultations.length}}"><view class="ai-result-title">我的咨询</view><view class="item-row" wx:for="{{consultations}}" wx:key="consultation_id"><text class="item-label">训练方案咨询</text><text class="item-val">{{taskLabels[item.status] || item.status}}</text></view></view>
+  <view class="ai-bottom-note">观察 · 理解 · 行动</view><button class="linkish" bindtap="onOpenApiHint">服务与数据说明</button>
 </view>
-
 <bottom-nav active="ai" />

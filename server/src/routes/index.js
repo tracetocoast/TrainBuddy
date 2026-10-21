@@ -13,6 +13,7 @@ const trainingService = require('../services/trainingService')
 const { presentForActor } = require('../lib/planAccess')
 const diaryService = require('../services/diaryService')
 const growthService = require('../services/growthService')
+const bodyMeasurementService = require('../services/bodyMeasurementService')
 const exerciseService = require('../services/exerciseService')
 const voiceTaskService = require('../services/voice/voiceTaskService')
 const { listProviders } = require('../services/voice/adapters')
@@ -1298,6 +1299,19 @@ function buildRouter() {
     } catch (e) {
       next(e)
     }
+  })
+
+  // 身体测量独立保存，不继承日记或教练的共享权限。
+  r.get('/body-measurements', authRequired, (req, res, next) => {
+    try { ok(res, bodyMeasurementService.list(req.app.locals.store.state, req.actor, req.query)) }
+    catch (error) { next(error) }
+  })
+
+  r.put('/body-measurements/:date', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(state => bodyMeasurementService.save(state, req.actor, req.params.date, req.body || {}))
+      ok(res, data)
+    } catch (error) { next(error) }
   })
 
   // ---------- API29 growth ----------
