@@ -1,0 +1,18 @@
+<view class="body-page record-page">
+  <view class="body-heading">记录身体数据</view>
+  <view class="body-caption">一次一项，简单记下今天</view>
+  <view class="body-status" wx:if="{{loading}}">正在读取…</view>
+  <view class="body-status" wx:elif="{{error}}"><view>{{error}}</view><button class="link" bindtap="reload">重试</button></view>
+  <block wx:else>
+    <view class="record-options">
+      <picker range="{{metricNames}}" value="{{metricIndex}}" bindchange="onMetric" disabled="{{saving}}"><view class="record-option"><text>测量项目</text><text>{{metric.label}} <text class="metric-arrow">›</text></text></view></picker>
+      <picker mode="date" value="{{date}}" start="1900-01-01" end="{{today}}" bindchange="onDate" disabled="{{saving}}"><view class="record-option"><text>测量日期</text><text>{{date}} <text class="metric-arrow">›</text></text></view></picker>
+    </view>
+    <view class="record-input-label">{{metric.label}}</view>
+    <view class="record-value-row"><input class="record-value" type="digit" value="{{value}}" placeholder="0.0" maxlength="8" bindinput="onInput" disabled="{{saving || conflict}}" /><text>{{metric.unit}}</text></view>
+    <view class="record-hint">{{metric.key === 'shoulder' ? '肩围是绕肩一周的长度，不是肩宽。' : metric.unit === 'cm' && metric.key !== 'height' ? '保持相同测量位置；单侧围度请始终测量同一侧。' : '尽量保持相同测量时间和条件，方便日后比较。'}}</view>
+    <view class="record-conflict" wx:if="{{conflict}}"><view>该日记录已更新，当前输入仍保留。请先备份再载入最新记录。</view><button class="link" bindtap="onReload">载入最新记录</button></view>
+    <button class="record-save" bindtap="onSave" disabled="{{saving || conflict || !value}}" loading="{{saving}}">保存</button>
+    <view class="body-privacy">只更新当前指标，其他记录保持原样 · 仅自己可见</view>
+  </block>
+</view>

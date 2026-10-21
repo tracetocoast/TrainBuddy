@@ -1,0 +1,19 @@
+<view class="body-page">
+  <view class="body-page-head"><view><view class="body-heading">身体数据</view><view class="body-caption">每一次记录，都有迹可循</view></view><button class="body-add" bindtap="onRecord" disabled="{{loading || error}}">＋ 记录</button></view>
+  <view class="body-status" wx:if="{{loading}}">正在读取…</view>
+  <view class="body-status" wx:elif="{{error}}"><view>{{error}}</view><button class="link" bindtap="reload">重试</button></view>
+  <block wx:else>
+    <view class="body-section-label">常用指标</view>
+    <view class="metric-list">
+      <button class="metric-row" wx:for="{{common}}" wx:key="key" data-key="{{item.key}}" bindtap="onMetric">
+        <view class="grow"><view class="metric-name">{{item.label}}</view><view class="metric-date">{{item.date || '还没有记录'}}</view></view>
+        <view class="metric-number">{{item.value}}<text wx:if="{{item.date}}">{{item.unit}}</text></view><text class="metric-arrow">›</text>
+      </button>
+    </view>
+    <button class="all-metrics" bindtap="onToggle"><text>{{showAll ? '收起其他指标' : '其他身体指标'}}</text><text class="all-caption">{{showAll ? '⌃' : '围度、肌肉量、身高  ›'}}</text></button>
+    <view class="metric-list" wx:if="{{showAll}}">
+      <button class="metric-row" wx:for="{{others}}" wx:key="key" data-key="{{item.key}}" bindtap="onMetric"><view class="grow"><view class="metric-name">{{item.label}}</view><view class="metric-date">{{item.date || '还没有记录'}}</view></view><view class="metric-number">{{item.value}}<text wx:if="{{item.date}}">{{item.unit}}</text></view><text class="metric-arrow">›</text></button>
+    </view>
+    <view class="body-privacy">仅自己可见 · 点击指标查看变化趋势</view>
+  </block>
+</view>
