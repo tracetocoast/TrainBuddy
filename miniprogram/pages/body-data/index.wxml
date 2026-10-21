@@ -20,17 +20,48 @@
       <button class="map-history-entry" bindtap="onHistory"><text>全部测量记录</text><text>时间与数值完整留存 ›</text></button>
     </block>
     <block wx:elif="{{activeTab === 'chart'}}">
-      <picker range="{{metricNames}}" value="{{metricIndex}}" bindchange="onChartMetric"><view class="chart-metric-picker">{{chart.metric.label}} <text>切换指标 ▾</text></view></picker>
-      <view class="metric-hero"><view class="metric-hero-value">{{chart.latest}}<text>{{chart.metric.unit}}</text></view><view class="body-caption">{{chart.latestDate}} {{chart.latestTime}}</view><view class="metric-change">{{chart.deltaText}}</view></view>
-      <view class="metric-ranges"><button wx:for="{{ranges}}" wx:key="key" class="metric-range {{range === item.key ? 'on' : ''}}" data-range="{{item.key}}" bindtap="onRange">{{item.label}}</button></view>
-      <view class="trend-wrap"><view class="body-chart" wx:if="{{chart.count}}"><view class="chart-grid grid-top"></view><view class="chart-grid grid-middle"></view><view class="chart-grid grid-bottom"></view><view class="chart-line" wx:for="{{chart.lines}}" wx:key="id" style="{{item.style}}"></view><view class="chart-dot" wx:for="{{chart.dots}}" wx:key="id" style="left:{{item.x}}rpx;top:{{item.y}}rpx"></view></view><view class="metric-empty" wx:else>还没有这项数据<text>先在人体图上记录一次测量。</text></view><view class="chart-labels" wx:if="{{chart.count}}"><text>{{chart.firstDate}}</text><text>{{chart.latestDate}}</text></view></view>
-      <button class="map-history-entry" bindtap="onHistory"><text>查看测量明细</text><text>›</text></button>
+      <view class="insights-layout">
+        <scroll-view class="insights-sidebar" scroll-y enhanced show-scrollbar="{{false}}">
+          <button wx:for="{{chartMetrics}}" wx:key="key" class="insight-metric {{item.label.length > 3 ? 'compact' : ''}} {{metricIndex === index ? 'on' : ''}}" data-index="{{index}}" bindtap="onChartMetric" aria-label="查看{{item.label}}趋势"><image src="{{item.icon}}" mode="aspectFit"/><text>{{item.label}}</text></button>
+        </scroll-view>
+        <view class="insights-main">
+          <view class="insight-periods"><button wx:for="{{ranges}}" wx:key="key" class="{{range === item.key ? 'on' : ''}}" data-range="{{item.key}}" bindtap="onRange">{{item.label}}</button></view>
+          <view class="insight-heading"><view>{{chart.metric.label}}<text>（{{chart.metric.unit}}）</text></view><button class="number-toggle {{showNumbers ? 'on' : ''}}" bindtap="onNumbers" aria-label="{{showNumbers ? '隐藏' : '显示'}}图表数值">数字<text>{{showNumbers ? '✓' : '○'}}</text></button></view>
+          <view class="insight-window">{{chart.from}} — {{chart.to}}</view>
+          <block wx:if="{{chart.count}}">
+            <view class="insight-plot-wrap">
+              <view class="insight-plot">
+                <view class="insight-grid" wx:for="{{chart.axes}}" wx:key="key" style="top:{{item.y}}rpx"><text>{{item.value}}</text></view>
+                <view class="insight-line" wx:for="{{chart.lines}}" wx:key="id" style="{{item.style}}"></view>
+                <view class="insight-point" wx:for="{{chart.dots}}" wx:key="id" style="left:{{item.x}}rpx;top:{{item.y}}rpx"><text wx:if="{{showNumbers && item.showLabel}}">{{item.label}}</text></view>
+                <view class="insight-date" wx:for="{{chart.labels}}" wx:key="id" style="left:{{item.x}}rpx">{{item.text}}</view>
+              </view>
+            </view>
+          </block>
+          <view class="insight-empty" wx:else>这段时间没有记录<text>可调整日期，或去数据页添加测量。</text></view>
+          <view class="insight-stats">
+            <view><text>最新{{chart.metric.label}}</text><view>{{chart.latest}}</view><text>{{chart.latestDate || '尚未记录'}}</text></view>
+            <view><text>较前次</text><view>{{chart.previousChange}}</view><text>{{chart.metric.key === 'bodyFat' ? '个百分点' : chart.metric.unit}}</text></view>
+            <view><text>本期均值</text><view>{{chart.average}}</view><text>{{chart.count}} 次记录 · {{chart.metric.unit}}</text></view>
+          </view>
+          <view class="insight-filters">
+            <view class="insight-filter"><text>开始</text><picker mode="date" value="{{startDate || chart.from}}" end="{{endDate || chart.to}}" data-field="startDate" bindchange="onFilterDate"><view>{{startDate || '请选择'}}<text>⌄</text></view></picker><button data-field="startDate" bindtap="onClearDate" aria-label="清除开始日期">清除</button></view>
+            <view class="insight-filter"><text>结束</text><picker mode="date" value="{{endDate || chart.to}}" start="{{startDate}}" data-field="endDate" bindchange="onFilterDate"><view>{{endDate || '请选择'}}<text>⌄</text></view></picker><button data-field="endDate" bindtap="onClearDate" aria-label="清除结束日期">清除</button></view>
+            <view class="filter-error" wx:if="{{filterError}}">{{filterError}}</view>
+          </view>
+          <button class="insight-detail" bindtap="onHistory">全部测量明细 ›</button>
+        </view>
+      </view>
     </block>
     <block wx:else>
-      <picker mode="date" fields="month" value="{{month + '-01'}}" bindchange="onMonth"><view class="chart-metric-picker">{{month}} <text>选择月份 ▾</text></view></picker>
-      <view class="measurement-weekdays"><text wx:for="{{weekdays}}" wx:key="*this">{{item}}</text></view>
-      <view class="measurement-calendar"><block wx:for="{{days}}" wx:key="key"><view wx:if="{{item.empty}}"></view><button wx:else class="measurement-day {{item.selected ? 'selected' : ''}}" data-date="{{item.date}}" bindtap="onDay"><text>{{item.day}}</text><view class="calendar-measure-dot" wx:if="{{item.hasData}}"></view></button></block></view>
-      <view class="calendar-selected-date">{{selectedDate}}</view><view class="calendar-record" wx:for="{{dayRows}}" wx:key="id"><view>{{item.time}}</view><view>{{item.text}}</view></view><view class="metric-empty" wx:if="{{!dayRows.length}}">当天没有测量记录</view>
+      <view class="calendar-heading"><view>{{calendarLabel}}日历<text>（{{calendarUnit}}）</text></view><view class="calendar-type"><button class="{{calendarMetric === 'weight' ? 'on' : ''}}" data-key="weight" bindtap="onCalendarMetric"><image src="{{metricIcons.weight}}"/>体重</button><button class="{{calendarMetric === 'bodyFat' ? 'on' : ''}}" data-key="bodyFat" bindtap="onCalendarMetric"><image src="{{metricIcons.bodyFat}}"/>体脂</button></view></view>
+      <view class="calendar-card">
+        <view class="calendar-month-head"><button class="month-arrow" data-step="-1" bindtap="onMoveMonth" aria-label="上个月">‹</button><picker mode="date" fields="month" value="{{month + '-01'}}" bindchange="onMonth"><view>{{monthLabel}}</view></picker><button class="month-arrow" data-step="1" bindtap="onMoveMonth" aria-label="下个月">›</button></view>
+        <view class="measurement-weekdays"><text wx:for="{{weekdays}}" wx:key="*this">{{item}}</text></view>
+        <view class="measurement-calendar"><block wx:for="{{days}}" wx:key="key"><view wx:if="{{item.empty}}"></view><button wx:else class="measurement-day {{item.selected ? 'selected' : ''}} {{item.today ? 'is-today' : ''}}" data-date="{{item.date}}" bindtap="onDay" aria-label="{{item.date}}{{item.hasData ? '，有测量记录' : ''}}"><text class="day-number">{{item.day}}</text><view class="calendar-measure-dot" wx:if="{{item.hasData}}"></view></button></block></view>
+      </view>
+      <view class="calendar-records-head"><text>{{selectedDate}}</text><text>{{dayRows.length}} 次{{calendarLabel}}记录</text></view>
+      <view class="calendar-record" wx:for="{{dayRows}}" wx:key="id"><view>{{item.time}}</view><view>{{item.text}}</view></view><view class="calendar-empty" wx:if="{{!dayRows.length}}">当天还没有{{calendarLabel}}记录</view>
     </block>
   </block>
 </view>

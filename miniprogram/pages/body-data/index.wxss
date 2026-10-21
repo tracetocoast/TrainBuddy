@@ -9,5 +9,56 @@
 .map-connector { position: absolute; width: var(--reach); height: 2rpx; background: #d2dfe9; top: 100%; pointer-events: none; }.tag-left .map-connector { left: 0; width: calc(100% + var(--reach)); }.tag-right .map-connector { right: 0; width: calc(100% + var(--reach)); }
 .map-connector view { position: absolute; width: 14rpx; height: 14rpx; border: 3rpx solid #d2dfe9; box-shadow: 0 0 0 3rpx #edf2f6; background: #b2c7d7; border-radius: 50%; top: -6rpx; }.tag-left .map-connector view { right: 0; }.tag-right .map-connector view { left: 0; }
 .map-instruction { text-align: center; color: #a1a9b1; font-size: 22rpx; line-height: 1.8; margin: 0 0 22rpx; }.map-history-entry { display: flex; justify-content: space-between; gap: 16rpx; align-items: center; width: 100% !important; min-height: 84rpx; padding: 22rpx 18rpx; border-radius: 16rpx; background: #1b2b39; font-size: 26rpx; color: #bad5e9; }.map-history-entry text:last-child { color: #8b98a2; font-size: 23rpx; }
-.chart-metric-picker { display: flex; justify-content: space-between; align-items: center; padding: 16rpx 0 26rpx; font-size: 30rpx; color: #d6e4ed; }.chart-metric-picker text { font-size: 24rpx; color: #8b98a2; }
-.measurement-weekdays,.measurement-calendar { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); text-align: center; gap: 10rpx; }.measurement-weekdays { color: #a1a9b1; font-size: 22rpx; margin-bottom: 16rpx; }.measurement-day { width: 100% !important; height: 82rpx; border-radius: 16rpx; font-size: 28rpx; color: #aebfcd; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5rpx; }.measurement-day.selected { background: #28465b; color: #bad5e9; }.calendar-measure-dot { width: 7rpx; height: 7rpx; border-radius: 50%; background: #bad5e9; }.calendar-selected-date { font-size: 27rpx; margin: 32rpx 0 16rpx; color: #d6e4ed; }.calendar-record { padding: 20rpx 0; border-top: 1rpx solid #293c4b; color: #d6e4ed; font-size: 26rpx; }.calendar-record view:last-child { margin-top: 8rpx; font-size: 24rpx; color: #8b98a2; }
+
+/* 图表：固定窄指标栏，主区域保留足够的趋势阅读空间。 */
+.insights-layout { display: flex; gap: 18rpx; align-items: flex-start; }
+.insights-sidebar { width: 134rpx; flex: none; height: 1000rpx; }
+.insight-metric { width: 100% !important; min-height: 88rpx; margin-bottom: 10rpx !important; padding: 12rpx 8rpx; border: 1rpx solid #304351; border-radius: 16rpx; display: flex; align-items: center; gap: 7rpx; color: #a8bdcc; font-size: 23rpx; text-align: left; }
+.insight-metric image { width: 32rpx; height: 32rpx; flex: none; }
+.insight-metric text { flex: 1; }
+.insight-metric.on { background: #28465b; border-color: #66869e; color: #edf5fa; }
+.insights-main { flex: 1; min-width: 0; }
+.insight-periods { display: flex; padding: 5rpx; border: 1rpx solid #304351; border-radius: 17rpx; gap: 4rpx; }
+.insight-periods button { flex: 1; width: 0 !important; min-height: 60rpx; display: flex; justify-content: center; align-items: center; font-size: 27rpx; color: #91a6b6; border-radius: 12rpx; }
+.insight-periods button.on { background: #c6d7e3; color: #203649; font-weight: 600; }
+.insight-heading { display: flex; align-items: center; justify-content: space-between; gap: 8rpx; margin-top: 26rpx; font-size: 28rpx; font-weight: 600; }
+.insight-heading > view { flex: 1; min-width: 0; }
+.insight-heading > view text { font-size: 21rpx; color: #91a6b6; font-weight: 400; }
+.number-toggle { display: flex; align-items: center; gap: 5rpx; padding: 9rpx 10rpx; font-size: 20rpx; border: 1rpx solid #304351; border-radius: 12rpx; color: #91a6b6; flex: none; }
+.number-toggle.on { color: #bdd7e9; }.number-toggle text { font-size: 23rpx; }
+.insight-window { font-size: 19rpx; color: #8199ab; margin-top: 10rpx; }
+.insight-plot-wrap { margin: 24rpx 0 18rpx; padding-right: 66rpx; }
+.insight-plot { position: relative; width: 422rpx; height: 324rpx; }
+.insight-grid { position: absolute; width: 100%; border-top: 1rpx dashed #304351; }
+.insight-grid text { position: absolute; left: 100%; margin-left: 6rpx; top: -15rpx; font-size: 18rpx; color: #8199ab; white-space: nowrap; }
+.insight-line { position: absolute; height: 3rpx; background: #a1c4dd; transform-origin: left center; }
+.insight-point { position: absolute; width: 12rpx; height: 12rpx; margin: -5rpx 0 0 -6rpx; border-radius: 50%; background: #172432; border: 3rpx solid #a1c4dd; }
+.insight-point text { position: absolute; left: 50%; bottom: 15rpx; transform: translateX(-50%); white-space: nowrap; color: #c6d7e3; font-size: 19rpx; }
+.insight-date { position: absolute; top: 294rpx; transform: translateX(-50%); color: #91a6b6; font-size: 19rpx; white-space: nowrap; }
+.insight-empty { height: 366rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a8bdcc; font-size: 25rpx; text-align: center; }.insight-empty text { font-size: 21rpx; color: #8199ab; margin-top: 16rpx; }
+.insight-stats { display: flex; border-top: 1rpx solid #304351; border-bottom: 1rpx solid #304351; padding: 22rpx 0; }
+.insight-stats > view { flex: 1; min-width: 0; text-align: center; padding: 0 5rpx; border-right: 1rpx solid #304351; }.insight-stats > view:last-child { border-right: 0; }
+.insight-stats text { display: block; color: #91a6b6; font-size: 19rpx; line-height: 1.6; }.insight-stats view view { color: #c1d9ea; font-size: 33rpx; margin: 7rpx 0; font-weight: 600; }
+.insight-filters { padding-top: 20rpx; }.insight-filter { display: flex; align-items: center; gap: 10rpx; margin-bottom: 14rpx; font-size: 22rpx; color: #a8bdcc; }.insight-filter > text { width: 48rpx; flex: none; }
+.insight-filter picker { flex: 1; min-width: 0; }.insight-filter picker view { background: #192a38; padding: 16rpx 12rpx; border: 1rpx solid #304351; border-radius: 13rpx; display: flex; justify-content: space-between; white-space: nowrap; font-size: 22rpx; }
+.insight-filter button { flex: none; padding: 16rpx 10rpx; color: #bdd7e9; border-radius: 12rpx; background: #192a38; font-size: 21rpx; }
+.filter-error { color: #deb48c; font-size: 21rpx; }.insight-detail { color: #bdd7e9; font-size: 23rpx; padding: 18rpx 0; text-align: left; }
+/* 月历：圆形选中日期，测量点与当天提示独立。 */
+.calendar-heading { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; margin: 34rpx 0 24rpx; }
+.calendar-heading > view:first-child { font-size: 31rpx; font-weight: 600; }.calendar-heading > view:first-child text { font-size: 21rpx; color: #91a6b6; font-weight: 400; }
+.calendar-type { display: flex; background: #192a38; padding: 4rpx; border: 1rpx solid #304351; border-radius: 50rpx; flex: none; }.calendar-type button { display: flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 58rpx; padding: 8rpx 16rpx; border: 1rpx solid transparent; border-radius: 40rpx; color: #91a6b6; font-size: 25rpx; }.calendar-type button.on { color: #dceaf3; border-color: #66869e; background: #28465b; }.calendar-type image { width: 28rpx; height: 28rpx; }
+.calendar-card { padding: 32rpx 14rpx 25rpx; border-radius: 24rpx; background: #192a38; border: 1rpx solid #293d4d; }
+.calendar-month-head { display: flex; align-items: center; justify-content: space-between; margin: 0 20rpx 28rpx; }.calendar-month-head picker { font-size: 31rpx; font-weight: 600; letter-spacing: 2rpx; }.month-arrow { width: 54rpx !important; height: 54rpx; border-radius: 50%; background: #2b4051; color: #cfdfeb; display: flex; align-items: center; justify-content: center; font-size: 40rpx; line-height: 1; padding-bottom: 4rpx; }
+.measurement-weekdays,.measurement-calendar { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); text-align: center; }
+.measurement-weekdays { color: #91a6b6; font-size: 24rpx; padding-bottom: 16rpx; border-bottom: 1rpx solid #304351; }
+.measurement-day { position: relative; width: 100% !important; height: 90rpx; font-size: 28rpx; color: #d6e4ed; display: flex; align-items: center; justify-content: center; }
+.day-number { width: 48rpx; height: 48rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1rpx solid transparent; }.measurement-day.is-today .day-number { border-color: #66869e; }.measurement-day.selected .day-number { background: #c6d7e3; color: #203649; font-weight: 600; border-color: #c6d7e3; }
+.calendar-measure-dot { position: absolute; bottom: 9rpx; left: 50%; margin-left: -3rpx; width: 6rpx; height: 6rpx; border-radius: 50%; background: #a1c4dd; }
+.calendar-records-head { display: flex; justify-content: space-between; align-items: center; margin: 30rpx 4rpx 10rpx; font-size: 26rpx; }.calendar-records-head text:last-child { font-size: 22rpx; color: #91a6b6; }
+.calendar-record { display: flex; justify-content: space-between; gap: 20rpx; padding: 22rpx 4rpx; border-bottom: 1rpx solid #293c4b; color: #c1d9ea; font-size: 26rpx; }.calendar-record view:first-child { color: #91a6b6; font-size: 23rpx; }.calendar-empty { color: #8199ab; font-size: 24rpx; padding: 24rpx 4rpx; }
+.number-toggle { width: auto !important; }
+.insight-filter button { width: 70rpx !important; }
+.calendar-type button { width: auto !important; }
+.map-tabs button.on,.unit-switch button.on { background: #28465b; color: #edf5fa; }
+
+.insight-metric.compact { font-size: 19rpx; }
