@@ -99,9 +99,10 @@ function getDailyView(app, studentId, localDate) {
 
   const categories = ['workout_self', 'meal', 'body_state', 'special']
   const shares = {}
+  const primary = bindingApi.getActivePrimaryCoach(app, studentId)
   categories.forEach((c) => {
     const sk = shareKey(studentId, localDate, c)
-    shares[c] = !!store.dayShares[sk]
+    shares[c] = !!(primary && store.dayShares[sk] && store.dayShares[sk].recipientCoachUserId === primary.coachUserId)
   })
 
   return Promise.resolve({
@@ -290,7 +291,7 @@ function getSharedDailyForCoach(app, coachUserId, studentId, localDate) {
 
   function shared(cat) {
     const sk = shareKey(studentId, localDate, cat)
-    return !!store.dayShares[sk]
+    return !!(store.dayShares[sk] && store.dayShares[sk].recipientCoachUserId === coachUserId)
   }
 
   const result = {

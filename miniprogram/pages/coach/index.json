@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "教练",
+  "usingComponents": {
+    "bottom-nav": "/components/bottom-nav/index",
+    "brand-logo": "/components/brand-logo/index"
+  }
+}

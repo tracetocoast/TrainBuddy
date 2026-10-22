@@ -25,12 +25,15 @@ Page({
     studentName: '',
     dateList: [],
     localDate: '',
+    today: '',
     shared: {
       visible: {},
       hiddenReasons: {},
       canSee: {}
     },
     feedbackText: '',
+    mealFeedbackText: '',
+    sendingFeedback: false,
     feedbacks: []
   },
 
@@ -72,6 +75,7 @@ Page({
         studentId,
         studentName: (row && row.name) || this.data.studentName,
         dateList: keys.map((k) => time.formatDateLabel(k)),
+        today,
         localDate: this.data.localDate || today
       })
       this.reload()
@@ -82,9 +86,12 @@ Page({
     const app = getApp()
     const coachId = app.globalData.session.user.userId
     const { studentId, localDate } = this.data
+    const sequence = this.reloadSequence = (this.reloadSequence || 0) + 1
+    this.setData({shared:{visible:{},hiddenReasons:{},canSee:{}},feedbacks:[]})
     diaryApi
       .getSharedDailyForCoach(app, coachId, studentId, localDate)
       .then((res) => {
+        if (sequence !== this.reloadSequence) return
         const shared = res.data
         const vis = shared.visible || {}
         if (vis.meals) {
@@ -116,11 +123,17 @@ Page({
         studentId,
         targetId: studentId + '|' + localDate
       })
-      .then((res) => this.setData({ feedbacks: res.data || [] }))
+      .then((res) => { if (sequence === this.reloadSequence) this.setData({ feedbacks: res.data || [] }) })
+      .catch(err => app.toast(err.message || '点评加载失败'))
+  },
+
+  onDateChange(e) {
+    this.onPickDate({currentTarget:{dataset:{key:e.detail.value}}})
   },
 
   onPickDate(e) {
-    this.setData({ localDate: e.currentTarget.dataset.key, feedbackText: '' })
+    if (this.data.sendingFeedback) return
+    this.setData({ localDate: e.currentTarget.dataset.key, feedbackText: '', mealFeedbackText: '' })
     this.reload()
   },
 
@@ -128,28 +141,28 @@ Page({
     this.setData({ feedbackText: e.detail.value })
   },
 
-  onSubmitFeedback() {
-    const app = getApp()
-    const text = (this.data.feedbackText || '').trim()
-    if (!text) {
-      app.toast('请填写点评')
-      return
-    }
-    const user = app.globalData.session.user
-    diaryApi
-      .addFeedback(app, {
-        authorId: user.userId,
-        authorName: user.displayName || '教练',
-        targetType: 'daily_log',
-        targetId: this.data.studentId + '|' + this.data.localDate,
-        studentId: this.data.studentId,
-        text
-      })
-      .then(() => {
-        this.setData({ feedbackText: '' })
-        app.toast('点评已提交')
-        this.reload()
-      })
+  onMealFeedbackInput(e) { this.setData({mealFeedbackText:e.detail.value}) },
+
+  onSubmitFeedback(e) {
+    if (this.data.sendingFeedback) return
+    const type = e && e.currentTarget && e.currentTarget.dataset.type === 'meal' ? 'meal' : 'daily_log'
+    const field = type === 'meal' ? 'mealFeedbackText' : 'feedbackText'
+    const app = getApp(), user = app.globalData.session.user
+    const text = (this.data[field] || '').trim()
+    if (!text) { app.toast('请填写点评'); return }
+    const targetId = this.data.studentId + '|' + this.data.localDate
+    const signature = type + '|' + targetId + '|' + text
+    if (!this.feedbackIntent || this.feedbackIntent.signature !== signature) this.feedbackIntent = { signature, key:'feedback_'+Date.now()+'_'+Math.random().toString(36).slice(2) }
+    this.setData({sendingFeedback:true})
+    return diaryApi.addFeedback(app, {
+      targetType:type, targetId, studentId:this.data.studentId, text, idempotencyKey:this.feedbackIntent.key
+    }).then(() => {
+      this.feedbackIntent=null
+      this.setData({[field]:''})
+      app.toast('点评已同步给学员')
+      this.reload()
+    }).catch(err => app.toast(err.message || '点评提交失败，请重试'))
+      .finally(() => this.setData({sendingFeedback:false}))
   },
 
   goRecord() {

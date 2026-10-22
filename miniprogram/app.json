@@ -22,7 +22,8 @@
     "pages/profile/index",
     "pages/bind/index",
     "pages/privacy/index",
-    "pages/body-history/index"
+    "pages/body-history/index",
+    "pages/coach/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fafbf7",

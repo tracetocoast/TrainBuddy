@@ -2,6 +2,7 @@
   <view class="eyebrow">STUDENT PROFILE · COACH</view>
   <view class="title">{{studentName}}</view>
   <view class="sub">仅展示学员已共享且绑定授权开启的内容。看不到 ≠ 没运动。</view>
+  <picker mode="date" value="{{localDate}}" end="{{today}}" bindchange="onDateChange"><view class="link" style="max-width:none;justify-content:flex-start">{{localDate}} · 选择日期⌄</view></picker>
 
   <scroll-view class="dates" scroll-x>
     <button
@@ -47,6 +48,8 @@
     <view class="sub">{{shared.hiddenReasons.meal || '未共享饮食'}}</view>
   </view>
 
+<view class="card" wx:if="{{shared.canSee.meal && shared.visible.meals.length}}"><view class="card-title">饮食点评与建议</view><textarea class="field" maxlength="2000" placeholder="这一天吃得怎么样？给学员一些具体、可执行的饮食建议。" value="{{mealFeedbackText}}" bindinput="onMealFeedbackInput" disabled="{{sendingFeedback}}"/><button class="primary" style="width:100%;margin-top:16rpx" data-type="meal" bindtap="onSubmitFeedback" disabled="{{sendingFeedback}}">{{sendingFeedback ? '同步中…' : '发布饮食建议'}}</button></view>
+
   <!-- 身体状态 -->
   <view class="head"><view class="head-title">身体状态</view></view>
   <block wx:if="{{shared.canSee.body}}">
@@ -81,11 +84,11 @@
     <view class="head-title">教练点评</view>
     <text class="tag">可写</text>
   </view>
-  <textarea class="field" placeholder="针对当日已共享内容点评（学员可见）" value="{{feedbackText}}" bindinput="onFeedbackInput" />
-  <button class="primary" style="width:100%;margin-top:12rpx" bindtap="onSubmitFeedback">提交点评</button>
+  <textarea class="field" disabled="{{sendingFeedback}}" maxlength="2000" placeholder="针对当日已共享内容点评（学员可见）" value="{{feedbackText}}" bindinput="onFeedbackInput" />
+  <button class="primary" style="width:100%;margin-top:12rpx" bindtap="onSubmitFeedback" disabled="{{sendingFeedback}}">提交点评</button>
 
   <view class="card" wx:for="{{feedbacks}}" wx:key="id">
-    <view class="card-title">{{item.authorName || '教练'}}</view>
+    <view class="card-title">{{item.authorName || '教练'}} · {{item.targetType === 'meal' ? '饮食建议' : '当日反馈'}}</view>
     <view class="sub">{{item.text}}</view>
   </view>
   <view class="card sub" wx:if="{{!feedbacks.length}}">暂无点评</view>

@@ -2,7 +2,7 @@ const icons = require('../../assets/navigation-icons')
 const NAV = {
   student: [
     { key: 'home', path: '/pages/home/index', icon: '⌂', text: '今天' },
-    { key: 'booking', path: '/pages/booking/index', icon: '▦', text: '约课' },
+    { key: 'coach', path: '/pages/coach/index', text: '教练' },
     { key: 'workout', path: '/pages/workout/index', icon: '↗', text: '训练' },
     { key: 'ai', path: '/pages/ai/index', icon: '✦', text: 'AI助手' },
     { key: 'growth', path: '/pages/growth/index', icon: '✳', text: '成长' }

@@ -165,8 +165,8 @@
     </view>
     <view class="card sub" wx:if="{{!session.exercises.length}}">请添加动作、录音或文字解析后再同步。</view>
 
-    <view class="head"><view class="head-title">可共享点评</view></view>
-    <textarea class="field" value="{{publicNote}}" placeholder="学员可见的点评…" bindinput="onPublicNote" disabled="{{session.status === 'completed'}}" />
+    <view class="head"><view class="head-title">动作问题与课后建议</view></view>
+    <textarea class="field" value="{{publicNote}}" placeholder="例如：卧推时肩胛不够稳定，下次降低重量，先练习肩胛收紧。确认同步后学员可见。" bindinput="onPublicNote" disabled="{{session.status === 'completed'}}" />
 
     <view class="head"><view class="head-title">私人备注</view></view>
     <textarea class="field" value="{{privateNote}}" placeholder="不同步给学员…" bindinput="onPrivateNote" disabled="{{session.status === 'completed'}}" />

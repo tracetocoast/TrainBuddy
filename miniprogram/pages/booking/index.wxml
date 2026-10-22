@@ -189,4 +189,4 @@
   </block>
 </view>
 
-<bottom-nav active="booking" />
+<bottom-nav active="{{role === 'student' ? 'coach' : 'booking'}}" />

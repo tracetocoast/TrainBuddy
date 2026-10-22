@@ -1,0 +1,35 @@
+<view class="page coach-space">
+  <view class="top"><view class="brand"><brand-logo class="brand-emblem-slot"/>教练</view><text class="space-caption">训练之外，也有回应</text></view>
+  <view class="space-state" wx:if="{{loading}}">正在同步教练动态…</view>
+  <view class="card" wx:elif="{{error}}"><view class="sub">{{error}}</view><button class="link" bindtap="reload">重新加载</button></view>
+  <view class="binding-empty" wx:elif="{{!binding}}"><view class="empty-title">找到陪你进步的人</view><view class="sub">绑定教练后，在这里接收课后反馈、交流饮食并预约课程。</view><button class="primary" bindtap="goBind">绑定我的教练</button></view>
+  <block wx:else>
+    <view class="coach-summary"><view class="coach-avatar">{{binding.initial}}</view><view class="grow"><view class="coach-name">{{binding.coachName}}</view><view class="sub">你的专属教练 · 已绑定</view></view><button class="link" bindtap="goBooking">预约课程 ›</button></view>
+    <view class="space-tabs"><button wx:for="{{tabs}}" wx:key="key" class="{{tab === item.key ? 'on' : ''}}" data-tab="{{item.key}}" bindtap="onTab">{{item.label}}</button></view>
+    <block wx:if="{{tab === 'training'}}">
+      <view class="section-intro">教练确认同步后的训练表与动作建议，都会留在这里。</view>
+      <view class="session-card" wx:for="{{sessions}}" wx:key="id">
+        <button class="session-head" data-id="{{item.id}}" bindtap="onExpand"><view class="grow"><view class="session-date">{{item.date}} · 已同步</view><view class="card-title">{{item.title}}</view><view class="sub">{{item.exercises.length}} 个动作 · {{item.doneSets}} 组完成</view></view><text class="expand-mark">{{expandedId === item.id ? '−' : '＋'}}</text></button>
+        <block wx:if="{{expandedId === item.id}}">
+          <view class="coach-note"><view class="note-label">教练点评与注意事项</view><view class="note-text">{{item.note || '本次没有补充动作建议。'}}</view></view>
+          <view class="session-exercise" wx:for="{{item.exercises}}" wx:for-item="exercise" wx:key="id"><view class="exercise-name">{{exercise.name}}</view><view class="session-set" wx:for="{{exercise.sets}}" wx:for-item="set" wx:key="id"><text>第 {{set.number}} 组</text><text>{{set.weight}}</text><text>{{set.reps}}</text><text>{{set.done ? '完成' : '未完成'}}</text></view></view>
+        </block>
+      </view>
+      <view class="space-empty" wx:if="{{!sessions.length}}">还没有课后反馈<view>上课后，教练确认同步的训练表和建议会显示在这里。</view></view>
+    </block>
+    <block wx:elif="{{tab === 'meal'}}">
+      <view class="meal-toolbar"><picker mode="date" value="{{localDate}}" end="{{today}}" bindchange="onDate"><view class="date-picker">{{localDate}}⌄</view></picker><button class="link" bindtap="goDiary">记录饮食 ›</button></view>
+      <view class="share-status"><view>{{day.shares.meal ? '当日饮食已共享' : '当日饮食尚未共享'}}<view class="sub">{{binding.scopes.meal ? '只共享你选择的日期，支持随时撤回。' : '饮食授权未开启，教练暂时无法查看。'}}</view></view><button class="link" wx:if="{{!binding.scopes.meal}}" bindtap="goPrivacy">管理授权 ›</button></view>
+      <view class="meal-card" wx:for="{{day.meals}}" wx:key="id"><text class="meal-label">{{item.label}}</text><view class="meal-food">{{item.foodText}}</view><view class="sub" wx:if="{{item.portionText}}">{{item.portionText}}</view></view>
+      <view class="space-empty" wx:if="{{!day.meals.length}}">当天还没有饮食记录<view>先记录吃了什么，再共享给教练点评。</view></view>
+      <button class="{{day.shares.meal ? 'secondary' : 'primary'}} share-button" disabled="{{busy || (!day.shares.meal && (!day.meals.length || !binding.scopes.meal))}}" bindtap="onShareMeal">{{busy ? '同步中…' : (day.shares.meal ? '撤回当日饮食共享' : '共享当日饮食给教练')}}</button>
+      <view class="head"><view class="head-title">教练的回复</view></view>
+      <view class="feedback-card" wx:for="{{feedbacks}}" wx:key="id"><view class="feedback-head"><text>{{item.authorName || '教练'}} · {{item.typeLabel}}</text><text>{{item.timeLabel}}</text></view><view class="note-text">{{item.text}}</view></view>
+      <view class="space-empty" wx:if="{{!feedbacks.length}}">还没有当天的点评<view>教练发布建议后，回到这里即可查看。</view></view>
+    </block>
+    <block wx:else>
+      <view class="booking-intro"><view class="empty-title">把下一次训练，安排好</view><view class="sub">查看 {{binding.coachName}} 的可约时间，预约课程或管理已有预约。</view><button class="primary" bindtap="goBooking">查看时间与预约</button></view>
+    </block>
+  </block>
+</view>
+<bottom-nav active="coach"/>
