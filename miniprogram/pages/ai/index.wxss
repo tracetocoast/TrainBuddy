@@ -57,3 +57,5 @@
 .ai-outline { background: #eef4e9; border-color: #d4e3cc; color: #28744e; }
 .photo-slot { background: #f7f9f2; border-color: #cbdac1; color: #486540; }
 .ai-service-title { font-size: 35rpx; }
+
+.food-entry-button { justify-content: center; padding: 18rpx 10rpx; min-height: 84rpx; margin-top: 0; font-size: 26rpx; }

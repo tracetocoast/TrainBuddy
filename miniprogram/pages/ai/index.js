@@ -75,6 +75,10 @@ Page({
     })
   },
 
+  onFoodCamera() { wx.navigateTo({url:'/pages/food-photo/index?source=camera'}) },
+
+  onFoodAlbum() { wx.navigateTo({url:'/pages/food-photo/index?source=album'}) },
+
   async onPickFront() {
     await this.pickView('front')
   },

@@ -24,7 +24,8 @@
     "pages/privacy/index",
     "pages/body-history/index",
     "pages/coach/index",
-    "pages/friends/index"
+    "pages/friends/index",
+    "pages/food-photo/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fafbf7",
