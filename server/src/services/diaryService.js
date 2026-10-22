@@ -162,6 +162,16 @@ function addMeal(app, payload) {
     mealType: mealType || 'snack',
     foodText: foodText || '',
     portionText: portionText || '',
+    macrosG: payload.macrosG || { carbs: null, protein: null, fat: null },
+    isEstimate: payload.isEstimate != null ? !!payload.isEstimate : false,
+    sourceTaskId: payload.sourceTaskId || null,
+    mediaId: payload.mediaId || null,
+    mediaShared: false,
+    items: payload.items || [],
+    sharedToCoachUserId: null,
+    sharedAt: null,
+    syncStatus: 'none',
+    syncError: null,
     createdAt: time.nowMs(),
     updatedAt: time.nowMs(),
     deletedAt: null
@@ -273,6 +283,23 @@ function revokeDayCategory(app, studentId, localDate, category) {
   return getDailyView(app, studentId, localDate)
 }
 
+/** 教练可见饮食：默认不含原图 media_id */
+function presentMealForCoach(m) {
+  return {
+    id: m.id,
+    mealType: m.mealType,
+    foodText: m.foodText,
+    portionText: m.portionText,
+    macros_g: m.macrosG || null,
+    is_estimate: !!m.isEstimate,
+    items: m.items || [],
+    source_task_id: m.sourceTaskId || null,
+    media_id: m.mediaShared ? m.mediaId || null : null,
+    item_shared: !!m.sharedToCoachUserId,
+    createdAt: m.createdAt
+  }
+}
+
 /**
  * 教练读取某日日记：严格按授权过滤（AC22/AC23）
  */
@@ -318,16 +345,30 @@ function getSharedDailyForCoach(app, coachUserId, studentId, localDate) {
       : '学员未共享该日训练'
   }
 
-  // 饮食
-  if (shared('meal') && binding.scopes.meal) {
-    result.visible.meals = store.meals.filter(
-      (m) =>
-        m.studentId === studentId && m.localDate === localDate && !m.deletedAt
-    )
+  // 饮食：整天共享 或 逐条共享（AI 营养记录），互不静默扩大范围
+  const dayMealOk = shared('meal') && binding.scopes.meal
+  const itemSharedMeals = store.meals.filter(
+    (m) =>
+      m.studentId === studentId &&
+      m.localDate === localDate &&
+      !m.deletedAt &&
+      m.sharedToCoachUserId === coachUserId &&
+      binding.scopes.meal
+  )
+  if (dayMealOk) {
+    result.visible.meals = store.meals
+      .filter(
+        (m) =>
+          m.studentId === studentId && m.localDate === localDate && !m.deletedAt
+      )
+      .map(presentMealForCoach)
     const waters = store.waters.filter(
       (w) => w.studentId === studentId && w.localDate === localDate
     )
     result.visible.waterTotalMl = waters.reduce((s, w) => s + w.amountMl, 0)
+  } else if (itemSharedMeals.length) {
+    result.visible.meals = itemSharedMeals.map(presentMealForCoach)
+    result.visible.item_shared_only = true
   } else {
     result.hiddenReasons.meal = '记录不可见'
   }

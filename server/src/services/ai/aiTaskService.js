@@ -10,7 +10,13 @@ const { makeId } = require('../../lib/ids')
 const { AppError } = require('../../lib/errors')
 const mediaService = require('../mediaService')
 const entitlementService = require('../entitlementService')
-const { runPostureScan, runGoalNode, resolveProvider, WATERMARK } = require('./providers')
+const {
+  runPostureScan,
+  runGoalNode,
+  runNutritionScan,
+  resolveProvider,
+  WATERMARK
+} = require('./providers')
 
 function ensureAi(state) {
   if (!state.ai) state.ai = { tasks: [], ledger: [], callbackDedup: {} }
@@ -21,7 +27,13 @@ function ensureAi(state) {
 }
 
 function featureForType(type) {
-  return type === 'goal_image' ? 'goal_image' : 'posture_scan'
+  if (type === 'goal_image') return 'goal_image'
+  if (type === 'nutrition_scan') return 'nutrition_scan'
+  return 'posture_scan'
+}
+
+function findTask(state, taskId) {
+  return ensureAi(state).tasks.find((t) => t.id === taskId) || null
 }
 
 function ensureGoals(state) {
@@ -39,8 +51,8 @@ function ensurePosture(state) {
 async function createTask(state, actor, body) {
   const ai = ensureAi(state)
   const type = body.type
-  if (!type || ['posture_scan', 'goal_image'].indexOf(type) < 0) {
-    throw new AppError('VALIDATION', 'type 须为 posture_scan 或 goal_image')
+  if (!type || ['posture_scan', 'goal_image', 'nutrition_scan'].indexOf(type) < 0) {
+    throw new AppError('VALIDATION', 'type 须为 posture_scan、goal_image 或 nutrition_scan')
   }
 
   const mode = body.mode === 'demo' ? 'demo' : 'real'
@@ -58,6 +70,7 @@ async function createTask(state, actor, body) {
 
   let ledgerId = null
   if (mode === 'real') {
+    entitlementService.ensureMissingTrialGrants(state, actor.userId)
     const reserved = entitlementService.reserve(state, {
       userId: actor.userId,
       feature: featureForType(type),
@@ -88,7 +101,8 @@ async function createTask(state, actor, body) {
     updatedAt: time.nowMs(),
     publishedAt: null,
     nodes: null,
-    groupId: null
+    groupId: null,
+    confirmedMealId: null
   }
 
   ai.tasks.push(task)
@@ -96,8 +110,10 @@ async function createTask(state, actor, body) {
   try {
     if (type === 'posture_scan') {
       await processPostureTask(state, task, body)
-    } else {
+    } else if (type === 'goal_image') {
       await processGoalTask(state, task, body)
+    } else {
+      await processNutritionTask(state, task, body)
     }
   } catch (e) {
     task.status = 'failed'
@@ -111,6 +127,96 @@ async function createTask(state, actor, body) {
   }
 
   return presentTask(task, state)
+}
+
+async function processNutritionTask(state, task, body) {
+  const input = Object.assign({}, task.input || {}, (body && body.input) || {})
+  task.input = input
+  const mediaId = input.media_id || input.mediaId
+  if (!mediaId) {
+    throw new AppError('VALIDATION', '缺少 media_id')
+  }
+
+  const asset = mediaService.getAsset(state, mediaId)
+  if (!asset || asset.deletedAt || asset.ownerId !== task.ownerId) {
+    throw new AppError('NOT_FOUND', '媒体不存在或无权使用')
+  }
+  if (asset.status !== 'ready') {
+    throw new AppError('INVALID_STATE', '媒体尚未上传完成，不能开始识别')
+  }
+
+  task.status = 'running'
+  task.updatedAt = time.nowMs()
+
+  const qualityHints = input.quality_hints || input.qualityHints || asset.quality || {}
+  let imageUrl = input.image_url || input.imageUrl || null
+  if (!imageUrl) {
+    try {
+      const access = mediaService.getAccess(
+        state,
+        { userId: task.ownerId },
+        mediaId
+      )
+      imageUrl = access && access.url
+    } catch (_) {
+      imageUrl = null
+    }
+  }
+  const out = await runNutritionScan({
+    mode: task.mode,
+    qualityHints,
+    imageUrl,
+    imageBase64: input.image_base64 || input.imageBase64 || null,
+    mime: asset.mime || 'image/jpeg'
+  })
+
+  if (task.consentRevoked) {
+    task.status = 'cancelled'
+    task.error = { code: 'CONSENT_REVOKED', message: '授权已撤回，迟到结果不发布' }
+    releaseTaskQuota(state, task, 'revoked')
+    return
+  }
+
+  if (out.status === 'need_retake') {
+    task.status = 'need_retake'
+    task.resultRef = {
+      kind: 'nutrition_result',
+      data: {
+        task_id: task.id,
+        media_id: mediaId,
+        status: 'need_retake',
+        items: [],
+        total_macros_g: { carbs: null, protein: null, fat: null },
+        is_estimate: true,
+        is_demo: !!out.is_demo,
+        model_version: out.model_version || null,
+        quality: out.quality,
+        message: out.message || '请重拍'
+      }
+    }
+    task.updatedAt = time.nowMs()
+    releaseTaskQuota(state, task, 'need_retake')
+    return
+  }
+
+  task.status = 'needs_confirmation'
+  task.resultRef = {
+    kind: 'nutrition_result',
+    data: {
+      task_id: task.id,
+      media_id: mediaId,
+      status: 'needs_confirmation',
+      items: out.items || [],
+      total_macros_g: out.total_macros_g || { carbs: null, protein: null, fat: null },
+      is_estimate: out.is_estimate !== false,
+      is_demo: !!out.is_demo,
+      model_version: out.model_version || null,
+      quality: out.quality || null
+    }
+  }
+  task.publishedAt = time.nowMs()
+  task.updatedAt = time.nowMs()
+  chargeTaskQuota(state, task, 1, task.id + ':nutrition')
 }
 
 async function processPostureTask(state, task, body) {
@@ -243,7 +349,8 @@ async function processGoalTask(state, task, body) {
         mode: task.mode,
         nodeKey: node.key,
         months: node.months,
-        fail: failKeys.has(node.key)
+        fail: failKeys.has(node.key),
+        goalText: (task.input && (task.input.goal_text || task.input.goalText)) || ''
       })
 
       if (task.consentRevoked || group.consentRevoked) {
@@ -383,7 +490,7 @@ function cancelTask(state, actor, taskId, body = {}) {
       extra: { latest_revision: task.revision }
     })
   }
-  if (['succeeded', 'partial', 'cancelled'].indexOf(task.status) >= 0) {
+  if (['succeeded', 'partial', 'cancelled', 'confirmed'].indexOf(task.status) >= 0) {
     throw new AppError('INVALID_STATE', '当前状态不可取消')
   }
   task.status = 'cancelled'
@@ -438,6 +545,32 @@ async function retryTask(state, actor, taskId, body = {}) {
     return presentTask(task, state)
   }
 
+  if (
+    task.type === 'nutrition_scan' &&
+    (task.status === 'need_retake' || task.status === 'failed')
+  ) {
+    task.status = 'queued'
+    task.error = null
+    task.resultRef = null
+    task.revision += 1
+    task.updatedAt = time.nowMs()
+    try {
+      await processNutritionTask(state, task, {
+        input: Object.assign({}, task.input, body.input || {})
+      })
+    } catch (e) {
+      task.status = 'failed'
+      task.error = {
+        code: e.code || 'AI_FAILED',
+        message: e.message || '任务失败',
+        retryable: !!e.retryable
+      }
+      task.updatedAt = time.nowMs()
+      releaseTaskQuota(state, task, 'failed')
+    }
+    return presentTask(task, state)
+  }
+
   throw new AppError('VALIDATION', '请指定可重试的失败节点或需重拍任务')
 }
 
@@ -465,7 +598,8 @@ async function retryGoalNode(state, task, nodeKey) {
       mode: task.mode,
       nodeKey: node.key,
       months: node.months,
-      fail: false
+      fail: false,
+      goalText: (task.input && (task.input.goal_text || task.input.goalText)) || ''
     })
     if (task.consentRevoked || group.consentRevoked) {
       node.status = 'cancelled'
@@ -641,6 +775,12 @@ function presentTask(task, state) {
     if (g) out.result = presentGroup(g)
   } else if (task.resultRef && task.resultRef.kind === 'quality_gate') {
     out.result = task.resultRef.data
+  } else if (task.resultRef && task.resultRef.kind === 'nutrition_result') {
+    out.result = task.resultRef.data
+  }
+
+  if (task.confirmedMealId) {
+    out.confirmed_meal_id = task.confirmedMealId
   }
 
   if (task.nodes) {
@@ -709,5 +849,7 @@ module.exports = {
   ensureAi,
   ensurePosture,
   ensureGoals,
-  presentTask
+  presentTask,
+  findTask,
+  processNutritionTask
 }

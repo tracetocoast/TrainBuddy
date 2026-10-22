@@ -176,8 +176,43 @@ function parseLine(line, segmentId) {
   }
 }
 
+/**
+ * 优先走统一 LLM；失败或未配置时回退规则解析（保证 AC11）
+ */
+async function structureTextWithLlm(text, opts = {}) {
+  const llm = require('../llm')
+  if (!llm.isTaskEnabled('voice_structure')) {
+    return structureText(text, opts)
+  }
+  try {
+    const out = await llm.runTask(
+      'voice_structure',
+      { text, taskId: opts.taskId || 'seg' },
+      { mode: 'real' }
+    )
+    const data = out.data || {}
+    if (!data.schema_version) data.schema_version = 'workout_draft.v1'
+    if (!Array.isArray(data.segments)) data.segments = []
+    if (!Array.isArray(data.unparsed_text)) data.unparsed_text = []
+    data.segments = data.segments.map((seg, idx) => {
+      const id = seg.segment_id || makeSegmentId(opts.taskId || 'seg', idx)
+      const missing = Array.isArray(seg.missing_fields) ? seg.missing_fields : []
+      return Object.assign({}, seg, {
+        segment_id: id,
+        missing_fields: missing,
+        requires_confirmation:
+          seg.requires_confirmation != null ? !!seg.requires_confirmation : missing.length > 0
+      })
+    })
+    return data
+  } catch (_) {
+    return structureText(text, opts)
+  }
+}
+
 module.exports = {
   structureText,
+  structureTextWithLlm,
   parseLine,
   libraryItem,
   EXERCISE_LIBRARY
