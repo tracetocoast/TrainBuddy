@@ -13,14 +13,14 @@
   padding: 12rpx 20rpx;
   border-radius: 999rpx;
   background: var(--surface);
-  border: 2rpx solid #304351;
+  border: 2rpx solid #e0e7dc;
   font-size: 22rpx;
-  font-weight: 700;
-  color: #91a6b6;
+  font-weight: 600;
+  color: #6e7c72;
 }
 
 .chip.on {
-  background: #28465b;
-  border-color: #52718a;
-  color: #e4edf3;
+  background: #e6f0e4;
+  border-color: #a5c5a7;
+  color: #25352c;
 }

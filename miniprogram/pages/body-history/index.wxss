@@ -1,5 +1,5 @@
 @import "../../styles/body.wxss";
-.history-trend-link { padding: 16rpx 0; font-size: 25rpx; color: #9cbbd1; }
-.history-measurement { border: 1rpx solid #304351; background: var(--surface); border-radius: 22rpx; padding: 24rpx; margin-bottom: 20rpx; }
-.history-stamp { display: flex; align-items: center; gap: 18rpx; font-size: 24rpx; color: #91a3b1; padding-bottom: 16rpx; border-bottom: 1rpx solid #293c4b; }
-.history-item { display: flex; justify-content: space-between; gap: 20rpx; padding-top: 18rpx; font-size: 29rpx; color: #bdd1df; }.history-unit { font-size: 23rpx; color: #91a3b1; }
+.history-trend-link { padding: 16rpx 0; font-size: 25rpx; color: #28744e; }
+.history-measurement { border: 1rpx solid #e0e7dc; background: var(--surface); border-radius: 22rpx; padding: 24rpx; margin-bottom: 20rpx; }
+.history-stamp { display: flex; align-items: center; gap: 18rpx; font-size: 24rpx; color: #6e7c72; padding-bottom: 16rpx; border-bottom: 1rpx solid #e0e7dc; }
+.history-item { display: flex; justify-content: space-between; gap: 20rpx; padding-top: 18rpx; font-size: 29rpx; color: #28744e; }.history-unit { font-size: 23rpx; color: #6e7c72; }

@@ -38,7 +38,7 @@
   </view>
   <view class="card chart" wx:if="{{summary && summary.bars && summary.bars.length}}">
     <view class="bar-col" wx:for="{{summary.bars}}" wx:key="date">
-      <view class="bar" style="height: {{item.height || 8}}rpx; background: {{item.sets ? '#a5c5db' : '#304351'}};"></view>
+      <view class="bar" style="height: {{item.height || 8}}rpx; background: {{item.sets ? '#449361' : '#e7ede2'}};"></view>
       <text class="sub">{{item.label}}</text>
     </view>
   </view>

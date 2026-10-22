@@ -1,8 +1,8 @@
 {
   "navigationBarTitleText": "AI助手",
-  "navigationBarBackgroundColor": "#111b26",
-  "navigationBarTextStyle": "white",
-  "backgroundColor": "#111b26",
+  "navigationBarBackgroundColor": "#fafbf7",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#fafbf7",
   "usingComponents": {
     "bottom-nav": "/components/bottom-nav/index",
     "role-switcher": "/components/role-switcher/index",

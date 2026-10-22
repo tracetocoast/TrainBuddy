@@ -25,11 +25,11 @@
     "pages/body-history/index"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#111b26",
+    "navigationBarBackgroundColor": "#fafbf7",
     "navigationBarTitleText": "练搭子",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#111b26",
-    "backgroundTextStyle": "light"
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#fafbf7",
+    "backgroundTextStyle": "dark"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

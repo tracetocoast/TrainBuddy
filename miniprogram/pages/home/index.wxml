@@ -7,17 +7,15 @@
   <role-switcher />
   <block wx:if="{{role === 'student'}}">
     <view class="welcome">
-      <view class="title">今天，也进步一点</view>
-      <view class="sub">跟着自己的节奏，练出好状态。</view>
+      <view class="home-quote">时间会记住，你为自己做过的事。</view>
     </view>
     <view class="daily-card">
       <view class="daily-intro">
         <view class="grow">
           <text class="daily-label">今日训练</text>
-          <view class="daily-title">准备好动起来了吗？</view>
+          <view class="daily-title">留一点时间，给自己</view>
           <view class="sub">选择你的计划，逐组记录进步。</view>
         </view>
-        <view class="training-emblem" aria-hidden="true"><brand-logo size="126" /></view>
       </view>
       <button class="primary" bindtap="goWorkout">开始训练</button>
     </view>
@@ -51,7 +49,7 @@
       <text class="chevron">›</text>
     </view>
     <view class="head">
-      <view class="head-title">一点点，积累成改变</view>
+      <view class="head-title">本周概览</view>
       <button class="link" bindtap="goGrowth">查看成长 ›</button>
     </view>
     <view class="stats">
@@ -69,7 +67,7 @@
       </view>
     </view>
     <view class="head">
-      <view class="head-title">训练之外，也照顾好自己</view>
+      <view class="head-title">日常记录</view>
     </view>
     <view class="quick-grid">
       <button class="quick-card" bindtap="goDiary">
@@ -92,8 +90,7 @@
   </block>
   <block wx:elif="{{role === 'coach' && canSwitchCoach}}">
     <view class="welcome">
-      <view class="title">今天，陪他们进步</view>
-      <view class="sub">安排课程，留下每一次训练的记录。</view>
+      <view class="home-quote">好的陪伴，让改变慢慢发生。</view>
     </view>
     <view class="daily-card">
       <view class="daily-label">教练工作台</view>
