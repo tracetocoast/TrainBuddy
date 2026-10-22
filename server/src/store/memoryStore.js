@@ -14,6 +14,7 @@ function emptyState() {
     sessions: {}, // token -> { userId, createdAt, expiresAt }
     invitations: [],
     bindings: [],
+    friends: { invitations: [], relations: [], comments: [] },
     schedule: {
       rulesByCoach: {},
       exceptions: [],

@@ -1,0 +1,31 @@
+<view class="page page-solo friends-page">
+  <view class="friends-heading"><view class="brand"><brand-logo class="brand-emblem-slot"/>朋友</view><button class="link" bindtap="onManage">{{manage ? '收起' : '添加朋友'}} {{manage ? '−' : '＋'}}</button></view>
+  <view class="sub">看看彼此的训练，留下一点鼓励。</view>
+  <view class="friend-manage" wx:if="{{manage || (!loading && !friends.length && !error)}}">
+    <view class="card-title">邀请一个训练搭子</view>
+    <view class="consent-note">绑定成功后，双方可以互看近 7 天已完成的训练、动作与重量次数，并对具体训练点评。饮食、身体数据、照片及教练备注不共享。</view>
+    <button class="secondary" disabled="{{busy}}" bindtap="onCreateInvite">创建邀请码，邀请互相共享训练</button>
+    <view class="invite-result" wx:if="{{invite}}"><view>{{invite.code}}</view><view class="sub">{{invite.expires}} 前有效 · 仅可使用一次</view><button class="link" bindtap="onCopy">复制邀请码</button></view>
+    <view class="code-label">收到朋友的邀请码？</view>
+    <view class="code-row"><input class="field" maxlength="10" value="{{code}}" bindinput="onCode" placeholder="输入朋友的 10 位邀请码" disabled="{{busy}}"/><button class="secondary" bindtap="onPreview" disabled="{{busy}}">查找</button></view>
+    <view class="preview-card" wx:if="{{preview}}"><view class="card-title">和 {{preview.name}} 成为朋友</view><view class="consent-note">确认后，你们将互相共享近 7 天的已完成训练。双方均可随时解除。</view><button class="primary" disabled="{{busy}}" bindtap="onAccept">确认绑定并互相共享训练</button></view>
+  </view>
+  <view class="friend-state" wx:if="{{loading}}">正在读取朋友动态…</view>
+  <view class="card" wx:elif="{{error}}"><view class="sub">{{error}}</view><button class="link" bindtap="reload">重试</button></view>
+  <block wx:elif="{{friends.length}}">
+    <scroll-view class="friend-selector" scroll-x><button wx:for="{{friends}}" wx:key="id" class="friend-chip {{selectedId === item.id ? 'on' : ''}}" data-id="{{item.id}}" bindtap="onSelect" disabled="{{busy}}">{{item.name}}</button></scroll-view>
+    <view class="friend-week"><view class="week-title">{{selected.name}}<text>近 7 天 · {{selected.sessionCount}} 次训练</text></view><view class="week-days"><view wx:for="{{selected.days}}" wx:key="date"><text>{{item.label}}</text><view class="day-bar {{item.count ? 'trained' : ''}}">{{item.count || '—'}}</view></view></view></view>
+    <view class="head"><view class="head-title">朋友的训练</view><text class="sub">最近 7 天</text></view>
+    <view class="training-card" wx:for="{{sessions}}" wx:key="id">
+      <view class="training-date">{{item.date}}</view><view class="card-title">{{item.title}}</view>
+      <view class="training-exercise" wx:for="{{item.exercises}}" wx:for-item="exercise" wx:key="index"><view>{{exercise.name}}</view><text>{{exercise.summary}}</text></view>
+      <view class="comment" wx:for="{{item.comments}}" wx:for-item="comment" wx:key="id"><view class="comment-author">{{comment.name}}<text>{{comment.time}}</text></view><view>{{comment.text}}</view></view>
+      <textarea class="field comment-field" maxlength="500" placeholder="为朋友的这次训练留一句点评…" value="{{drafts[item.id] || ''}}" data-id="{{item.id}}" bindinput="onDraft" disabled="{{busy}}"/>
+      <button class="comment-send" data-id="{{item.id}}" bindtap="onComment" disabled="{{busy}}">{{busy ? '处理中…' : '发布点评'}}</button>
+    </view>
+    <view class="friend-state" wx:if="{{!sessions.length}}">朋友近 7 天还没有已完成的训练。<view>没有记录，也可能是在好好休息。</view></view>
+    <view class="head" wx:if="{{received.length}}"><view class="head-title">这位朋友给我的点评</view></view>
+    <view class="training-card" wx:for="{{received}}" wx:key="id"><view class="training-date">{{item.date}} · 我的训练</view><view class="card-title">{{item.title}}</view><view class="comment" wx:for="{{item.comments}}" wx:for-item="comment" wx:key="id"><view class="comment-author">{{comment.name}}<text>{{comment.time}}</text></view><view>{{comment.text}}</view></view></view>
+    <button class="remove-friend" disabled="{{busy}}" bindtap="onRemove">解除与 {{selected.name}} 的朋友关系</button>
+  </block>
+</view>

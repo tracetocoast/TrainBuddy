@@ -66,6 +66,7 @@
         <text class="stat-label">连续记录天数</text>
       </view>
     </view>
+    <friend-window/>
     <view class="head">
       <view class="head-title">日常记录</view>
     </view>
@@ -107,6 +108,7 @@
       </view>
       <button class="primary" bindtap="goBooking">查看排课</button>
     </view>
+    <friend-window/>
     <view class="head">
       <view class="head-title">我的学员</view>
     </view>

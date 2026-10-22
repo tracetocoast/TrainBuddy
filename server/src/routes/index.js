@@ -32,6 +32,7 @@ const { makeId } = require('../lib/ids')
 
 function buildRouter() {
   const r = express.Router()
+  r.use('/friends', require('./friends').buildFriendsRouter())
 
   // ---------- API01 auth（可无 mock accountKey）----------
   r.post('/auth/wechat-session', async (req, res, next) => {

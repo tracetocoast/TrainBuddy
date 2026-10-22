@@ -23,7 +23,8 @@
     "pages/bind/index",
     "pages/privacy/index",
     "pages/body-history/index",
-    "pages/coach/index"
+    "pages/coach/index",
+    "pages/friends/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fafbf7",
