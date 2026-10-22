@@ -31,6 +31,10 @@ Page({
     this.reload()
   },
 
+  goBodyData() {
+    wx.navigateTo({ url: '/pages/body-data/index' })
+  },
+
   studentId() {
     return getApp().globalData.session.user.userId
   },

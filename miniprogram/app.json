@@ -13,18 +13,25 @@
     "pages/diary/index",
     "pages/ai/index",
     "pages/growth/index",
+    "pages/body-data/index",
+    "pages/body-metric/index",
+    "pages/body-record/index",
     "pages/record/index",
     "pages/students/index",
     "pages/student-profile/index",
     "pages/profile/index",
     "pages/bind/index",
-    "pages/privacy/index"
+    "pages/privacy/index",
+    "pages/body-history/index",
+    "pages/coach/index",
+    "pages/friends/index",
+    "pages/food-photo/index"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#f5f6f0",
+    "navigationBarBackgroundColor": "#fafbf7",
     "navigationBarTitleText": "练搭子",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f6f0",
+    "backgroundColor": "#fafbf7",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "登录",
-  "usingComponents": {}
+  "usingComponents": {
+    "brand-logo": "/components/brand-logo/index"
+  }
 }

@@ -54,7 +54,7 @@ Page({
         growthApi.getSummary(app, user.userId).then((res) => {
           const s = res.data
           this.setData({
-            streak: s.diaryStreak || s.trainingDays || 0,
+            streak: s.diaryStreak || 0,
             weekCount: s.sessionCount,
             hasStats: !s.empty.sessionCount,
             planRateText:

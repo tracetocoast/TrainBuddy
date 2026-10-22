@@ -13,10 +13,10 @@
 }
 
 .hidden {
-  background: #eceee6;
+  background: #f1f4ee;
   border-style: dashed;
 }
 
 .hidden .card-title {
-  color: #74796d;
+  color: #6e7c72;
 }

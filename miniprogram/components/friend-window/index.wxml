@@ -1,0 +1,8 @@
+<view class="friends-window">
+  <view class="window-head"><text>朋友</text><button bindtap="goFriends">{{count ? '查看全部' : '添加朋友'}} ›</button></view>
+  <view class="window-caption">一起练，各有各的节奏</view>
+  <view class="window-empty" wx:if="{{loading}}">正在读取朋友动态…</view>
+  <view class="window-empty" wx:elif="{{error}}"><text>{{error}}</text><button bindtap="refresh">重试</button></view>
+  <view class="window-empty" wx:elif="{{!count}}">绑定朋友，看看彼此最近 7 天的训练。</view>
+  <button class="friend-row" wx:for="{{friends}}" wx:key="id" data-id="{{item.id}}" bindtap="goFriends"><view class="friend-avatar">{{item.initial}}</view><view class="friend-info"><view>{{item.name}}</view><text>近 7 天 · {{item.sessionCount}} 次训练</text></view><view class="friend-days"><view wx:for="{{item.days}}" wx:for-item="day" wx:key="date" class="{{day.count ? 'trained' : ''}}" aria-label="{{day.date}}，{{day.count}}次训练"></view></view><text class="row-arrow">›</text></button>
+</view>

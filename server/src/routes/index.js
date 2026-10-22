@@ -13,6 +13,7 @@ const trainingService = require('../services/trainingService')
 const { presentForActor } = require('../lib/planAccess')
 const diaryService = require('../services/diaryService')
 const growthService = require('../services/growthService')
+const bodyMeasurementService = require('../services/bodyMeasurementService')
 const exerciseService = require('../services/exerciseService')
 const voiceTaskService = require('../services/voice/voiceTaskService')
 const { listProviders } = require('../services/voice/adapters')
@@ -31,6 +32,7 @@ const { makeId } = require('../lib/ids')
 
 function buildRouter() {
   const r = express.Router()
+  r.use('/friends', require('./friends').buildFriendsRouter())
 
   // ---------- API01 auth（可无 mock accountKey）----------
   r.post('/auth/wechat-session', async (req, res, next) => {
@@ -720,6 +722,11 @@ function buildRouter() {
           return true
         })
       }
+      list = list.map(session => {
+        const visible = Object.assign({}, session)
+        if (visible.coach_id !== req.actor.userId) delete visible.private_note
+        return visible
+      })
       ok(res, list)
     } catch (e) {
       next(e)
@@ -1219,20 +1226,31 @@ function buildRouter() {
     }
   })
 
-  r.post('/feedback', authRequired, async (req, res, next) => {
+  r.post('/feedback', authRequired, idempotency(), async (req, res, next) => {
     try {
       const data = await req.app.locals.store.tx(async () => {
         const studentId = req.body.student_id
         assertCoachReadStudent(req.app.locals.store.state, req.actor.userId, studentId)
         const app = asApp(req.app.locals.store)
+        const text = String(req.body.text || '').trim()
+        if (!text || text.length > 2000) throw new AppError('VALIDATION', '请填写 1–2000 字点评')
+        const targetType = req.body.target_type || 'daily_log'
+        if (!['daily_log', 'meal'].includes(targetType)) throw new AppError('VALIDATION', '不支持的点评类型')
+        const targetId = String(req.body.target_id || '')
+        const date = targetId.slice(studentId.length + 1)
+        if (targetId !== studentId + '|' + date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new AppError('VALIDATION', '请选择点评日期')
+        if (targetType === 'meal') {
+          const shared = await unwrap(diaryService.getSharedDailyForCoach(app, req.actor.userId, studentId, date))
+          if (!(shared.data.visible.meals || []).length) throw new AppError('CONSENT_REQUIRED', '学员尚未共享当日饮食或已撤回', { status: 403 })
+        }
         const out = await unwrap(
           diaryService.addFeedback(app, {
             authorId: req.actor.userId,
             authorName: req.actor.displayName,
-            targetType: req.body.target_type || 'daily_log',
-            targetId: req.body.target_id,
+            targetType,
+            targetId,
             studentId,
-            text: req.body.text
+            text
           })
         )
         return out.data
@@ -1245,14 +1263,30 @@ function buildRouter() {
 
   r.get('/feedback', authRequired, async (req, res, next) => {
     try {
+      const studentId = req.query.student_id || req.actor.userId
+      if (studentId !== req.actor.userId) assertCoachReadStudent(req.app.locals.store.state, req.actor.userId, studentId)
       const app = asApp(req.app.locals.store)
       const out = await unwrap(
         diaryService.listFeedback(app, {
-          studentId: req.query.student_id,
+          studentId,
           targetId: req.query.target_id
         })
       )
-      ok(res, out.data)
+      let feedbacks = out.data || []
+      if (studentId !== req.actor.userId) {
+        const visible = []
+        for (const feedback of feedbacks) {
+          if (feedback.authorId !== req.actor.userId) continue
+          if (feedback.targetType === 'meal') {
+            const date = feedback.targetId.slice(studentId.length + 1)
+            const shared = await unwrap(diaryService.getSharedDailyForCoach(app, req.actor.userId, studentId, date))
+            if (!shared.data.visible.meals) continue
+          }
+          visible.push(feedback)
+        }
+        feedbacks = visible
+      }
+      ok(res, feedbacks)
     } catch (e) {
       next(e)
     }
@@ -1298,6 +1332,26 @@ function buildRouter() {
     } catch (e) {
       next(e)
     }
+  })
+
+  // 身体测量独立保存，不继承日记或教练的共享权限。
+  r.get('/body-measurements', authRequired, (req, res, next) => {
+    try { ok(res, bodyMeasurementService.list(req.app.locals.store.state, req.actor, req.query)) }
+    catch (error) { next(error) }
+  })
+
+  r.post('/body-measurements', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(state => bodyMeasurementService.append(state, req.actor, req.body || {}, req.idempotencyKey, req.idempotencyBodyHash))
+      ok(res, data)
+    } catch (error) { next(error) }
+  })
+
+  r.put('/body-measurements/:date', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(state => bodyMeasurementService.save(state, req.actor, req.params.date, req.body || {}))
+      ok(res, data)
+    } catch (error) { next(error) }
   })
 
   // ---------- API29 growth ----------

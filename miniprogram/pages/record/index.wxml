@@ -1,7 +1,7 @@
 <view class="page">
   <view class="top">
     <view class="brand">
-      <text class="mark">↗</text>练搭子
+      <brand-logo class="brand-emblem-slot" />练搭子
       <text class="brand-sub">TRAIN BUDDY</text>
     </view>
   </view>
@@ -9,8 +9,8 @@
   <role-switcher />
 
   <view class="eyebrow">POST-SESSION · C04 · 7.3</view>
-  <view class="title">下课别忙走，<br/>记录交给我。</view>
-  <view class="sub">录音→转写→候选→确认合并。缺字段不擅自补全；冲突保留人工值。无麦克风仍可手填。</view>
+  <view class="title">记录这一次进步</view>
+  <view class="sub">点击添加动作，也可以用语音或文字录入。确认后同步给学员。</view>
 
   <view class="head">
     <view class="head-title">选择学员</view>
@@ -66,7 +66,7 @@
     </view>
     <view class="card hidden" wx:else>
       <view class="card-title">麦克风不可用</view>
-      <view class="sub">已拒绝权限或设备不支持。可继续点击添加动作或下方文字录入（AC14）。</view>
+      <view class="sub">已拒绝权限或设备不支持。可继续点击添加动作或在下方输入文字。</view>
       <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onRequestMic">重试授权</button>
     </view>
 
@@ -165,8 +165,8 @@
     </view>
     <view class="card sub" wx:if="{{!session.exercises.length}}">请添加动作、录音或文字解析后再同步。</view>
 
-    <view class="head"><view class="head-title">可共享点评</view></view>
-    <textarea class="field" value="{{publicNote}}" placeholder="学员可见的点评…" bindinput="onPublicNote" disabled="{{session.status === 'completed'}}" />
+    <view class="head"><view class="head-title">动作问题与课后建议</view></view>
+    <textarea class="field" value="{{publicNote}}" placeholder="例如：卧推时肩胛不够稳定，下次降低重量，先练习肩胛收紧。确认同步后学员可见。" bindinput="onPublicNote" disabled="{{session.status === 'completed'}}" />
 
     <view class="head"><view class="head-title">私人备注</view></view>
     <textarea class="field" value="{{privateNote}}" placeholder="不同步给学员…" bindinput="onPrivateNote" disabled="{{session.status === 'completed'}}" />
@@ -182,7 +182,7 @@
     <view class="card" wx:if="{{session.status === 'completed'}}">
       <view class="card-title">已同步正式版</view>
       <view class="sub">下次计划草稿已按规则生成（未自动加量）。</view>
-      <button class="primary" style="width:100%;margin-top:16rpx" bindtap="goNextPlan" wx:if="{{nextPlanId}}">编辑下次计划 C05 ↗</button>
+      <button class="primary" style="width:100%;margin-top:16rpx" bindtap="goNextPlan" wx:if="{{nextPlanId}}">调整下次训练计划</button>
     </view>
   </block>
 </view>

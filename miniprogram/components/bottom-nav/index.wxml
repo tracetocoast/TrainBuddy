@@ -6,7 +6,7 @@
     data-path="{{item.path}}"
     bindtap="onSwitch"
   >
-    <view class="nav-icon">{{item.icon}}</view>
+    <view class="nav-icon"><image class="nav-symbol" src="{{icons[item.key]}}" mode="aspectFit" aria-hidden="true" /></view>
     <text class="nav-text">{{item.text}}</text>
   </view>
 </view>

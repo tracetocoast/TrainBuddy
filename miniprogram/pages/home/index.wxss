@@ -1,1 +1,104 @@
-/* 首页沿用全局样式 */
+.daily-card { padding: 30rpx; border: 1rpx solid #e0e7dc; background: #ffffff; border-radius: 28rpx; }
+
+.daily-intro {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 26rpx;
+}
+
+.daily-label {
+  display: inline-block;
+  color: #6e7c72;
+  font-size: 23rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.daily-title {
+  font-size: 36rpx;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 10rpx;
+}
+
+.daily-card .primary {
+  width: 100%;
+}
+
+.blue {
+  background: #ffffff;
+  color: #28744e;
+}
+.orange {
+  background: #fff3e3;
+  color: #6e7c72;
+}
+.violet {
+  background: #ffffff;
+  color: #6e7c72;
+}
+
+.chevron {
+  font-size: 38rpx;
+  color: #6e7c72;
+  flex-shrink: 0;
+}
+
+.quick-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.quick-card {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  border: 2rpx solid #e0e7dc;
+  border-bottom-width: 1rpx;
+  border-radius: 26rpx;
+  text-align: left;
+}
+
+.quick-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
+  font-size: 36rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.coach-counts {
+  display: flex;
+  gap: 70rpx;
+  margin: 24rpx 0;
+}
+
+.quick-card {
+  width: 100% !important;
+}
+
+.home-page .flex > .link {
+  flex: 0 0 auto;
+}
+
+.welcome { margin: 4rpx 0 28rpx; }
+.home-quote { font-size: 24rpx; line-height: 1.8; color: #74806d; letter-spacing: 1rpx; }
+.daily-card { padding: 32rpx; background: #edf4e6; border: 1rpx solid #e0ead6; border-radius: 28rpx; }
+.daily-intro { margin-bottom: 28rpx; }
+.daily-label { color: #68815c; font-weight: 500; font-size: 22rpx; letter-spacing: 2rpx; }
+.daily-title { color: #2e452f; font-size: 38rpx; font-weight: 500; margin: 12rpx 0; }
+.daily-card .sub { color: #718168; font-size: 24rpx; }
+.blue { background: #edf3e8; color: #5f8054; }
+.orange { background: #fff1df; color: #b67e35; }
+.violet { background: #f0edf6; color: #8b7ba4; }
+.quick-card { background: #ffffff; border: 1rpx solid #e0e7dc; }
+.home-page .head-title { font-size: 29rpx; font-weight: 500; }
+.home-page .stat { padding: 24rpx 10rpx; }

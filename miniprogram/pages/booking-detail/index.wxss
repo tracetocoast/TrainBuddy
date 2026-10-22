@@ -6,7 +6,7 @@
   display: flex;
   justify-content: space-between;
   padding: 14rpx 0;
-  border-bottom: 1rpx solid #eef0e9;
+  border-bottom: 1rpx solid #e0e7dc;
   font-size: 26rpx;
 }
 
@@ -15,11 +15,11 @@
 }
 
 .k {
-  color: #74796d;
+  color: #6e7c72;
 }
 
 .v {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .dates {

@@ -33,6 +33,10 @@ Page({
     specialNote: ''
   },
 
+  onLoad(query) {
+    if (query && /^\d{4}-\d{2}-\d{2}$/.test(query.date || '')) this.setData({localDate:query.date})
+  },
+
   onShow() {
     if (!requireLogin(this)) return
     const today = time.todayKey()

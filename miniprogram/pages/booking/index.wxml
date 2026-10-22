@@ -1,7 +1,7 @@
 <view class="page">
   <view class="top">
     <view class="brand">
-      <text class="mark">↗</text>练搭子
+      <brand-logo class="brand-emblem-slot" />练搭子
       <text class="brand-sub">TRAIN BUDDY</text>
     </view>
   </view>
@@ -11,7 +11,7 @@
   <!-- ========== 学员约课 ========== -->
   <block wx:if="{{role === 'student'}}">
     <view class="eyebrow">FIND YOUR SESSION</view>
-    <view class="title">约一场，状态拉满。</view>
+    <view class="title">约一节好课</view>
     <view class="sub" wx:if="{{coachName}}">教练 · {{coachName}} · 确认后才会占用时段</view>
     <view class="sub" wx:else>请先绑定教练后再预约</view>
 
@@ -36,7 +36,7 @@
           class="date-btn {{selectedDate === item.dateKey ? 'chosen' : ''}}"
           data-key="{{item.dateKey}}"
           bindtap="onPickDate"
-        >{{item.weekday}}<b>{{item.day}}</b></button>
+        >{{item.weekday}}<text class="date-day">{{item.day}}</text></button>
       </scroll-view>
 
       <view class="head">
@@ -95,8 +95,8 @@
   <!-- ========== 教练排课 ========== -->
   <block wx:elif="{{role === 'coach'}}">
     <view class="eyebrow">STUDIO SCHEDULE</view>
-    <view class="title">排课清晰，节奏在线。</view>
-    <view class="sub">待处理置顶 · 日/周视图 · 规则与例外</view>
+    <view class="title">我的排课</view>
+    <view class="sub">查看课程安排，处理学员预约。</view>
 
     <view class="seg">
       <button class="seg-btn {{coachTab === 'day' ? 'on' : ''}}" data-tab="day" bindtap="onCoachTab">日视图</button>
@@ -118,7 +118,7 @@
             <view class="card-title">{{item.student_name || '学员'}} · 待确认</view>
             <view class="sub">{{item.dateKey}} {{item.startLabel}}–{{item.endLabel}}</view>
           </view>
-          <text class="statuspill">pending</text>
+          <text class="statuspill">待确认</text>
         </view>
         <view class="twobtn" style="margin-top:16rpx">
           <button class="secondary" data-id="{{item.booking_id}}" data-rev="{{item.revision}}" bindtap="onReject">拒绝</button>
@@ -151,7 +151,7 @@
           class="date-btn {{selectedDate === item.dateKey ? 'chosen' : ''}}"
           data-key="{{item.dateKey}}"
           bindtap="onPickDate"
-        >{{item.weekday}}<b>{{item.day}}</b></button>
+        >{{item.weekday}}<text class="date-day">{{item.day}}</text></button>
       </scroll-view>
 
       <view class="card" wx:for="{{coachDayBookings}}" wx:key="booking_id" data-id="{{item.booking_id}}" bindtap="goDetail">
@@ -184,9 +184,9 @@
           <view class="sub">节</view>
         </view>
       </view>
-      <view class="card sub">数字为当日有效占用（pending/confirmed 等）。点日视图看明细。</view>
+      <view class="card sub">显示每天已预约的课程数，切换日视图查看详情。</view>
     </block>
   </block>
 </view>
 
-<bottom-nav active="booking" />
+<bottom-nav active="{{role === 'student' ? 'coach' : 'booking'}}" />

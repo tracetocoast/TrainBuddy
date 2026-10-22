@@ -105,7 +105,7 @@ function addFeedback(app, payload) {
       target_id: payload.targetId,
       target_type: payload.targetType,
       text: payload.text
-    })
+    }, { idempotencyKey: payload.idempotencyKey })
     .then((res) => ({ data: res.data, request_id: res.request_id }))
 }
 

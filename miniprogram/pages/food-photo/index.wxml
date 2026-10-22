@@ -1,0 +1,16 @@
+<view class="page page-solo food-page">
+  <view class="food-kicker">AI 饮食助手 · 功能预留</view>
+  <view class="food-title">把这一餐，轻松记下来</view>
+  <view class="sub">拍照或选择食物照片，后续可估算碳水、蛋白质和脂肪，并记录到饮食日记。</view>
+  <view class="food-photo" wx:if="{{photo}}" bindtap="onPreview"><image src="{{photo}}" mode="aspectFit"/><text>点击查看照片</text></view>
+  <view class="food-photo food-empty" wx:else><view class="plate-mark"><view></view></view><view>给这一餐拍张照片</view><text>尽量包含整餐，方便后续确认食物和份量</text></view>
+  <view class="twobtn"><button class="primary" bindtap="onCamera" disabled="{{picking}}">拍照</button><button class="secondary" bindtap="onAlbum" disabled="{{picking}}">从相册选择</button></view>
+  <view class="food-error" wx:if="{{error}}">{{error}}</view>
+  <view class="food-local-note" wx:if="{{photo}}">当前仅本地预览，照片尚未上传，也未生成饮食记录。</view>
+  <view class="head"><view class="head-title">营养估算</view><text class="food-badge">待接入识别</text></view>
+  <view class="nutrient-grid"><view wx:for="{{nutrients}}" wx:key="key"><text>{{item.name}}</text><view>—<text>g</text></view></view></view>
+  <view class="food-estimate-note">识别结果将是估算值。接入后可确认食物及份量，再保存到当天对应餐次。</view>
+  <view class="food-sync"><view class="food-sync-head"><view>记录后自动同步教练<view class="sub">待接入 · 当前未开启</view></view><switch disabled checked="{{false}}" color="#28744e"/></view><view class="food-estimate-note">仅在已绑定教练、开启饮食授权且主动启用自动同步时生效。朋友看不到饮食记录。</view></view>
+  <button class="primary food-save" disabled>识别并记录 · 即将开放</button>
+  <button class="link food-manual" bindtap="goDiary">现在先手动记录饮食 ›</button>
+</view>

@@ -1,7 +1,7 @@
 <view class="page">
   <view class="top">
     <view class="brand">
-      <text class="mark">↗</text>练搭子
+      <brand-logo class="brand-emblem-slot" />练搭子
       <text class="brand-sub">TRAIN BUDDY</text>
     </view>
   </view>
@@ -10,8 +10,8 @@
 
   <view class="eyebrow">WORKOUT SESSION</view>
   <view class="title" wx:if="{{session}}">{{session.title}}</view>
-  <view class="title" wx:else>选择计划<br/>开练。</view>
-  <view class="sub">每组独立记录重量与次数。结束训练幂等，不会重复累计。</view>
+  <view class="title" wx:else>开始你的训练</view>
+  <view class="sub">记好每一组，看见每一点进步。</view>
 
   <view class="twobtn" wx:if="{{!session}}">
     <button class="secondary" bindtap="goExercises">动作库</button>
@@ -29,20 +29,20 @@
       <view class="sub">{{item.published.goal || '已发布计划'}} · v{{item.published.version}}</view>
       <button class="primary" style="width:100%;margin-top:16rpx" data-id="{{item.plan_id}}" bindtap="onStart">开始训练</button>
     </view>
-    <view class="card sub" wx:if="{{!plans.length}}">暂无已发布计划，将为你准备默认下肢模板。</view>
-    <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onEnsureDefault" wx:if="{{!plans.length}}">使用默认计划开练</button>
+    <view class="card sub" wx:if="{{!plans.length}}">还没有训练计划。去动作库挑选动作，或先体验入门模板。</view>
+    <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onEnsureDefault" wx:if="{{!plans.length}}">体验下肢训练模板</button>
   </block>
 
   <!-- 进行中 -->
   <block wx:else>
     <view class="head">
       <view class="head-title">训练进度</view>
-      <text><b>{{session.done_sets}}/{{session.total_sets}} 组</b></text>
+      <text class="sub">{{session.done_sets}}/{{session.total_sets}} 组</text>
     </view>
     <view class="progress">
       <view class="progress-bar" style="width: {{session.progress_percent}}%;"></view>
     </view>
-    <view class="sub" style="margin-top:8rpx">计划快照 v{{session.plan_revision || '—'}} · 状态 {{session.status}}</view>
+    <view class="sub" style="margin-top:8rpx">{{session.status === 'completed' ? '本次训练已完成' : '记录会自动保存，可以放心继续'}}</view>
 
     <view class="exercise" wx:for="{{session.exercises}}" wx:key="id">
       <view class="flex">
