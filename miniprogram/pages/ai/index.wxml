@@ -5,7 +5,7 @@
   <view class="ai-services-label"><text>你的专属工具</text><text class="ai-service-count">01 — 03</text></view>
   <view class="aibox food-box">
     <view class="row-between"><text class="ai-section-number">01 / NUTRITION</text><text class="ai-badge">功能预留</text></view>
-    <view class="ai-service-title">拍照记饮食</view><view class="ai-desc">拍一餐，或从相册选一张。预留碳水、蛋白质与脂肪估算，确认后记录；授权并开启后，可自动同步教练。</view>
+    <view class="ai-service-title">拍照记饮食</view><view class="ai-desc">拍一餐，或从相册选一张。估算碳水、蛋白质与脂肪，确认后记入日记；授权并开启后，可自动同步教练。</view>
     <view class="photo-grid"><button class="ai-primary food-entry-button" bindtap="onFoodCamera">拍照</button><button class="ai-outline food-entry-button" bindtap="onFoodAlbum">从相册选择</button></view>
     <view class="ai-footnote">目前可选择照片并预览，营养识别、记录和自动同步尚未开放。</view>
   </view>

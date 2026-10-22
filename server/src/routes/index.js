@@ -17,7 +17,7 @@ const bodyMeasurementService = require('../services/bodyMeasurementService')
 const exerciseService = require('../services/exerciseService')
 const voiceTaskService = require('../services/voice/voiceTaskService')
 const { listProviders } = require('../services/voice/adapters')
-const { structureText } = require('../services/voice/structure')
+const { structureTextWithLlm } = require('../services/voice/structure')
 const mediaService = require('../services/mediaService')
 const aiTaskService = require('../services/ai/aiTaskService')
 const { listProviders: listAiProviders } = require('../services/ai/providers')
@@ -27,6 +27,7 @@ const entitlementService = require('../services/entitlementService')
 const outboxService = require('../services/outboxService')
 const opsService = require('../services/opsService')
 const paymentService = require('../services/paymentService')
+const nutritionService = require('../services/nutritionService')
 const time = require('../lib/time')
 const { makeId } = require('../lib/ids')
 
@@ -303,6 +304,37 @@ function buildRouter() {
           req.body.callback_id || req.body.callbackId,
           req.body
         )
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // ---------- 营养识别确认 / 自动同步偏好 ----------
+  r.post('/nutrition-tasks/:id/confirm', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        nutritionService.confirmTask(state, req.actor, req.params.id, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/nutrition-sync-settings', authRequired, (req, res, next) => {
+    try {
+      ok(res, nutritionService.getPrefs(req.app.locals.store.state, req.actor.userId))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.put('/nutrition-sync-settings', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        nutritionService.setPrefs(state, req.actor, req.body || {})
       )
       ok(res, data)
     } catch (e) {
@@ -879,7 +911,7 @@ function buildRouter() {
 
   r.post('/sessions/:id/parse-text', authRequired, async (req, res, next) => {
     try {
-      const parsed = structureText(req.body.text || '', {
+      const parsed = await structureTextWithLlm(req.body.text || '', {
         taskId: 'text_' + Date.now()
       })
       ok(res, parsed)
@@ -1160,6 +1192,38 @@ function buildRouter() {
         )
         return out.data
       })
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/meals/:id/share', authRequired, idempotency(), async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) => {
+        const binding = require('../services/bindingAdapter').getActivePrimaryCoach(
+          { globalData: state },
+          req.actor.userId
+        )
+        if (!binding) throw new AppError('BINDING_INACTIVE', '尚未绑定教练')
+        return nutritionService.shareMealItem(
+          state,
+          req.actor.userId,
+          req.params.id,
+          binding.coachUserId
+        )
+      })
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/meals/:id/unshare', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        nutritionService.unshareMealItem(state, req.actor.userId, req.params.id)
+      )
       ok(res, data)
     } catch (e) {
       next(e)

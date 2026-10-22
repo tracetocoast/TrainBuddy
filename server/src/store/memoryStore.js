@@ -42,6 +42,7 @@ function emptyState() {
     posture: { reports: [] },
     goals: { groups: [] },
     consultations: [],
+    nutritionPrefs: {},
     entitlements: {
       balances: [],
       ledger: [],
