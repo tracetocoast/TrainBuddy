@@ -149,24 +149,35 @@ async function processNutritionTask(state, task, body) {
   task.updatedAt = time.nowMs()
 
   const qualityHints = input.quality_hints || input.qualityHints || asset.quality || {}
+  let imageBase64 = input.image_base64 || input.imageBase64 || null
   let imageUrl = input.image_url || input.imageUrl || null
-  if (!imageUrl) {
+  // 本地 mock 签名 URL 外网模型无法拉取，且会触发「only support text」类错误；有 base64 时优先用
+  if (imageUrl && /mock\.(signed|upload)\.local/i.test(imageUrl)) {
+    imageUrl = null
+  }
+  if (!imageUrl && !imageBase64) {
     try {
       const access = mediaService.getAccess(
         state,
         { userId: task.ownerId },
         mediaId
       )
-      imageUrl = access && access.url
+      const u = access && access.url
+      if (u && !/mock\.(signed|upload)\.local/i.test(u)) imageUrl = u
     } catch (_) {
-      imageUrl = null
+      /* ignore */
     }
+  }
+  // 避免把大图 base64 持久化进 store
+  if (task.input) {
+    delete task.input.image_base64
+    delete task.input.imageBase64
   }
   const out = await runNutritionScan({
     mode: task.mode,
     qualityHints,
     imageUrl,
-    imageBase64: input.image_base64 || input.imageBase64 || null,
+    imageBase64,
     mime: asset.mime || 'image/jpeg'
   })
 
@@ -237,10 +248,22 @@ async function processPostureTask(state, task, body) {
   )
   const forcePelvicUnable = !!(input.force_pelvic_unable || body.force_pelvic_unable)
 
+  const frontImageBase64 = input.front_image_base64 || input.frontImageBase64 || null
+  const sideImageBase64 = input.side_image_base64 || input.sideImageBase64 || null
+  if (task.input) {
+    delete task.input.front_image_base64
+    delete task.input.frontImageBase64
+    delete task.input.side_image_base64
+    delete task.input.sideImageBase64
+  }
+
   const out = await runPostureScan({
     mode: task.mode,
     qualityGate,
-    forcePelvicUnable
+    forcePelvicUnable,
+    frontImageBase64,
+    sideImageBase64,
+    mime: (front && front.mime) || (side && side.mime) || 'image/jpeg'
   })
 
   if (task.consentRevoked) {

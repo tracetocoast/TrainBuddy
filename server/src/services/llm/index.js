@@ -10,11 +10,13 @@ const { AppError } = require('../../lib/errors')
 const { publicStatus, isTaskEnabled, resolveForTask } = require('./config')
 const client = require('./client')
 const nutrition = require('./tasks/nutrition')
+const postureScan = require('./tasks/posture_scan')
 const voiceStructure = require('./tasks/voice_structure')
 const goalImageSpec = require('./tasks/goal_image_spec')
 
 const REGISTRY = {
   nutrition,
+  posture_scan: postureScan,
   voice_structure: voiceStructure,
   goal_image_spec: goalImageSpec
 }
@@ -62,9 +64,14 @@ async function runTask(taskKey, input, opts = {}) {
 
   const endpoint = resolveForTask(taskKey)
   const messages = task.buildMessages(input || {})
+  const coerce =
+    typeof task.normalizeResult === 'function'
+      ? (raw) => task.normalizeResult(raw, input || {})
+      : null
   const result = await client.chatJson({
     messages,
     schema: task.schema,
+    coerce,
     model: endpoint.model,
     apiKey: endpoint.apiKey,
     baseUrl: endpoint.baseUrl,
@@ -72,12 +79,18 @@ async function runTask(taskKey, input, opts = {}) {
     temperature: 0.2
   })
 
+  // chatJson 已在校验前 coerce；再归一化一次保证出口形状稳定
+  let data = result.data
+  if (typeof task.normalizeResult === 'function') {
+    data = task.normalizeResult(data, input || {})
+  }
+
   return {
     task: taskKey,
     mode: 'real',
     is_demo: false,
     provider: endpoint.name,
-    data: result.data,
+    data,
     usage: result.usage,
     model: result.model
   }

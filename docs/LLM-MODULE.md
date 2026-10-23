@@ -7,6 +7,7 @@
 | 任务 key | 业务 | 输入 | 输出 |
 |----------|------|------|------|
 | `nutrition` | 拍照记饮食 | 图片 URL／Base64 + 质量提示 | 营养 JSON（克） |
+| `posture_scan` | 体态观察 | 正面／侧面 Base64 | 观察项 JSON（无总分） |
 | `voice_structure` | 课后口述结构化 | 转写／文字 | `workout_draft.v1` |
 | `goal_image_spec` | 健身目标图 | 节点月份／目标文案 | **生成规格 JSON**（非像素） |
 
@@ -25,7 +26,7 @@
 | 供应商 | 用途 | 关键变量 |
 |--------|------|----------|
 | DeepSeek | `voice_structure`、`goal_image_spec` | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` |
-| 豆包 Ark | `nutrition`（视觉） | `DOUBAO_API_KEY` + **`DOUBAO_MODEL`（视觉理解接入点 ep-…，勿用 Seedream 文生图）** |
+| 豆包 Ark | `nutrition`／`posture_scan`（视觉） | `DOUBAO_API_KEY` + **`DOUBAO_MODEL`（视觉理解接入点 ep-…，勿用 Seedream）** |
 | MiniMax | 饮食回退或手动覆盖 | `MINIMAX_API_KEY` / `MINIMAX_MODEL` |
 
 可用 `LLM_TASK_PROVIDER_<TASK>=deepseek|doubao|minimax` 覆盖路由。

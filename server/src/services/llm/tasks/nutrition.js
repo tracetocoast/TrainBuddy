@@ -70,19 +70,26 @@ function buildMessages(input) {
     '。schema 字段：status, items[{food_name,portion{amount,unit,is_estimated},macros_g{carbs,protein,fat},basis,uncertainties}], total_macros_g, is_estimate, message。'
 
   const content = [{ type: 'text', text: userText }]
-  if (input.imageUrl) {
-    content.push({ type: 'image_url', image_url: { url: input.imageUrl } })
-  } else if (input.imageBase64) {
-    const mime = input.mime || 'image/jpeg'
+  const mime = input.mime || 'image/jpeg'
+  let dataUrl = null
+  if (input.imageBase64) {
     const raw = String(input.imageBase64).replace(/^data:[^;]+;base64,/, '')
-    content.push({
-      type: 'image_url',
-      image_url: { url: 'data:' + mime + ';base64,' + raw }
-    })
+    dataUrl = 'data:' + mime + ';base64,' + raw
+  } else if (
+    input.imageUrl &&
+    (/^data:image\//i.test(input.imageUrl) || /^https?:\/\//i.test(input.imageUrl)) &&
+    !/mock\.(signed|upload)\.local/i.test(input.imageUrl)
+  ) {
+    dataUrl = input.imageUrl
+  }
+
+  if (dataUrl) {
+    // 豆包视觉：图在前、文在后更稳
+    content.unshift({ type: 'image_url', image_url: { url: dataUrl } })
   } else {
     content.push({
       type: 'text',
-      text: '（无图片字节：仅根据质量提示判断；若无法识别请 need_retake）'
+      text: '（无可用图片：请 need_retake，不要编造营养数值）'
     })
   }
 

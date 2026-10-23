@@ -62,6 +62,19 @@ function friendlyLlmHttpError(rawMsg, status, model) {
       rateLimited: false
     }
   }
+  if (
+    lower.indexOf('only support text') >= 0 ||
+    lower.indexOf('only supports text') >= 0 ||
+    lower.indexOf('text messages') >= 0
+  ) {
+    return {
+      code: 'LLM_WRONG_MODEL',
+      message:
+        '当前推理接入点只支持纯文本，不能看图。请在火山方舟新建「视觉理解／多模态」接入点（名称含 vision／视觉），把 DOUBAO_MODEL 换成新的 ep-… 后重启 API。',
+      retryable: false,
+      rateLimited: false
+    }
+  }
   return {
     code: 'LLM_HTTP_ERROR',
     message: msg.slice(0, 240),
@@ -225,8 +238,17 @@ async function chatJson(opts) {
         continue
       }
 
+      let data = parsed
+      if (typeof opts.coerce === 'function') {
+        try {
+          data = opts.coerce(data) || data
+        } catch (_) {
+          /* 纠偏失败则仍用原始解析结果做 schema 校验 */
+        }
+      }
+
       if (schema) {
-        const v = validate(parsed, schema)
+        const v = validate(data, schema)
         if (!v.ok) {
           lastError = new AppError(
             'LLM_SCHEMA_INVALID',
@@ -247,7 +269,7 @@ async function chatJson(opts) {
       }
 
       return {
-        data: parsed,
+        data,
         model,
         usage: payload.usage || null,
         attempt: attempt + 1
