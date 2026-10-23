@@ -279,6 +279,46 @@ Page({
     }
   },
 
+  readPhotoBase64(filePath) {
+    return new Promise((resolve, reject) => {
+      const compress = () =>
+        new Promise((res, rej) => {
+          if (!wx.compressImage) {
+            res(filePath)
+            return
+          }
+          wx.compressImage({
+            src: filePath,
+            quality: 70,
+            success: (r) => res((r && r.tempFilePath) || filePath),
+            fail: () => res(filePath)
+          })
+        })
+      compress()
+        .then((path) => {
+          wx.getFileSystemManager().readFile({
+            filePath: path,
+            encoding: 'base64',
+            success: (r) => {
+              const b64 = r && r.data
+              if (!b64) {
+                reject(new Error('读取照片失败'))
+                return
+              }
+              // 约 4MB base64 ≈ 3MB 原图，避免撑爆请求体
+              if (String(b64).length > 4 * 1024 * 1024) {
+                reject(new Error('照片过大，请换一张或离远一点再拍'))
+                return
+              }
+              resolve(String(b64))
+            },
+            fail: (err) => reject(err || new Error('读取照片失败'))
+          })
+        })
+        .catch(reject)
+    })
+  },
+
   async onScan() {
     const app = getApp()
     if (this.data.busy || !this.data.photo) return
@@ -294,6 +334,11 @@ Page({
 
     this.setData({ busy: true, error: '', phase: 'scanning', saveMessage: '' })
     try {
+      let imageBase64 = null
+      if (mode === 'real') {
+        imageBase64 = await this.readPhotoBase64(this.data.photo)
+      }
+
       const intent = await aiApi.createUploadIntent({
         purpose: 'nutrition_input',
         mime: 'image/jpeg',
@@ -306,15 +351,18 @@ Page({
       const mediaId = asset.media_id
       this.setData({ mediaId })
 
+      const input = {
+        media_id: mediaId,
+        quality_hints: { has_food: true }
+      }
+      if (imageBase64) input.image_base64 = imageBase64
+
       const task = await aiApi.createAiTask(
         {
           type: 'nutrition_scan',
           mode,
           consent_confirmed: true,
-          input: {
-            media_id: mediaId,
-            quality_hints: { has_food: true }
-          }
+          input
         },
         'nutrition_' + Date.now()
       )
