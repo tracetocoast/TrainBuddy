@@ -248,10 +248,22 @@ async function processPostureTask(state, task, body) {
   )
   const forcePelvicUnable = !!(input.force_pelvic_unable || body.force_pelvic_unable)
 
+  const frontImageBase64 = input.front_image_base64 || input.frontImageBase64 || null
+  const sideImageBase64 = input.side_image_base64 || input.sideImageBase64 || null
+  if (task.input) {
+    delete task.input.front_image_base64
+    delete task.input.frontImageBase64
+    delete task.input.side_image_base64
+    delete task.input.sideImageBase64
+  }
+
   const out = await runPostureScan({
     mode: task.mode,
     qualityGate,
-    forcePelvicUnable
+    forcePelvicUnable,
+    frontImageBase64,
+    sideImageBase64,
+    mime: (front && front.mime) || (side && side.mime) || 'image/jpeg'
   })
 
   if (task.consentRevoked) {

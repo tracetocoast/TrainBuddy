@@ -238,8 +238,17 @@ async function chatJson(opts) {
         continue
       }
 
+      let data = parsed
+      if (typeof opts.coerce === 'function') {
+        try {
+          data = opts.coerce(data) || data
+        } catch (_) {
+          /* 纠偏失败则仍用原始解析结果做 schema 校验 */
+        }
+      }
+
       if (schema) {
-        const v = validate(parsed, schema)
+        const v = validate(data, schema)
         if (!v.ok) {
           lastError = new AppError(
             'LLM_SCHEMA_INVALID',
@@ -260,7 +269,7 @@ async function chatJson(opts) {
       }
 
       return {
-        data: parsed,
+        data,
         model,
         usage: payload.usage || null,
         attempt: attempt + 1

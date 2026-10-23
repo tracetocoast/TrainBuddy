@@ -7,7 +7,7 @@
  */
 
 function parseEnabledTasks(raw) {
-  const fallback = ['nutrition', 'voice_structure', 'goal_image_spec']
+  const fallback = ['nutrition', 'posture_scan', 'voice_structure', 'goal_image_spec']
   if (!raw || !String(raw).trim()) return fallback
   return String(raw)
     .split(',')
@@ -52,7 +52,8 @@ function providerDefs() {
 function taskProviderName(taskKey) {
   const override = env('LLM_TASK_PROVIDER_' + String(taskKey || '').toUpperCase(), '')
   if (override) return override.toLowerCase()
-  if (taskKey === 'nutrition') {
+  // 视觉任务：饮食／体态 → 豆包（当前推理接入点）
+  if (taskKey === 'nutrition' || taskKey === 'posture_scan') {
     const defs = providerDefs()
     if (defs.doubao.apiKey && defs.doubao.model) return 'doubao'
     if (defs.minimax.apiKey) return 'minimax'
@@ -143,6 +144,7 @@ function publicStatus() {
     },
     task_routing: {
       nutrition: taskProviderName('nutrition'),
+      posture_scan: taskProviderName('posture_scan'),
       voice_structure: taskProviderName('voice_structure'),
       goal_image_spec: taskProviderName('goal_image_spec')
     }

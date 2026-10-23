@@ -30,19 +30,21 @@ function listProviders() {
 
 /**
  * 体态观察（无总分）
+ * real + 豆包视觉：走统一 LLM posture_scan；demo 用本地 fixture
  */
-async function runPostureScan({ mode, qualityGate, forcePelvicUnable }) {
-  const provider = resolveProvider(mode)
-  if (provider === 'unavailable') {
-    throw new AppError('PROVIDER_NOT_CONFIGURED', '体态分析能力尚未接入，请稍后再试或使用演示模式', {
-      retryable: false,
-      status: 503
-    })
-  }
-
+async function runPostureScan({
+  mode,
+  qualityGate,
+  forcePelvicUnable,
+  frontImageBase64,
+  sideImageBase64,
+  frontImageUrl,
+  sideImageUrl,
+  mime
+}) {
   if (qualityGate && qualityGate.need_retake) {
     return {
-      provider,
+      provider: mode === 'demo' ? 'mock' : resolveProvider(mode),
       is_demo: mode === 'demo',
       status: 'need_retake',
       overall_score: null,
@@ -52,57 +54,86 @@ async function runPostureScan({ mode, qualityGate, forcePelvicUnable }) {
     }
   }
 
-  const pelvicConclusion = forcePelvicUnable
-    ? 'unable_to_judge'
-    : mode === 'demo'
-      ? 'needs_attention'
-      : 'unable_to_judge'
+  if (mode === 'demo') {
+    const data = llm.REGISTRY.posture_scan.demoFixture({ forcePelvicUnable })
+    return Object.assign({ provider: 'mock', is_demo: true }, data)
+  }
 
+  if (llm.isTaskEnabled('posture_scan')) {
+    const out = await llm.runTask(
+      'posture_scan',
+      {
+        forcePelvicUnable: !!forcePelvicUnable,
+        qualityHints: (qualityGate && qualityGate.reasons) || {},
+        frontImageBase64,
+        sideImageBase64,
+        frontImageUrl,
+        sideImageUrl,
+        mime: mime || 'image/jpeg'
+      },
+      { mode: 'real' }
+    )
+    const data = out.data || {}
+    return {
+      provider: out.provider || 'doubao',
+      is_demo: false,
+      status: data.status || 'draft',
+      overall_score: null,
+      model_version: data.model_version || out.model || 'llm-posture',
+      items: data.items || [],
+      improvement_hints: data.improvement_hints || [],
+      quality: data.quality || null,
+      message: data.message || null
+    }
+  }
+
+  const provider = resolveProvider(mode)
+  if (provider === 'unavailable') {
+    throw new AppError('PROVIDER_NOT_CONFIGURED', '体态分析能力尚未接入，请稍后再试或使用演示模式', {
+      retryable: false,
+      status: 503
+    })
+  }
+
+  // AI_PROVIDER=mock 且未开 LLM 时的占位（不得伪造成功体态）
   return {
     provider,
-    is_demo: mode === 'demo',
+    is_demo: false,
     status: 'draft',
     overall_score: null,
-    model_version: mode === 'demo' ? 'demo-posture-v0' : 'mock-posture-v0',
+    model_version: 'mock-posture-v0',
     items: [
       {
         key: 'round_shoulders',
         label: '圆肩倾向',
-        conclusion: mode === 'demo' ? 'needs_attention' : 'no_obvious',
-        basis: { views: ['front'], notes: '肩峰相对可见位置' },
-        reliability: mode === 'demo' ? 'demo_only' : 'unverified'
+        conclusion: 'unable_to_judge',
+        basis: { views: ['front'], notes: '未接入视觉模型，无法判断' },
+        reliability: 'unverified'
       },
       {
         key: 'lateral_trunk',
         label: '侧面躯干姿态',
-        conclusion: 'no_obvious',
-        basis: { views: ['side'], notes: '躯干相对垂直参考' },
-        reliability: mode === 'demo' ? 'demo_only' : 'unverified'
+        conclusion: 'unable_to_judge',
+        basis: { views: ['side'], notes: '未接入视觉模型，无法判断' },
+        reliability: 'unverified'
       },
       {
         key: 'uneven_shoulders',
         label: '高低肩倾向',
-        conclusion: 'no_obvious',
-        basis: { views: ['front'], notes: '双侧肩峰高度差不明显' },
-        reliability: mode === 'demo' ? 'demo_only' : 'unverified'
+        conclusion: 'unable_to_judge',
+        basis: { views: ['front'], notes: '未接入视觉模型，无法判断' },
+        reliability: 'unverified'
       },
       {
         key: 'pelvic_posture',
         label: '骨盆姿态',
-        conclusion: pelvicConclusion,
-        basis: {
-          views: ['side'],
-          notes:
-            pelvicConclusion === 'unable_to_judge'
-              ? '关键点遮挡或角度不足，无法判断'
-              : '演示样本疑似前倾倾向'
-        },
-        reliability: pelvicConclusion === 'unable_to_judge' ? 'insufficient' : 'demo_only'
+        conclusion: 'unable_to_judge',
+        basis: { views: ['side'], notes: '未接入视觉模型，无法判断' },
+        reliability: 'insufficient'
       }
     ],
     improvement_hints: [
-      { title: '核心稳定', note: '候选方向，待教练复核后个性化' },
-      { title: '髋踝活动度', note: '一般性说明，非已确认计划' }
+      { title: '配置视觉模型', note: '请启用 LLM posture_scan（豆包视觉接入点）后再做正式评估' }
     ]
   }
 }

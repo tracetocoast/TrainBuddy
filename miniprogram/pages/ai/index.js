@@ -18,6 +18,8 @@ Page({
     mode: 'real',
     frontMediaId: '',
     sideMediaId: '',
+    frontPhotoPath: '',
+    sidePhotoPath: '',
     postureTask: null,
     postureReport: null,
     goalTask: null,
@@ -41,13 +43,20 @@ Page({
       .providers()
       .then((info) => {
         const active = (info && info.active) || 'unavailable'
-        const ready = active === 'mock' || active === 'demo'
+        const llm = (info && info.llm) || {}
+        const doubaoOk = !!(llm.providers && llm.providers.doubao && llm.providers.doubao.configured)
+        const postureRouted =
+          llm.task_routing && llm.task_routing.posture_scan === 'doubao' && doubaoOk
+        const ready =
+          active === 'mock' || active === 'demo' || doubaoOk || !!llm.configured
         this.setData({
           providerInfo: info,
           realProviderReady: ready,
-          statusHint: ready
-            ? '真实通道：本地 mock 已启用'
-            : '真实通道未接入：提交将失败，不会显示成功'
+          statusHint: postureRouted
+            ? '真实体态：将调用豆包视觉推理接入点（无总分）'
+            : ready
+              ? '真实通道已配置'
+              : '真实通道未接入：提交将失败，不会显示成功'
         })
       })
       .catch(() => {
@@ -109,7 +118,7 @@ Page({
       return
     }
 
-    // 真实：引导选图后走 upload-intent（本地无对象存储时仅完成登记）
+    // 真实：选图登记 + 保留本地路径供识别时读 base64
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
@@ -132,8 +141,17 @@ Page({
               has_side: view === 'side'
             }
           })
-          if (view === 'front') this.setData({ frontMediaId: asset.media_id })
-          else this.setData({ sideMediaId: asset.media_id })
+          if (view === 'front') {
+            this.setData({
+              frontMediaId: asset.media_id,
+              frontPhotoPath: file.tempFilePath || ''
+            })
+          } else {
+            this.setData({
+              sideMediaId: asset.media_id,
+              sidePhotoPath: file.tempFilePath || ''
+            })
+          }
           app.toast('已上传登记')
         } catch (e) {
           app.toast((e && e.message) || '上传失败')
@@ -141,6 +159,44 @@ Page({
           this.setData({ busy: false })
         }
       }
+    })
+  },
+
+  readPhotoBase64(filePath) {
+    return new Promise((resolve, reject) => {
+      if (!filePath) {
+        resolve(null)
+        return
+      }
+      const afterCompress = (path) => {
+        wx.getFileSystemManager().readFile({
+          filePath: path,
+          encoding: 'base64',
+          success: (r) => {
+            const b64 = r && r.data
+            if (!b64) {
+              reject(new Error('读取照片失败'))
+              return
+            }
+            if (String(b64).length > 4 * 1024 * 1024) {
+              reject(new Error('照片过大，请换一张清晰半身照'))
+              return
+            }
+            resolve(String(b64))
+          },
+          fail: (err) => reject(err || new Error('读取照片失败'))
+        })
+      }
+      if (!wx.compressImage) {
+        afterCompress(filePath)
+        return
+      }
+      wx.compressImage({
+        src: filePath,
+        quality: 70,
+        success: (r) => afterCompress((r && r.tempFilePath) || filePath),
+        fail: () => afterCompress(filePath)
+      })
     })
   },
 
@@ -157,28 +213,37 @@ Page({
       wx.showModal({
         title: '能力未接入',
         content:
-          '真实体态分析尚未配置供应商。不会显示成功结果。可切换「演示」查看流程，或配置 AI_PROVIDER=mock。',
+          '真实体态分析尚未配置供应商。不会显示成功结果。可切换「演示」查看流程，或配置豆包视觉接入点。',
         showCancel: false
       })
     }
 
     this.setData({ busy: true, postureTask: null, postureReport: null })
     try {
+      const input = {
+        front_media_id: this.data.frontMediaId || undefined,
+        side_media_id: this.data.sideMediaId || undefined,
+        quality_hints: {
+          has_front: !!this.data.frontMediaId,
+          has_side: !!this.data.sideMediaId,
+          person_count: 1
+        }
+      }
+      if (mode === 'real') {
+        if (this.data.frontPhotoPath) {
+          input.front_image_base64 = await this.readPhotoBase64(this.data.frontPhotoPath)
+        }
+        if (this.data.sidePhotoPath) {
+          input.side_image_base64 = await this.readPhotoBase64(this.data.sidePhotoPath)
+        }
+      }
+
       const task = await aiApi.createAiTask(
         {
           type: 'posture_scan',
           mode,
           consent_confirmed: true,
-          input: {
-            front_media_id: this.data.frontMediaId || undefined,
-            side_media_id: this.data.sideMediaId || undefined,
-            // 缺侧面时服务端返回 need_retake（AC26）
-            quality_hints: {
-              has_front: !!this.data.frontMediaId,
-              has_side: !!this.data.sideMediaId,
-              person_count: 1
-            }
-          }
+          input
         },
         'posture_' + mode + '_' + Date.now()
       )
