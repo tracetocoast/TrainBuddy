@@ -21,16 +21,103 @@
   </view>
   <view class="aibox goal-box">
     <view class="row-between"><text class="ai-section-number">03 / VISION</text><text class="ai-badge">目标预览</text></view>
-    <view class="ai-service-title">让目标，更具体一点</view><view class="ai-desc">以本人照片为起点，探索不同阶段的身材视觉方向。</view>
+    <view class="ai-service-title">让目标，更具体一点</view>
+    <view class="ai-desc">上传本人照片，选择目标方向与风格后生成激励预览图。优先保持面容特征，仅适度调整体型与线条。</view>
+    <view class="photo-grid goal-photo-grid">
+      <button class="photo-slot {{goalMediaId || goalPhotoPath ? 'photo-ready' : ''}}" bindtap="onPickGoalPhoto" disabled="{{busy || goalGenerating}}">
+        <image wx:if="{{goalPhotoPath}}" class="goal-thumb" src="{{goalPhotoPath}}" mode="aspectFill" />
+        <block wx:else>
+          <view class="photo-frame"><text>＋</text></view>
+          <view class="photo-title">本人照片</view>
+          <view class="photo-sub">拍照或相册 · 建议单人全身／半身</view>
+        </block>
+        <view class="photo-sub" wx:if="{{goalPhotoPath}}">已选照片 · 点击重选</view>
+      </button>
+    </view>
     <view class="vision-timeline"><view><text class="vision-month">02</text><text class="vision-caption">个月</text></view><view class="vision-line"></view><view><text class="vision-month">03</text><text class="vision-caption">个月</text></view><view class="vision-line"></view><view><text class="vision-month">06</text><text class="vision-caption">个月</text></view></view>
-    <button class="ai-outline" bindtap="onGoalGenerate" disabled="{{busy}}">生成目标预览 <text>↗</text></button>
-    <view class="ai-footnote">AI 效果图为视觉模拟，不是实际身材变化的预测或保证。</view>
+    <button class="ai-outline" bindtap="onGoalGenerate" disabled="{{busy || goalGenerating}}" loading="{{goalGenerating}}">{{goalGenerating ? '目标图生成中…' : '生成目标预览'}} <text wx:if="{{!goalGenerating}}">↗</text></button>
+    <view class="ai-footnote">AI 效果图为视觉模拟，不是实际身材变化的预测或保证。正式模式将调用 MiniMax 图生图。</view>
   </view>
   <view class="ai-settings"><view class="row-between"><text class="ai-settings-title">体验模式</text><radio-group class="mode-group" bindchange="onModeChange"><label class="mode-item"><radio value="real" checked="{{mode === 'real'}}" color="#28744e" disabled="{{busy}}" />正式</label><label class="mode-item"><radio value="demo" checked="{{mode === 'demo'}}" color="#28744e" disabled="{{busy}}" />演示</label></radio-group></view><view class="hint">{{statusHint}}</view></view>
   <view class="aibox" wx:if="{{postureTask}}"><view class="ai-result-title">体态分析进度</view><view class="ai-desc">{{taskLabels[postureTask.status] || postureTask.status}}<text wx:if="{{postureTask.is_demo}}"> · 演示结果</text></view><view class="ai-error" wx:if="{{postureTask.error}}">{{postureTask.error.message}}</view></view>
   <view class="aibox" wx:if="{{postureReport}}"><view class="row-between"><view class="ai-result-title">体态观察报告</view><text class="ai-badge" wx:if="{{postureReport.is_demo}}">演示</text></view><view class="ai-desc">逐项观察特征，不以单一分数定义你的身体。</view><view class="item-row" wx:for="{{postureReport.items}}" wx:key="key"><text class="item-label">{{item.label}}</text><text class="item-val">{{item.conclusion_label}}</text></view><button class="ai-outline" bindtap="onCoachReview" wx:if="{{role === 'coach'}}">教练复核</button></view>
-  <view class="aibox" wx:if="{{goalGroup}}"><view class="ai-result-title">你的阶段目标</view><view class="ai-desc">{{taskLabels[goalGroup.status] || goalGroup.status}}<text wx:if="{{mode === 'demo'}}"> · 演示结果</text></view><view class="node-row" wx:for="{{goalGroup.nodes}}" wx:key="key"><view class="node-main"><text>{{item.months}} 个月 · {{taskLabels[item.status] || item.status}}</text><text class="wm" wx:if="{{item.watermarked}}">导出含 AI 模拟标记</text></view><view class="node-actions"><button wx:if="{{item.status === 'failed'}}" class="mini-btn" data-key="{{item.key}}" bindtap="onRetryNode" disabled="{{busy}}">重试</button><button wx:if="{{item.result_media_id}}" class="mini-btn" data-media="{{item.result_media_id}}" bindtap="onExportNode">导出</button></view></view><button class="ai-outline" bindtap="onConsult" disabled="{{busy}}">与教练聊聊训练方案</button></view>
+  <view class="aibox" wx:if="{{goalGenerating && !goalGroup}}">
+    <view class="ai-result-title">目标预览生成中</view>
+    <view class="ai-desc">已返回主页面，MiniMax 正在根据你的照片与配置异步出图，请稍候…</view>
+  </view>
+  <view class="aibox goal-result-box" wx:if="{{goalGroup}}">
+    <view class="goal-result-head">
+      <view class="ai-result-title goal-result-title">你的目标预览</view>
+      <text class="ai-badge" wx:if="{{goalGroup.is_demo || mode === 'demo'}}">演示</text>
+    </view>
+    <view class="ai-desc goal-result-desc">状态：{{taskLabels[goalGroup.status] || goalGroup.status}}</view>
+    <view class="ai-desc goal-result-hint">生成完成后可对比查看现状与目标图</view>
+    <view class="goal-node" wx:for="{{goalGroup.nodes}}" wx:key="key">
+      <view class="goal-node-info">
+        <text class="goal-node-title">{{item.months ? item.months + ' 个月预览' : '目标预览'}}</text>
+        <text class="goal-node-status">{{taskLabels[item.status] || item.status}}</text>
+        <text class="goal-node-wm" wx:if="{{item.watermarked}}">含 AI 模拟标记</text>
+      </view>
+      <view class="goal-node-actions">
+        <button wx:if="{{item.status === 'failed'}}" class="goal-action-btn" data-key="{{item.key}}" bindtap="onRetryNode" disabled="{{busy}}">重试</button>
+        <button wx:if="{{item.status === 'succeeded'}}" class="goal-action-btn goal-action-primary" data-key="{{item.key}}" data-media="{{item.result_media_id}}" bindtap="onCompareGoal">对比查看</button>
+        <button
+          wx:if="{{item.status === 'succeeded' || item.preview_url || item.result_media_id}}"
+          class="goal-action-btn"
+          data-media="{{item.result_media_id}}"
+          data-key="{{item.key}}"
+          bindtap="onExportNode"
+          disabled="{{busy}}"
+        >导出到相册</button>
+      </view>
+    </view>
+    <button class="ai-outline" bindtap="onConsult" disabled="{{busy}}">与教练聊聊训练方案</button>
+  </view>
   <view class="aibox" wx:if="{{consultations.length}}"><view class="ai-result-title">我的咨询</view><view class="item-row" wx:for="{{consultations}}" wx:key="consultation_id"><text class="item-label">训练方案咨询</text><text class="item-val">{{taskLabels[item.status] || item.status}}</text></view></view>
   <view class="ai-bottom-note">观察 · 理解 · 行动</view><button class="linkish" bindtap="onOpenApiHint">服务与数据说明</button>
 </view>
+
+<!-- 三大配置弹窗 -->
+<view class="goal-sheet-mask" wx:if="{{showGoalConfig}}" catchtouchmove="noop">
+  <view class="goal-sheet">
+    <view class="goal-sheet-title">目标预览配置</view>
+    <view class="goal-sheet-sub">选择完成后生成；将返回主页异步加载图片。</view>
+
+    <view class="goal-cfg-block">
+      <view class="goal-cfg-label">1. 目标身材</view>
+      <radio-group bindchange="onCfgBodyGoal">
+        <label class="goal-cfg-option" wx:for="{{bodyGoalOptions}}" wx:key="value">
+          <radio value="{{item.value}}" checked="{{goalConfig.body_goal === item.value}}" color="#28744e" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="goal-cfg-block">
+      <view class="goal-cfg-label">2. 目标变化幅度</view>
+      <radio-group bindchange="onCfgChangeLevel">
+        <label class="goal-cfg-option" wx:for="{{changeLevelOptions}}" wx:key="value">
+          <radio value="{{item.value}}" checked="{{goalConfig.change_level === item.value}}" color="#28744e" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="goal-cfg-block">
+      <view class="goal-cfg-label">3. 图片风格</view>
+      <radio-group bindchange="onCfgImageStyle">
+        <label class="goal-cfg-option" wx:for="{{imageStyleOptions}}" wx:key="value">
+          <radio value="{{item.value}}" checked="{{goalConfig.image_style === item.value}}" color="#28744e" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="goal-sheet-actions">
+      <button class="secondary goal-sheet-btn" bindtap="onCloseGoalConfig" disabled="{{goalGenerating}}">取消</button>
+      <button class="primary goal-sheet-btn" bindtap="onConfirmGoalConfig" loading="{{goalGenerating}}" disabled="{{goalGenerating}}">生成</button>
+    </view>
+  </view>
+</view>
+
 <bottom-nav active="ai" />

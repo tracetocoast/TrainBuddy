@@ -27,10 +27,12 @@ function exportWatermark(mediaId) {
   return http.post('/media/' + mediaId + '/export-watermark', {}).then((res) => res.data)
 }
 
-function createAiTask(body, idempotencyKey) {
+function createAiTask(body, idempotencyKey, options) {
+  const opts = options || {}
   return http
     .post('/ai-tasks', body, {
-      idempotencyKey: idempotencyKey || 'ai_' + Date.now()
+      idempotencyKey: idempotencyKey || 'ai_' + Date.now(),
+      timeout: opts.timeout != null ? opts.timeout : body && body.type === 'goal_image' ? 180000 : 60000
     })
     .then((res) => res.data)
 }

@@ -6,6 +6,8 @@
 const config = require('../../config')
 const { AppError } = require('../../lib/errors')
 const llm = require('../llm')
+const { buildGoalImagePrompt } = require('./goalPrompt')
+const minimaxImage = require('./minimaxImage')
 
 const WATERMARK = () => config.media.watermarkText
 
@@ -18,13 +20,19 @@ function resolveProvider(mode) {
 
 function listProviders() {
   const llmStatus = llm.publicStatus()
+  const minimaxImageReady = minimaxImage.isConfigured()
   return {
     active: process.env.AI_PROVIDER || config.aiProvider || 'unavailable',
     modes: {
       demo: 'mock（仅演示，结果带 DEMO 标记）',
       real: '需配置 AI_PROVIDER=mock 或 LLM_API_KEY；默认 unavailable 不得伪造成功'
     },
-    llm: llmStatus
+    llm: llmStatus,
+    goal_image: {
+      provider: minimaxImageReady ? 'minimax' : 'unavailable',
+      configured: minimaxImageReady,
+      model: process.env.MINIMAX_IMAGE_MODEL || 'image-01'
+    }
   }
 }
 
@@ -140,10 +148,21 @@ async function runPostureScan({
 
 /**
  * 单节点目标图
- * real + LLM：先产出 JSON 规格，像素仍走本地 mock 资产（真生图后续另接）
- * @param {{ fail?: boolean, goalText?: string }} opts
+ * real + MiniMax：按三大配置组装提示词，图生图返回 base64
+ * demo：本地 mock 规格（无外网）
+ * @param {{ fail?: boolean, goalText?: string, goalConfig?: object, sourceImageBase64?: string, sourceImageUrl?: string, mime?: string }} opts
  */
-async function runGoalNode({ mode, nodeKey, months, fail, goalText }) {
+async function runGoalNode({
+  mode,
+  nodeKey,
+  months,
+  fail,
+  goalText,
+  goalConfig,
+  sourceImageBase64,
+  sourceImageUrl,
+  mime
+}) {
   if (fail) {
     const err = new AppError('NODE_GENERATION_FAILED', '节点 ' + nodeKey + ' 生成失败', {
       retryable: true,
@@ -155,11 +174,60 @@ async function runGoalNode({ mode, nodeKey, months, fail, goalText }) {
 
   let spec = null
   let provider = resolveProvider(mode)
+  let imageDataUrl = null
+  let imageBase64 = null
+  let imageUrl = null
+  let promptMeta = null
+
+  const hasRefImage = !!(
+    sourceImageBase64 ||
+    (sourceImageUrl && !/mock\.(signed|upload)\.local/i.test(String(sourceImageUrl)))
+  )
+  const useMinimax = mode !== 'demo' && minimaxImage.isConfigured() && hasRefImage
 
   if (mode === 'demo') {
     spec = llm.REGISTRY.goal_image_spec.demoFixture({ nodeKey, months, goalText })
     provider = 'mock'
+    promptMeta = buildGoalImagePrompt(
+      Object.assign({}, goalConfig || {}, { months, goal_text: goalText })
+    )
+  } else if (useMinimax) {
+    promptMeta = buildGoalImagePrompt(
+      Object.assign({}, goalConfig || {}, { months, goal_text: goalText })
+    )
+    const gen = await minimaxImage.generateGoalImage({
+      prompt: promptMeta.prompt,
+      referenceImageBase64: sourceImageBase64,
+      referenceImageUrl: sourceImageUrl,
+      mime: mime || 'image/jpeg',
+      aspectRatio: '3:4'
+    })
+    provider = 'minimax'
+    imageDataUrl = gen.data_url
+    imageBase64 = gen.image_base64
+    imageUrl = gen.image_url
+    spec = {
+      schema_version: 'goal_image_minimax.v1',
+      node_key: nodeKey,
+      months,
+      prompt: promptMeta.prompt,
+      labels: promptMeta.labels,
+      config: promptMeta.config,
+      watermark_text: WATERMARK(),
+      preview_label: (promptMeta.labels && promptMeta.labels.body_goal) || '目标预览',
+      safety_flags: { identity_consistent: true },
+      generation_id: gen.generation_id,
+      model: gen.model
+    }
+  } else if (resolveProvider(mode) === 'mock') {
+    // 本地 mock 通道：不外网，供测例／未传参考图时的占位
+    spec = llm.REGISTRY.goal_image_spec.demoFixture({ nodeKey, months, goalText })
+    provider = 'mock'
+    promptMeta = buildGoalImagePrompt(
+      Object.assign({}, goalConfig || {}, { months, goal_text: goalText })
+    )
   } else if (llm.isTaskEnabled('goal_image_spec')) {
+    // 无 MiniMax 时退回规格 JSON（无像素）
     const out = await llm.runTask(
       'goal_image_spec',
       {
@@ -173,14 +241,14 @@ async function runGoalNode({ mode, nodeKey, months, fail, goalText }) {
     spec = out.data
     provider = out.provider || 'openai_compatible'
   } else if (provider === 'unavailable') {
-    throw new AppError('PROVIDER_NOT_CONFIGURED', '目标图能力尚未接入', {
-      retryable: false,
-      status: 503
-    })
+    throw new AppError(
+      'PROVIDER_NOT_CONFIGURED',
+      '目标图能力尚未接入：请配置 MINIMAX_API_KEY',
+      { retryable: false, status: 503 }
+    )
   }
 
-  const watermark =
-    (spec && spec.watermark_text) || WATERMARK()
+  const watermark = (spec && spec.watermark_text) || WATERMARK()
 
   return {
     provider,
@@ -192,11 +260,17 @@ async function runGoalNode({ mode, nodeKey, months, fail, goalText }) {
     quality: 'acceptable',
     preview_label:
       mode === 'demo' ? '示例' : (spec && spec.preview_label) || null,
+    image_data_url: imageDataUrl,
+    image_base64: imageBase64,
+    image_url: imageUrl,
+    prompt: promptMeta && promptMeta.prompt,
     result_payload: {
-      description: months + ' 个月目标模拟',
+      description: months ? months + ' 个月目标模拟' : '目标身材视觉预览',
       identity_consistent:
         !!(spec && spec.safety_flags && spec.safety_flags.identity_consistent !== false),
-      goal_image_spec: spec
+      goal_image_spec: spec,
+      goal_config: (promptMeta && promptMeta.config) || goalConfig || null,
+      labels: (promptMeta && promptMeta.labels) || null
     }
   }
 }
