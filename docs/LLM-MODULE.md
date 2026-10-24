@@ -8,10 +8,10 @@
 |----------|------|------|------|
 | `nutrition` | 拍照记饮食 | 图片 URL／Base64 + 质量提示 | 营养 JSON（克） |
 | `posture_scan` | 体态观察 | 正面／侧面 Base64 | 观察项 JSON（无总分） |
-| `voice_structure` | 课后口述结构化 | 转写／文字 | `workout_draft.v1` |
-| `goal_image_spec` | 健身目标图 | 节点月份／目标文案 | **生成规格 JSON**（非像素） |
+| `voice_structure` | 课后口述结构化 | 转写／文字 | `coach_session_summary.v1`（总结＋exercises；并派生 segments 供合并） |
+| `goal_image_spec` | 健身目标图规格（无 MiniMax 时回退） | 节点月份／目标文案 | **生成规格 JSON** |
 
-语音 **ASR 听写** 仍走 `VOICE_ASR_PROVIDER`，与本模块分离。目标图像素生成仍由 AI 适配器 mock／后续图像 API 消费 `goal_image_spec`。
+语音 **ASR 听写** 仍走 `VOICE_ASR_PROVIDER`。目标预览**像素图**优先走 MiniMax `image-01` 图生图（`subject_reference` + 三大配置提示词），见 `services/ai/minimaxImage.js` / `goalPrompt.js`。
 
 ## 安全
 
@@ -27,7 +27,7 @@
 |--------|------|----------|
 | DeepSeek | `voice_structure`、`goal_image_spec` | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` |
 | 豆包 Ark | `nutrition`／`posture_scan`（视觉） | `DOUBAO_API_KEY` + **`DOUBAO_MODEL`（视觉理解接入点 ep-…，勿用 Seedream）** |
-| MiniMax | 饮食回退或手动覆盖 | `MINIMAX_API_KEY` / `MINIMAX_MODEL` |
+| MiniMax | **目标预览图生图**；饮食回退 | `MINIMAX_API_KEY` / `MINIMAX_IMAGE_MODEL=image-01` |
 
 可用 `LLM_TASK_PROVIDER_<TASK>=deepseek|doubao|minimax` 覆盖路由。
 

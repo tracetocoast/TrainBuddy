@@ -67,26 +67,23 @@ describe('llm module', () => {
     const v1 = validate(llm.REGISTRY.nutrition.demoFixture(), nutri.schema)
     assert.equal(v1.ok, true, v1.errors.join('; '))
 
-    const voiceSample = {
-      schema_version: 'workout_draft.v1',
-      segments: [
+    const voiceSample = llm.REGISTRY.voice_structure.normalizeResult({
+      session_summary: '本次深蹲为主，组次完成较好。',
+      coach_record: '杠铃深蹲 60kg×8×3；表现稳定。',
+      exercises: [
         {
-          segment_id: 't_1',
-          display_name: '深蹲',
-          missing_fields: [],
-          requires_confirmation: false,
-          evidence_text: '深蹲 3组 8次 60kg',
-          weight_kg: 60,
-          set_count: 3,
-          candidate_reps_per_set: 8,
-          load_basis: 'total',
-          raw_name: '深蹲',
-          exercise_candidate: 'squat',
-          icon: '🏋️'
+          name: '杠铃深蹲',
+          sets: [{ weight_kg: 60, reps: 8, set_count: 3 }],
+          performance: '整体稳定',
+          form_issues: '',
+          next_session_suggestion: '可维持当前重量'
         }
       ],
-      unparsed_text: []
-    }
+      fatigue_or_discomfort: '',
+      coach_feedback: '动作标准，下周维持',
+      model_inferences: [],
+      needs_confirmation: []
+    })
     const v2 = validate(voiceSample, llm.getTaskMeta('voice_structure').schema)
     assert.equal(v2.ok, true, v2.errors.join('; '))
 
@@ -180,8 +177,9 @@ describe('llm module', () => {
   it('无 LLM_KEY 时语音结构化回退规则引擎（AC11）', async () => {
     delete process.env.LLM_API_KEY
     const parsed = await structureTextWithLlm('50公斤 5次', { taskId: 't1' })
-    assert.equal(parsed.schema_version, 'workout_draft.v1')
+    assert.equal(parsed.schema_version, 'coach_session_summary.v1')
     assert.ok(parsed.segments.length >= 1)
+    assert.ok(Array.isArray(parsed.exercises))
     assert.ok(parsed.segments[0].missing_fields.indexOf('set_count') >= 0)
     const rule = structureText('50公斤 5次', { taskId: 't1' })
     assert.deepEqual(parsed.segments[0].missing_fields, rule.segments[0].missing_fields)

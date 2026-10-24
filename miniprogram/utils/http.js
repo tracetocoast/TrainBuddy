@@ -34,6 +34,7 @@ function request(method, path, options = {}) {
       method,
       header,
       data: options.body,
+      timeout: options.timeout != null ? options.timeout : 60000,
       success(res) {
         const body = res.data || {}
         if (res.statusCode >= 200 && res.statusCode < 300) {

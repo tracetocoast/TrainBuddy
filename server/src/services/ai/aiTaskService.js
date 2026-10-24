@@ -65,7 +65,10 @@ async function createTask(state, actor, body) {
   let reserveAmount = 1
   if (type === 'goal_image') {
     const nodes = (body.input && body.input.nodes) || body.nodes
-    reserveAmount = nodes && nodes.length ? nodes.length : 3
+    const goalCfg = body.input && (body.input.goal_config || body.input.goalConfig)
+    if (nodes && nodes.length) reserveAmount = nodes.length
+    else if (mode === 'real' && goalCfg) reserveAmount = 1
+    else reserveAmount = 3
   }
 
   let ledgerId = null
@@ -311,19 +314,26 @@ async function processPostureTask(state, task, body) {
 }
 
 async function processGoalTask(state, task, body) {
-  const input = body.input || {}
+  const input = Object.assign({}, task.input || {}, (body && body.input) || {})
+  task.input = input
   const sourceMediaId = input.source_media_id || input.sourceMediaId
-  if (!sourceMediaId && task.mode === 'real') {
-    throw new AppError('VALIDATION', '缺少源照片')
+  const sourceImageBase64 = input.source_image_base64 || input.sourceImageBase64 || null
+  const goalConfig = input.goal_config || input.goalConfig || null
+  if (!sourceMediaId && !sourceImageBase64 && task.mode === 'real') {
+    throw new AppError('VALIDATION', '缺少源照片，请先拍照或从相册上传')
   }
 
   let nodesSpec = input.nodes || body.nodes
   if (!nodesSpec || !nodesSpec.length) {
-    nodesSpec = [
-      { key: 'm2', months: 2 },
-      { key: 'm3', months: 3 },
-      { key: 'm6', months: 6 }
-    ]
+    // 正式有配置时默认单节点（更快）；演示仍三节点覆盖 AC
+    nodesSpec =
+      task.mode === 'real' && goalConfig
+        ? [{ key: 'goal', months: 3 }]
+        : [
+            { key: 'm2', months: 2 },
+            { key: 'm3', months: 3 },
+            { key: 'm6', months: 6 }
+          ]
   }
   if (nodesSpec.length > 3) {
     throw new AppError('VALIDATION', '每次最多 3 个节点')
@@ -331,12 +341,22 @@ async function processGoalTask(state, task, body) {
 
   const failKeys = new Set((input.fail_nodes || body.fail_nodes || []).map(String))
 
+  let sourcePreviewUrl = null
+  if (sourceImageBase64) {
+    sourcePreviewUrl =
+      String(sourceImageBase64).indexOf('data:') === 0
+        ? String(sourceImageBase64)
+        : 'data:image/jpeg;base64,' + String(sourceImageBase64).replace(/^data:[^;]+;base64,/, '')
+  }
+
   const goals = ensureGoals(state)
   const group = {
     id: makeId('ggrp'),
     taskId: task.id,
     ownerId: task.ownerId,
     sourceMediaId: sourceMediaId || null,
+    sourcePreviewUrl,
+    goalConfig: goalConfig || null,
     goalText: input.goal_text || input.goalText || '',
     isDemo: task.isDemo,
     status: 'processing',
@@ -348,6 +368,8 @@ async function processGoalTask(state, task, body) {
   goals.groups.push(group)
   task.groupId = group.id
   task.nodes = []
+  task.status = 'running'
+  task.updatedAt = time.nowMs()
 
   for (const spec of nodesSpec) {
     const node = {
@@ -355,6 +377,7 @@ async function processGoalTask(state, task, body) {
       months: Number(spec.months),
       status: 'queued',
       resultMediaId: null,
+      previewUrl: null,
       error: null,
       revision: 1,
       charged: false
@@ -373,7 +396,11 @@ async function processGoalTask(state, task, body) {
         nodeKey: node.key,
         months: node.months,
         fail: failKeys.has(node.key),
-        goalText: (task.input && (task.input.goal_text || task.input.goalText)) || ''
+        goalText: input.goal_text || input.goalText || '',
+        goalConfig,
+        sourceImageBase64,
+        sourceImageUrl: null,
+        mime: input.mime || 'image/jpeg'
       })
 
       if (task.consentRevoked || group.consentRevoked) {
@@ -383,20 +410,27 @@ async function processGoalTask(state, task, body) {
       }
 
       const media = mediaService.ensureMedia(state)
+      const dataUrl = out.image_data_url || null
       const resultAsset = {
         id: makeId('media'),
         ownerId: task.ownerId,
         purpose: 'goal_image_result',
         mime: 'image/jpeg',
-        size: 1024,
+        size: dataUrl ? Math.ceil((dataUrl.length * 3) / 4) : 1024,
         status: 'ready',
         deletedAt: null,
-        meta: { node: node.key, months: node.months, preview_label: out.preview_label },
+        meta: {
+          node: node.key,
+          months: node.months,
+          preview_label: out.preview_label,
+          goal_config: goalConfig
+        },
         quality: null,
         derivedFrom: sourceMediaId || null,
         watermarked: true,
         watermarkText: out.watermark_text || WATERMARK(),
         isDemo: task.isDemo,
+        dataUrl,
         createdAt: time.nowMs(),
         updatedAt: time.nowMs(),
         completedAt: time.nowMs()
@@ -405,6 +439,7 @@ async function processGoalTask(state, task, body) {
 
       node.status = 'succeeded'
       node.resultMediaId = resultAsset.id
+      node.previewUrl = dataUrl
       node.result = out
       chargeNodeQuota(state, task, node.key)
     } catch (e) {
@@ -415,6 +450,12 @@ async function processGoalTask(state, task, body) {
         retryable: e.retryable !== false
       }
     }
+  }
+
+  // 不落库大图 base64，避免 MemoryStore 膨胀
+  if (task.input) {
+    delete task.input.source_image_base64
+    delete task.input.sourceImageBase64
   }
 
   const statuses = group.nodes.map((n) => n.status)
@@ -617,26 +658,33 @@ async function retryGoalNode(state, task, nodeKey) {
   task.updatedAt = time.nowMs()
 
   try {
+    const input = task.input || {}
     const out = await runGoalNode({
       mode: task.mode,
       nodeKey: node.key,
       months: node.months,
       fail: false,
-      goalText: (task.input && (task.input.goal_text || task.input.goalText)) || ''
+      goalText: input.goal_text || input.goalText || '',
+      goalConfig: input.goal_config || input.goalConfig || group.goalConfig || null,
+      sourceImageBase64: null,
+      sourceImageUrl: group.sourcePreviewUrl || null,
+      mime: input.mime || 'image/jpeg'
     })
     if (task.consentRevoked || group.consentRevoked) {
       node.status = 'cancelled'
       node.error = { code: 'CONSENT_REVOKED', message: '授权已撤回，迟到结果不发布' }
     } else {
       const media = mediaService.ensureMedia(state)
+      const dataUrl = out.image_data_url || null
       const resultAsset = {
         id: makeId('media'),
         ownerId: task.ownerId,
         purpose: 'goal_image_result',
         mime: 'image/jpeg',
-        size: 1024,
+        size: dataUrl ? Math.ceil((dataUrl.length * 3) / 4) : 1024,
         status: 'ready',
         deletedAt: null,
+        dataUrl,
         meta: { node: node.key, months: node.months },
         quality: null,
         derivedFrom: group.sourceMediaId,
@@ -650,6 +698,7 @@ async function retryGoalNode(state, task, nodeKey) {
       media.assets.push(resultAsset)
       node.status = 'succeeded'
       node.resultMediaId = resultAsset.id
+      node.previewUrl = dataUrl
       node.result = out
       chargeNodeQuota(state, task, node.key)
     }
@@ -840,11 +889,15 @@ function presentGroup(g) {
     status: g.status,
     is_demo: !!g.isDemo,
     goal_text: g.goalText,
+    goal_config: g.goalConfig || null,
+    source_media_id: g.sourceMediaId || null,
+    source_preview_url: g.sourcePreviewUrl || null,
     nodes: g.nodes.map((n) => ({
       key: n.key,
       months: n.months,
       status: n.status,
       result_media_id: n.resultMediaId,
+      preview_url: n.previewUrl || null,
       error: n.error,
       watermarked: n.status === 'succeeded'
     }))
