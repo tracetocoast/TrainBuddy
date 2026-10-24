@@ -21,6 +21,16 @@
 | --- | --- |
 | `mock`（默认） | 本地可测；可用 `demo_phrase` 指定文案 |
 | `wechat` | 需配置 `WECHAT_ASR_ENDPOINT`（及可选 `WECHAT_ASR_TOKEN`） |
+| `qwen` | 阿里云百炼 Qwen ASR；需 `QWEN_ASR_API_KEY` 或 `DASHSCOPE_API_KEY` |
+
+Qwen 常用配置：
+
+| 变量 | 说明 |
+| --- | --- |
+| `QWEN_ASR_MODEL` | 默认 `qwen-audio-3.1-asr-flash-streaming`（产品名 Qwen-Audio-ASR-Flash-Streaming） |
+| `QWEN_ASR_MODE` | `streaming`（WebSocket）或 `http`（`qwen3-asr-flash` 同步） |
+| `QWEN_ASR_WS_URL` | 默认 `wss://dashscope.aliyuncs.com/api-ws/v1/inference`；新版 MaaS 可用 `wss://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/api-ws/v1/inference` |
+| `QWEN_ASR_FORMAT` / `QWEN_ASR_SAMPLE_RATE` | 小程序录音多为 `mp3` / `16000` |
 
 `GET /api/v1/voice/providers` 查看当前可用适配器。
 

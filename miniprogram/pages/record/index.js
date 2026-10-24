@@ -173,17 +173,20 @@ Page({
       filePath: tempPath,
       encoding: 'base64',
       success: (file) => {
-        // mock ASR：用固定 demo_phrase 便于联调；真实音频字节仍上传
+        // mock 才带 demo_phrase；qwen/wechat 走真实音频转写
+        const payload = {
+          source: 'voice',
+          base_revision: session.revision,
+          audio_base64: file.data,
+          name_hint: this.data.student
+        }
+        if ((this.data.asrProvider || 'mock') === 'mock') {
+          payload.demo_phrase = '深蹲 60公斤 10次 4组'
+        }
         voiceApi
           .createTask(
             session.session_id,
-            {
-              source: 'voice',
-              base_revision: session.revision,
-              audio_base64: file.data,
-              demo_phrase: '深蹲 60公斤 10次 4组',
-              name_hint: this.data.student
-            },
+            payload,
             'voice_' + session.session_id + '_' + Date.now()
           )
           .then((res) => this.applyVoiceTask(res.data))
