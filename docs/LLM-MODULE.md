@@ -11,7 +11,7 @@
 | `voice_structure` | 课后口述结构化 | 转写／文字 | `coach_session_summary.v1`（总结＋exercises；并派生 segments 供合并） |
 | `goal_image_spec` | 健身目标图规格（无 MiniMax 时回退） | 节点月份／目标文案 | **生成规格 JSON** |
 
-语音 **ASR 听写** 仍走 `VOICE_ASR_PROVIDER`。目标预览**像素图**优先走 MiniMax `image-01` 图生图（`subject_reference` + 三大配置提示词），见 `services/ai/minimaxImage.js` / `goalPrompt.js`。
+语音 **ASR 听写** 走 `VOICE_ASR_PROVIDER`（`mock` / `wechat` / `qwen`；Qwen 见 `services/voice/adapters/qwen.js`）。目标预览**像素图**优先走 MiniMax `image-01` 图生图（`subject_reference` + 三大配置提示词），见 `services/ai/minimaxImage.js` / `goalPrompt.js`。
 
 ## 安全
 

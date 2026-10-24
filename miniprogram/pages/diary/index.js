@@ -30,7 +30,10 @@ Page({
     fatigue: '',
     soreness: '',
     specialType: '',
-    specialNote: ''
+    specialNote: '',
+    waterPercent: 0,
+    waterPulse: false,
+    enterTick: 0
   },
 
   onLoad(query) {
@@ -53,6 +56,11 @@ Page({
     return getApp().globalData.session.user.userId
   },
 
+  waterPercentOf(ml) {
+    const n = Number(ml) || 0
+    return Math.max(0, Math.min(100, Math.round((n / 2000) * 100)))
+  },
+
   reload() {
     const app = getApp()
     diaryApi.getDailyView(app, this.studentId(), this.data.localDate).then((res) => {
@@ -67,13 +75,19 @@ Page({
         fatigue: body.fatigue != null ? String(body.fatigue) : '',
         soreness: body.soreness || '',
         specialType: body.specialType || '',
-        specialNote: body.specialNote || ''
+        specialNote: body.specialNote || '',
+        waterPercent: this.waterPercentOf(view.waterTotalMl)
       })
     })
   },
 
   onPickDate(e) {
-    this.setData({ localDate: e.currentTarget.dataset.key })
+    const key = e.currentTarget.dataset.key
+    if (!key || key === this.data.localDate) return
+    this.setData({
+      localDate: key,
+      enterTick: this.data.enterTick + 1
+    })
     this.reload()
   },
 
@@ -93,7 +107,18 @@ Page({
     view.meals = (view.meals || []).map((m) =>
       Object.assign({}, m, { mealTypeLabel: MEAL_LABEL[m.mealType] || m.mealType })
     )
-    this.setData({ view })
+    this.setData({
+      view,
+      waterPercent: this.waterPercentOf(view.waterTotalMl)
+    })
+  },
+
+  pulseWater() {
+    this.setData({ waterPulse: true })
+    clearTimeout(this._waterPulseTimer)
+    this._waterPulseTimer = setTimeout(() => {
+      this.setData({ waterPulse: false })
+    }, 700)
   },
 
   onMealType(e) {
@@ -134,7 +159,10 @@ Page({
     const app = getApp()
     diaryApi
       .addWater(app, this.studentId(), this.data.localDate, this.data.waterMl)
-      .then((res) => this.applyView(res.data))
+      .then((res) => {
+        this.applyView(res.data)
+        this.pulseWater()
+      })
       .catch((err) => app.toast((err && err.message) || '失败'))
   },
 

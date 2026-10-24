@@ -51,7 +51,24 @@ Page({
     ],
     consultations: [],
     busy: false,
-    statusHint: ''
+    statusHint: '',
+    toolSwiperCurrent: 0,
+    toolTabs: [
+      { key: 'food', label: '饮食', index: '01' },
+      { key: 'posture', label: '体态', index: '02' },
+      { key: 'goal', label: '目标', index: '03' }
+    ]
+  },
+
+  onToolSwiperChange(e) {
+    const cur = e.detail && e.detail.current != null ? e.detail.current : 0
+    this.setData({ toolSwiperCurrent: cur })
+  },
+
+  onPickToolTab(e) {
+    const idx = Number(e.currentTarget.dataset.index)
+    if (!Number.isFinite(idx) || idx === this.data.toolSwiperCurrent) return
+    this.setData({ toolSwiperCurrent: idx })
   },
 
   onShow() {
