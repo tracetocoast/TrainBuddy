@@ -8,7 +8,7 @@
   align-items: center;
   background: var(--surface);
   border: 2rpx solid #e0e7dc;
-  border-radius: 24rpx;
+  border-radius: 32rpx;
   padding: 22rpx;
   margin-top: 12rpx;
 }

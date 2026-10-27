@@ -1,4 +1,10 @@
-.daily-card { padding: 30rpx; border: 1rpx solid #e0e7dc; background: #ffffff; border-radius: 28rpx; }
+.daily-card {
+  padding: 30rpx;
+  border: 1rpx solid #e0e7dc;
+  background: #ffffff;
+  border-radius: 36rpx;
+  box-shadow: 0 4rpx 18rpx rgba(37, 53, 44, 0.03);
+}
 
 .daily-intro {
   display: flex;
@@ -57,10 +63,14 @@
   align-items: center;
   gap: 20rpx;
   padding: 24rpx;
-  border: 2rpx solid #e0e7dc;
-  border-bottom-width: 1rpx;
-  border-radius: 26rpx;
+  border: 1rpx solid #e0e7dc;
+  border-radius: 32rpx;
   text-align: left;
+  transition: transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 4rpx 16rpx rgba(37, 53, 44, 0.03);
+}
+.quick-card:active {
+  transform: scale(0.97);
 }
 
 .quick-icon {
@@ -69,7 +79,7 @@
   justify-content: center;
   width: 72rpx;
   height: 72rpx;
-  border-radius: 22rpx;
+  border-radius: 28rpx;
   font-size: 36rpx;
   font-weight: 600;
   flex-shrink: 0;
@@ -91,7 +101,13 @@
 
 .welcome { margin: 4rpx 0 28rpx; }
 .home-quote { font-size: 24rpx; line-height: 1.8; color: #74806d; letter-spacing: 1rpx; }
-.daily-card { padding: 32rpx; background: #edf4e6; border: 1rpx solid #e0ead6; border-radius: 28rpx; }
+.daily-card {
+  padding: 32rpx;
+  background: #edf4e6;
+  border: 1rpx solid #e0ead6;
+  border-radius: 36rpx;
+  box-shadow: 0 8rpx 28rpx rgba(40, 116, 78, 0.08);
+}
 .daily-intro { margin-bottom: 28rpx; }
 .daily-label { color: #68815c; font-weight: 500; font-size: 22rpx; letter-spacing: 2rpx; }
 .daily-title { color: #2e452f; font-size: 38rpx; font-weight: 500; margin: 12rpx 0; }
