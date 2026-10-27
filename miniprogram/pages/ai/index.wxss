@@ -3,14 +3,7 @@
 .ai-brand { color: #25352c; font-size: 31rpx; font-weight: 500; }
 
 .ai-brand-detail { margin-left: 18rpx; font-size: 17rpx; letter-spacing: 3rpx; color: #6e7c72; }
-.ai-intro { position: relative; padding: 40rpx 0 44rpx; overflow: hidden; }
-.ai-kicker { font-size: 17rpx; letter-spacing: 3rpx; color: #6e7c72; position: relative; z-index: 1; }
-.ai-heading { margin: 24rpx 0 22rpx; font-size: 58rpx; line-height: 1.4; font-weight: 400; letter-spacing: 2rpx; position: relative; z-index: 1; }
-.ai-lead { font-size: 25rpx; color: #6e7c72; line-height: 1.8; position: relative; z-index: 1; }
-.ai-orbit { position: absolute; right: -56rpx; top: 66rpx; width: 282rpx; height: 282rpx; border: 1rpx solid #e0e7dc; border-radius: 50%; transform: rotate(-28deg); background: #ffffff; }
-.orbit-inner { position: absolute; left: 48rpx; top: -10rpx; width: 160rpx; height: 300rpx; border: 1rpx solid #e0e7dc; border-radius: 50%; }
-.orbit-point { position: absolute; top: 28rpx; left: 30rpx; width: 14rpx; height: 14rpx; background: #ffffff; border-radius: 50%; box-shadow: 0 0 24rpx rgba(188,220,239,.5); }
-.ai-services-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12rpx; margin: 0 2rpx 16rpx; font-size: 24rpx; color: #6e7c72; }
+.ai-services-label { display: flex; justify-content: space-between; align-items: baseline; gap: 12rpx; margin: 12rpx 2rpx 16rpx; font-size: 24rpx; color: #6e7c72; }
 .ai-service-count { font-size: 19rpx; letter-spacing: 1rpx; color: #6e7c72; flex-shrink: 0; }
 
 /* 工具轮播 */
@@ -125,12 +118,6 @@
 .ai-bottom-note { text-align: center; color: #6e7c72; letter-spacing: 7rpx; font-size: 22rpx; padding: 24rpx 0 12rpx; }
 .linkish { width: 100% !important; color: #6e7c72; font-size: 22rpx; padding: 18rpx 0; text-align: center; }
 
-.ai-intro { padding: 28rpx 0 34rpx; }
-.ai-heading { font-size: 48rpx; color: #2e452f; }
-.ai-kicker { color: #6e8861; }
-.ai-orbit { opacity: .45; border-color: #d3dfc6; background: transparent; }
-.orbit-inner { border-color: #c8d7b7; }
-.orbit-point { background: #e8ad4b; box-shadow: none; }
 .aibox { background: #ffffff; border-color: #e0e7dc; }
 .ai-primary { background: #28744e; border-color: #28744e; color: #ffffff; }
 .ai-outline { background: #eef4e9; border-color: #d4e3cc; color: #28744e; }

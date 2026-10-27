@@ -1,7 +1,6 @@
 <view class="ai-page">
   <view class="top"><view class="brand ai-brand"><brand-logo class="brand-emblem-slot" />练搭子 <text class="ai-brand-detail">INTELLIGENCE</text></view></view>
   <role-switcher />
-  <view class="ai-intro"><view class="ai-kicker">PERSONAL TRAINING INTELLIGENCE</view><view class="ai-heading">更懂身体，<view>更有方向。</view></view><view class="ai-lead">从饮食记录到目标预览，<view>为日常训练，多一点理解。</view></view><view class="ai-orbit" aria-hidden="true"><view class="orbit-inner"></view><view class="orbit-point"></view></view></view>
   <view class="ai-services-label">
     <text>你的专属工具</text>
     <text class="ai-service-count">左右滑动切换 · 0{{toolSwiperCurrent + 1}} / 03</text>
