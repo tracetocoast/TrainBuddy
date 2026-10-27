@@ -1,5 +1,5 @@
 :host { display: block; margin-top: 28rpx; }
-.friends-window { background: #ffffff; border: 1rpx solid #e0e7dc; border-radius: 24rpx; padding: 24rpx; color: #25352c; }
+.friends-window { background: #ffffff; border: 1rpx solid #e0e7dc; border-radius: 32rpx; padding: 24rpx; color: #25352c; }
 button { padding: 0; margin: 0; line-height: 1.5; background: transparent; color: inherit; font-size: inherit; border-radius: 0; }button::after { border: 0; }
 .window-head { display: flex; justify-content: space-between; align-items: center; font-size: 28rpx; }.window-head button { width: auto; font-size: 23rpx; color: #28744e; padding: 8rpx 0; }
 .window-caption { font-size: 21rpx; color: #84917c; margin-top: 4rpx; }

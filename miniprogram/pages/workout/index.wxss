@@ -2,7 +2,7 @@
   margin-top: 16rpx;
   padding: 16rpx;
   background: #f1f4ee;
-  border-radius: 16rpx;
+  border-radius: 24rpx;
 }
 
 .aset-main {

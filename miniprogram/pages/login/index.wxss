@@ -35,12 +35,18 @@
 .account-btn {
   display: block;
   width: 100%;
-  text-align: left; border: 2rpx solid #e0e7dc; border-bottom-width: 1rpx;
-  background: #f1f4ee;
-  border-radius: 24rpx;
+  text-align: left;
+  border: 1rpx solid #e0e7dc;
+  background: #f7f9f2;
+  border-radius: 32rpx;
   padding: 24rpx;
   margin-top: 16rpx;
   box-sizing: border-box;
+  transition: transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 4rpx 16rpx rgba(37, 53, 44, 0.03);
+}
+.account-btn:active {
+  transform: scale(0.97);
 }
 
 .account-btn.warn {
