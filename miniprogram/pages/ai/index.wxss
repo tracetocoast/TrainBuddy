@@ -539,7 +539,7 @@
   font-weight: 500;
 }
 
-/* Bottom sheet：上滑进入 + 把手 */
+/* Bottom sheet：上滑进入 + 把手；遮罩与内容分离，真机可滑选项区 */
 .goal-sheet-mask {
   position: fixed;
   left: 0;
@@ -547,22 +547,39 @@
   top: 0;
   bottom: 0;
   z-index: 1000;
-  background: rgba(24, 32, 28, 0.48);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   animation: aiMaskIn 0.22s ease;
 }
+.goal-sheet-backdrop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(24, 32, 28, 0.48);
+}
 .goal-sheet {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-height: 86vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #1c2220;
   color: #f4f6f2;
   border-radius: 40rpx 40rpx 0 0;
   padding: 16rpx 32rpx calc(28rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   box-shadow: 0 -16rpx 48rpx rgba(0, 0, 0, 0.18);
+}
+.goal-sheet-body {
+  flex: 1;
+  height: 52vh;
+  max-height: 52vh;
+  margin-top: 8rpx;
 }
 .goal-sheet-enter {
   animation: aiSheetUp 0.38s cubic-bezier(0.34, 1.2, 0.64, 1);

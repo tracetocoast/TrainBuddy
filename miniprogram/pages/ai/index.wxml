@@ -163,42 +163,45 @@
   <view class="ai-bottom-note">观察 · 理解 · 行动</view><button class="linkish" bindtap="onOpenApiHint">服务与数据说明</button>
 </view>
 
-<!-- 三大配置弹窗 -->
-<view class="goal-sheet-mask" wx:if="{{showGoalConfig}}" catchtouchmove="noop">
+<!-- 三大配置弹窗：遮罩拦截穿透，内容区用 scroll-view 保证真机可滑 -->
+<view class="goal-sheet-mask" wx:if="{{showGoalConfig}}">
+  <view class="goal-sheet-backdrop" catchtap="onCloseGoalConfig" catchtouchmove="noop"></view>
   <view class="goal-sheet goal-sheet-enter">
     <view class="goal-sheet-handle" aria-hidden="true"></view>
     <view class="goal-sheet-title">目标预览配置</view>
     <view class="goal-sheet-sub">选择完成后生成；将返回主页异步加载图片。</view>
 
-    <view class="goal-cfg-block">
-      <view class="goal-cfg-label">1. 目标身材</view>
-      <radio-group bindchange="onCfgBodyGoal">
-        <label class="goal-cfg-option" wx:for="{{bodyGoalOptions}}" wx:key="value">
-          <radio value="{{item.value}}" checked="{{goalConfig.body_goal === item.value}}" color="#28744e" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
+    <scroll-view scroll-y class="goal-sheet-body" enhanced show-scrollbar="{{false}}">
+      <view class="goal-cfg-block">
+        <view class="goal-cfg-label">1. 目标身材</view>
+        <radio-group bindchange="onCfgBodyGoal">
+          <label class="goal-cfg-option" wx:for="{{bodyGoalOptions}}" wx:key="value">
+            <radio value="{{item.value}}" checked="{{goalConfig.body_goal === item.value}}" color="#28744e" />
+            <text>{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
 
-    <view class="goal-cfg-block">
-      <view class="goal-cfg-label">2. 目标变化幅度</view>
-      <radio-group bindchange="onCfgChangeLevel">
-        <label class="goal-cfg-option" wx:for="{{changeLevelOptions}}" wx:key="value">
-          <radio value="{{item.value}}" checked="{{goalConfig.change_level === item.value}}" color="#28744e" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
+      <view class="goal-cfg-block">
+        <view class="goal-cfg-label">2. 目标变化幅度</view>
+        <radio-group bindchange="onCfgChangeLevel">
+          <label class="goal-cfg-option" wx:for="{{changeLevelOptions}}" wx:key="value">
+            <radio value="{{item.value}}" checked="{{goalConfig.change_level === item.value}}" color="#28744e" />
+            <text>{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
 
-    <view class="goal-cfg-block">
-      <view class="goal-cfg-label">3. 图片风格</view>
-      <radio-group bindchange="onCfgImageStyle">
-        <label class="goal-cfg-option" wx:for="{{imageStyleOptions}}" wx:key="value">
-          <radio value="{{item.value}}" checked="{{goalConfig.image_style === item.value}}" color="#28744e" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
+      <view class="goal-cfg-block">
+        <view class="goal-cfg-label">3. 图片风格</view>
+        <radio-group bindchange="onCfgImageStyle">
+          <label class="goal-cfg-option" wx:for="{{imageStyleOptions}}" wx:key="value">
+            <radio value="{{item.value}}" checked="{{goalConfig.image_style === item.value}}" color="#28744e" />
+            <text>{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
+    </scroll-view>
 
     <view class="goal-sheet-actions">
       <button class="secondary goal-sheet-btn" bindtap="onCloseGoalConfig" disabled="{{goalGenerating}}">取消</button>
