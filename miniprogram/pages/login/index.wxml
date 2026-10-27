@@ -3,13 +3,13 @@
     <view class="login-emblem"><brand-logo size="104" /></view>
     <view class="brand-title">练搭子</view>
     <view class="brand-en">TRAIN BUDDY</view>
-    <view class="sub">有人陪你练，每一步都算数。</view>
+    <view class="sub">专业训练，让每一次进步有迹可循。</view>
   </view>
 
   <view class="card">
     <view class="card-title">微信登录</view>
     <view class="sub" wx:if="{{wechatConfigured}}">使用当前微信账号登录；新用户默认学员身份。</view>
-    <view class="sub" wx:else>后端尚未配置 AppSecret 时不可用。可先用下方演示账号，或在 server/.env 填写 WECHAT_APPSECRET。</view>
+    <view class="sub" wx:else>微信登录暂未开通，可先使用下方演示账号体验。</view>
     <button class="primary" style="width:100%;margin-top:20rpx" bindtap="onWeChatLogin">微信一键登录</button>
   </view>
 

@@ -4,9 +4,9 @@
   gap: 0;
   padding: 6rpx;
   margin: 4rpx 0 24rpx;
-  border: 1rpx solid #e0e7dc;
+  border: 1rpx solid var(--line);
   border-radius: 999rpx;
-  background: #eef3ea;
+  background: var(--surface-raised);
   box-sizing: border-box;
 }
 
@@ -21,10 +21,10 @@
   font-size: 25rpx;
   font-weight: 500;
   line-height: 1.5;
-  color: #6e7c72;
+  color: var(--muted);
   background: transparent;
   transition:
-    transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1),
+    transform 0.18s cubic-bezier(.2,.8,.2,1),
     background 0.22s ease,
     color 0.22s ease,
     box-shadow 0.22s ease;
@@ -36,12 +36,16 @@
 
 .role-btn.on {
   background: #ffffff;
-  color: #1f5c3d;
+  color: var(--accent);
   font-weight: 600;
-  box-shadow: 0 6rpx 20rpx rgba(40, 116, 78, 0.12);
+  box-shadow: 0 6rpx 20rpx rgba(23, 32, 43, 0.12);
 }
 
 .role-btn-press {
   transform: scale(0.96);
   opacity: 0.92;
 }
+.role { background:#eaf0f6;border-color:#dce2e8;border-radius:14rpx;padding:6rpx; }
+.role-btn { min-height:44px;border-radius:10rpx;color:#526071;transition:opacity 100ms ease; }
+.role-btn.on { color:#17202b;box-shadow:0 2rpx 6rpx rgba(23,32,43,.06); }
+.role-btn-press { transform:none;opacity:.75; }

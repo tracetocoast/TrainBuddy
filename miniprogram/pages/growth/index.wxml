@@ -6,8 +6,11 @@
     </view>
   </view>
   <role-switcher />
-  <view class="eyebrow">YOUR PROGRESS · S08</view>
-  <view class="title">每一点进步，都算数</view>
+  <view class="eyebrow">YOUR PROGRESS</view>
+  <view class="title">训练成长</view>
+  <view class="sub">执行情况、训练容量与身体变化，一起看。</view>
+  <view class="ui-state" wx:if="{{loading}}">正在同步训练数据…</view>
+  <view class="ui-state ui-state-error" wx:if="{{error}}">{{error}}<button class="link" bindtap="reload">重试加载</button></view>
   <view class="growth-summary">
     <view class="grow">
       <view class="sub">本周完成训练</view>
@@ -38,7 +41,7 @@
   </view>
   <view class="card chart" wx:if="{{summary && summary.bars && summary.bars.length}}">
     <view class="bar-col" wx:for="{{summary.bars}}" wx:key="date">
-      <view class="bar" style="height: {{item.height || 8}}rpx; background: {{item.sets ? '#449361' : '#e7ede2'}};"></view>
+      <view class="bar" style="height: {{item.height || 8}}rpx; background: {{item.sets ? '#214beb' : '#eaf0f6'}};"></view>
       <text class="sub">{{item.label}}</text>
     </view>
   </view>

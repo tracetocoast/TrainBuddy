@@ -1,4 +1,4 @@
 {
   "navigationBarTitleText": "动作库",
-  "usingComponents": {}
+  "usingComponents": { "brand-logo": "/components/brand-logo/index" }
 }

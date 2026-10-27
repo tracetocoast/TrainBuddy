@@ -2,7 +2,7 @@
 .aset {
   margin-top: 16rpx;
   padding: 16rpx;
-  background: #f1f4ee;
+  background: var(--surface-raised);
   border-radius: 24rpx;
 }
 
@@ -28,7 +28,7 @@
   width: 120rpx;
   padding: 10rpx 12rpx;
   background: var(--surface);
-  border: 2rpx solid #e0e7dc;
+  border: 2rpx solid var(--line);
   border-radius: 12rpx;
   font-size: 24rpx;
   text-align: center;

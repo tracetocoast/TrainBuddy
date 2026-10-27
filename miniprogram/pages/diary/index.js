@@ -39,6 +39,11 @@ Page({
   onLoad(query) {
     if (query && /^\d{4}-\d{2}-\d{2}$/.test(query.date || '')) this.setData({localDate:query.date})
   },
+  onJumpSection(e) {
+    const section = e.currentTarget.dataset.section
+    if (!['training','meals','water','state','sharing'].includes(section)) return
+    wx.pageScrollTo({ selector: '#diary-' + section, offsetTop: -56, duration: 0, fail: () => getApp().toast('请向下滑动查看对应记录') })
+  },
 
   onShow() {
     if (!requireLogin(this)) return

@@ -50,7 +50,7 @@
 
     <view class="exercise" wx:for="{{session.exercises}}" wx:key="id">
       <view class="flex">
-        <view class="ico">{{item.icon}}</view>
+        <view class="ico"><brand-logo size="48"/></view>
         <view class="grow">
           <view class="card-title">{{item.name}}</view>
           <view class="sub">{{item.sets.length}} 组 · 逐组打卡</view>

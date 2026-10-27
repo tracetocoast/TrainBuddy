@@ -1,8 +1,8 @@
 <view class="page page-solo diary-page">
   <view class="diary-hero diary-enter" style="animation-delay: 0ms">
     <view class="diary-kicker">DAILY LOG</view>
-    <view class="diary-title">每日记录</view>
-    <view class="diary-lead">饮食、饮水、状态与特殊情况分开保存；共享按类别授权给教练。</view>
+    <view class="diary-title">训练补给</view>
+    <view class="diary-lead">记录训练之外的补给与恢复，按需共享给教练。</view>
   </view>
 
   <scroll-view class="diary-dates diary-enter" style="animation-delay: 60ms" scroll-x enable-flex show-scrollbar="{{false}}">
@@ -21,6 +21,7 @@
     </view>
   </scroll-view>
 
+  <view class="diary-section-nav"><button data-section="training" bindtap="onJumpSection">训练</button><button data-section="meals" bindtap="onJumpSection">饮食</button><button data-section="water" bindtap="onJumpSection">饮水</button><button data-section="state" bindtap="onJumpSection">恢复</button><button data-section="sharing" bindtap="onJumpSection">共享</button></view>
   <block wx:for="{{[enterTick]}}" wx:key="*this">
   <view class="diary-daybar diary-enter" style="animation-delay: 100ms" wx:if="{{view}}">
     <view class="diary-daybar-main">
@@ -39,7 +40,7 @@
   </view>
 
   <!-- 当天训练 -->
-  <view class="diary-section diary-enter" style="animation-delay: 140ms">
+  <view id="diary-training" class="diary-section diary-enter" style="animation-delay: 140ms">
     <view class="diary-section-head">
       <view class="diary-section-title">当天训练</view>
       <text class="diary-section-count">{{view.sessions.length || 0}}</text>
@@ -54,7 +55,7 @@
   </view>
 
   <!-- 饮食 -->
-  <view class="diary-section diary-enter" style="animation-delay: 180ms">
+  <view id="diary-meals" class="diary-section diary-enter" style="animation-delay: 180ms">
     <view class="diary-section-head">
       <view class="diary-section-title">饮食</view>
       <text class="diary-share-tag {{view.shares.meal ? 'on' : ''}}">{{view.shares.meal ? '已共享' : '未共享'}}</text>
@@ -100,7 +101,7 @@
   </view>
 
   <!-- 饮水 -->
-  <view class="diary-section diary-enter" style="animation-delay: 220ms">
+  <view id="diary-water" class="diary-section diary-enter" style="animation-delay: 220ms">
     <view class="diary-section-head">
       <view class="diary-section-title">饮水</view>
       <text class="diary-section-count">{{view.waterTotalMl || 0}} ml</text>
@@ -116,7 +117,7 @@
   </view>
 
   <!-- 身体状态 -->
-  <view class="diary-section diary-enter" style="animation-delay: 260ms">
+  <view id="diary-state" class="diary-section diary-enter" style="animation-delay: 260ms">
     <view class="diary-section-head">
       <view class="diary-section-title">身体状态</view>
       <text class="diary-share-tag {{view.shares.body_state ? 'on' : ''}}">{{view.shares.body_state ? '已共享' : '未共享'}}</text>
@@ -176,7 +177,7 @@
   </view>
 
   <!-- 训练共享 -->
-  <view class="diary-section diary-enter diary-section-last" style="animation-delay: 340ms">
+  <view id="diary-sharing" class="diary-section diary-enter diary-section-last" style="animation-delay: 340ms">
     <view class="diary-section-head">
       <view class="diary-section-title">训练共享</view>
       <text class="diary-share-tag {{view.shares.workout_self ? 'on' : ''}}">{{view.shares.workout_self ? '已共享' : '未共享'}}</text>

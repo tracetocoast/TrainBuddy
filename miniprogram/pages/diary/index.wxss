@@ -35,14 +35,14 @@
 .diary-kicker {
   font-size: 18rpx;
   letter-spacing: 3rpx;
-  color: #6e8861;
+  color: var(--muted);
 }
 
 .diary-title {
   margin-top: 14rpx;
   font-size: 44rpx;
   font-weight: 600;
-  color: #25352c;
+  color: var(--ink);
   letter-spacing: 1rpx;
 }
 
@@ -50,7 +50,7 @@
   margin-top: 12rpx;
   font-size: 25rpx;
   line-height: 1.7;
-  color: #6e7c72;
+  color: var(--muted);
 }
 
 /* 日期条 */
@@ -70,9 +70,9 @@
   min-width: 92rpx;
   padding: 16rpx 0;
   margin: 0 !important;
-  border-radius: 28rpx;
+  border-radius: 20rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e7dc;
+  border: 1rpx solid var(--line);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -86,25 +86,25 @@
 }
 
 .date-chip-on {
-  background: #e6f0e4;
-  border-color: #a5c5a7;
-  box-shadow: 0 8rpx 20rpx rgba(40, 116, 78, 0.12);
+  background: #edf1ff;
+  border-color: #b7c6f9;
+  box-shadow: 0 8rpx 20rpx rgba(23, 32, 43, 0.12);
   transform: translateY(-2rpx);
 }
 
 .date-week {
   font-size: 20rpx;
-  color: #6e7c72;
+  color: var(--muted);
 }
 
 .date-chip-on .date-week {
-  color: #486540;
+  color: var(--accent);
 }
 
 .date-day {
   font-size: 32rpx;
   font-weight: 600;
-  color: #25352c;
+  color: var(--ink);
   line-height: 1.1;
 }
 
@@ -117,8 +117,8 @@
   padding: 22rpx 24rpx;
   margin: 12rpx 0 8rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e7dc;
-  border-radius: 32rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 20rpx;
 }
 
 .diary-daybar-main {
@@ -129,7 +129,7 @@
 .diary-daybar-date {
   font-size: 28rpx;
   font-weight: 600;
-  color: #25352c;
+  color: var(--ink);
 }
 
 .diary-daybar-meta {
@@ -143,13 +143,13 @@
   font-size: 20rpx;
   padding: 6rpx 12rpx;
   border-radius: 999rpx;
-  background: #f1f5ed;
-  color: #486540;
+  background: var(--surface-raised);
+  color: var(--accent);
 }
 
 .diary-pill.soft {
-  background: #f5f7f0;
-  color: #6e7c72;
+  background: var(--surface-raised);
+  color: var(--muted);
 }
 
 .diary-pill-rest {
@@ -163,9 +163,9 @@
   margin: 0 !important;
   padding: 14rpx 22rpx;
   font-size: 23rpx;
-  color: #28744e;
-  background: #eef4e9;
-  border: 1rpx solid #d4e3cc;
+  color: var(--accent);
+  background: #edf1ff;
+  border: 1rpx solid var(--line);
   border-radius: 999rpx;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
@@ -179,8 +179,8 @@
   margin-top: 22rpx;
   padding: 28rpx 26rpx 24rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e7dc;
-  border-radius: 36rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 20rpx;
 }
 
 .diary-section-last {
@@ -198,12 +198,12 @@
 .diary-section-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #25352c;
+  color: var(--ink);
 }
 
 .diary-section-count {
   font-size: 22rpx;
-  color: #6e7c72;
+  color: var(--muted);
   letter-spacing: 0.5rpx;
 }
 
@@ -211,25 +211,25 @@
   font-size: 20rpx;
   padding: 6rpx 14rpx;
   border-radius: 999rpx;
-  border: 1rpx solid #e0e7dc;
-  color: #6e7c72;
-  background: #f7f9f2;
+  border: 1rpx solid var(--line);
+  color: var(--muted);
+  background: #f7f9fc;
 }
 
 .diary-share-tag.on {
-  color: #28744e;
-  border-color: #c5d9c2;
-  background: #eef4e9;
+  color: var(--accent);
+  border-color: var(--line);
+  background: #edf1ff;
 }
 
 .diary-empty {
   padding: 28rpx 8rpx;
   text-align: center;
   font-size: 24rpx;
-  color: #8a958b;
-  background: #fafbf7;
+  color: #738093;
+  background: var(--paper);
   border-radius: 24rpx;
-  border: 1rpx dashed #e0e7dc;
+  border: 1rpx dashed var(--line);
 }
 
 .diary-list {
@@ -240,9 +240,9 @@
 
 .diary-item {
   padding: 20rpx 18rpx;
-  background: #f7f9f2;
+  background: #f7f9fc;
   border-radius: 24rpx;
-  border: 1rpx solid #e8eee3;
+  border: 1rpx solid var(--line);
 }
 
 .meal-item {
@@ -260,21 +260,21 @@
 .diary-item-title {
   font-size: 27rpx;
   font-weight: 500;
-  color: #25352c;
+  color: var(--ink);
   line-height: 1.4;
 }
 
 .diary-item-sub {
   margin-top: 6rpx;
   font-size: 23rpx;
-  color: #6e7c72;
+  color: var(--muted);
   line-height: 1.55;
 }
 
 .diary-item-meta {
   margin-top: 6rpx;
   font-size: 21rpx;
-  color: #8a958b;
+  color: #738093;
 }
 
 .diary-text-btn {
@@ -291,17 +291,17 @@
 .diary-composer {
   margin-top: 18rpx;
   padding-top: 18rpx;
-  border-top: 1rpx solid #eef2ea;
+  border-top: 1rpx solid var(--line);
 }
 
 .diary-input {
   width: 100%;
   min-height: 80rpx;
   padding: 18rpx 20rpx;
-  background: #f1f4ee;
+  background: var(--surface-raised);
   border-radius: 24rpx;
   font-size: 26rpx;
-  color: #25352c;
+  color: var(--ink);
 }
 
 .diary-textarea {
@@ -309,10 +309,10 @@
   min-height: 140rpx;
   margin-top: 8rpx;
   padding: 18rpx 20rpx;
-  background: #f1f4ee;
+  background: var(--surface-raised);
   border-radius: 24rpx;
   font-size: 26rpx;
-  color: #25352c;
+  color: var(--ink);
   line-height: 1.6;
 }
 
@@ -329,16 +329,16 @@
   padding: 12rpx 20rpx;
   border-radius: 999rpx;
   background: #ffffff;
-  border: 1rpx solid #e0e7dc;
+  border: 1rpx solid var(--line);
   font-size: 23rpx;
-  color: #6e7c72;
+  color: var(--muted);
   transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .chip.on {
-  background: #e6f0e4;
-  border-color: #a5c5a7;
-  color: #25352c;
+  background: #edf1ff;
+  border-color: #b7c6f9;
+  color: var(--ink);
   font-weight: 500;
 }
 
@@ -368,21 +368,21 @@
   display: block;
   margin-bottom: 8rpx;
   font-size: 22rpx;
-  color: #6e7c72;
+  color: var(--muted);
 }
 
 /* 饮水进度 */
 .water-track {
   height: 16rpx;
   border-radius: 999rpx;
-  background: #eef2ea;
+  background: var(--line);
   overflow: hidden;
 }
 
 .water-fill {
   height: 100%;
   border-radius: 999rpx;
-  background: linear-gradient(90deg, #7fb59a, #28744e);
+  background: linear-gradient(90deg, var(--accent), var(--accent));
   transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   min-width: 0;
 }
@@ -407,10 +407,10 @@
   min-height: 80rpx;
   padding: 16rpx;
   text-align: center;
-  background: #f1f4ee;
+  background: var(--surface-raised);
   border-radius: 24rpx;
   font-size: 28rpx;
-  color: #25352c;
+  color: var(--ink);
 }
 
 .water-add {
@@ -424,8 +424,8 @@
   min-height: 84rpx;
   padding: 20rpx 24rpx;
   border-radius: 999rpx;
-  background: #28744e;
-  border: 1rpx solid #28744e;
+  background: var(--accent);
+  border: 1rpx solid var(--accent);
   color: #ffffff;
   font-size: 27rpx;
   font-weight: 500;
@@ -447,8 +447,8 @@
   padding: 18rpx 12rpx;
   border-radius: 24rpx;
   background: #ffffff;
-  border: 1rpx solid #d4e3cc;
-  color: #28744e;
+  border: 1rpx solid var(--line);
+  color: var(--accent);
   font-size: 24rpx;
   text-align: center;
   transition: transform 0.15s ease, background 0.15s ease;
@@ -458,3 +458,17 @@
   transform: scale(0.97);
   opacity: 0.92;
 }
+.diary-enter { animation:none; }
+.diary-section-nav { position:sticky;top:0;z-index:10;display:flex;gap:8rpx;background:var(--paper);padding:12rpx 0;border-bottom:1rpx solid var(--line); }
+.diary-section-nav button { flex:1;min-width:0;min-height:44px;background:var(--surface);color:var(--ink);font-size:24rpx;border:1rpx solid var(--line);border-radius:10rpx; }
+.diary-section { border-radius:16rpx;border:0;border-top:3rpx solid var(--ink);padding:26rpx 24rpx; }
+.diary-section-title { font-weight:750; }
+.diary-input,.diary-textarea,.water-input { border:1rpx solid var(--line);border-radius:12rpx;background:#f7f9fc; }
+.diary-input { height:96rpx;line-height:96rpx;padding:0 20rpx; }
+.diary-primary,.diary-ghost,.diary-rest-btn { border-radius:12rpx;min-height:44px; }
+.date-chip { border-radius:12rpx;box-shadow:none; }
+.date-chip-on { background:var(--graphite);border-color:var(--graphite);transform:none;box-shadow:none; }
+.date-chip-on .date-day,.date-chip-on .date-week { color:#fff; }
+.diary-item { border:0;border-bottom:1rpx solid var(--line);border-radius:0;background:transparent;padding:20rpx 0; }
+.diary-btn-press,.date-chip-press,.chip-press { transform:none;opacity:.8; }
+.water-fill.water-pulse { animation:none; }

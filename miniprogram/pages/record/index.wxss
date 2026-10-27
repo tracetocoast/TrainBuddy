@@ -18,13 +18,13 @@
   align-items: flex-start;
   gap: 16rpx;
   padding: 12rpx 0;
-  border-bottom: 1rpx solid #e0e7dc;
+  border-bottom: 1rpx solid var(--line);
 }
 
 .aset {
   margin-top: 12rpx;
   padding: 12rpx;
-  background: #f1f4ee;
+  background: var(--surface-raised);
   border-radius: 999rpx;
 }
 
@@ -44,7 +44,7 @@
   width: 110rpx;
   padding: 8rpx 10rpx;
   background: var(--surface);
-  border: 2rpx solid #e0e7dc;
+  border: 2rpx solid var(--line);
   border-radius: 10rpx;
   font-size: 24rpx;
   text-align: center;
@@ -65,16 +65,16 @@
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
   background: var(--surface);
-  border: 2rpx solid #e0e7dc;
+  border: 2rpx solid var(--line);
   font-size: 22rpx;
   font-weight: 600;
-  color: #6e7c72;
+  color: var(--muted);
 }
 
 .chip.on {
-  background: #e6f0e4;
-  border-color: #a5c5a7;
-  color: #25352c;
+  background: #edf1ff;
+  border-color: #b7c6f9;
+  color: var(--ink);
 }
 
 .warn {
@@ -89,7 +89,7 @@
 }
 
 .hidden {
-  background: #f1f4ee;
+  background: var(--surface-raised);
   border-style: dashed;
 }
 
@@ -101,3 +101,16 @@
 }
 
 .rec-on { background: #cf593b !important; color: #ffffff !important; }
+.aset { border-radius:14rpx; }
+.rec-on { background:#b42332 !important;color:#fff !important; }
+.mini-field { height:88rpx;min-height:44px;font-size:30rpx;font-weight:650;font-variant-numeric:tabular-nums; }
+.quick-btn,.chip { border-radius:10rpx;min-height:44px; }
+.record-entry-tabs { display:flex;gap:6rpx;border:1rpx solid var(--line);border-radius:14rpx;background:var(--surface-raised);padding:6rpx;margin-top:28rpx; }
+.record-entry-tabs button { flex:1;width:0 !important;min-height:44px;border-radius:10rpx;font-size:26rpx;color:var(--muted); }
+.record-entry-tabs button.on { background:#fff;color:var(--ink);font-weight:700; }
+.record-number { flex:1;min-width:0; }
+.record-number > text { display:block;font-size:20rpx;color:var(--muted);margin-bottom:6rpx; }
+.record-number .mini-field { width:100%;box-sizing:border-box; }
+.aset-line { flex-wrap:nowrap;gap:12rpx;align-items:flex-end; }
+.aset-no { padding-bottom:20rpx;min-width:38rpx; }
+.aset-line .primary { padding:16rpx;min-height:44px; }

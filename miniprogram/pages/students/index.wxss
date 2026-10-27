@@ -1,1 +1,4 @@
 /* 学员页沿用全局样式 */
+.diagnostic-tools { border-top:1rpx solid var(--line);margin-top:32rpx;padding-top:16rpx; }
+.diagnostic-tools > .link { color:var(--muted);max-width:none; }
+.card.flex { border-radius:14rpx;border-left:4rpx solid var(--accent); }

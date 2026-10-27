@@ -2,3 +2,4 @@
 .ruler{display:block;white-space:nowrap;margin:12rpx 0 0;line-height:normal}.tick{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:88rpx;min-height:88rpx;margin:0;padding:0;background:transparent;color:var(--ix-muted, #526071);line-height:1.2;font-size:24rpx;border-radius:0}.tick::after{border:0}.tick-number{font-size:22rpx;margin-top:8rpx}.tick.pointer{color:var(--ix-accent, #214beb);font-weight:700}
 .step{flex:0 0 88rpx;box-sizing:border-box}.number{display:block;width:160rpx;flex:1 1 160rpx;box-sizing:border-box;color:var(--ix-ink, #17202b)}.range{margin:18rpx 6rpx 8rpx}
 .step{min-width:44px;min-height:44px;transition:transform var(--ix-fast,100ms) ease}.step:active{transform:scale(.97)}.reduced .step{transition:none;transform:none}.number{min-height:44px}
+.step { width:88rpx !important;max-width:44px; }
