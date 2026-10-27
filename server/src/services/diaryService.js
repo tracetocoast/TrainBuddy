@@ -94,7 +94,7 @@ function getDailyView(app, studentId, localDate) {
     (s) =>
       s.studentId === studentId &&
       s.businessDate === localDate &&
-      s.status === 'completed'
+      s.status === 'completed' && (s.sourceType !== 'coach_post_session' || s.sharedAt)
   )
 
   const categories = ['workout_self', 'meal', 'body_state', 'special']

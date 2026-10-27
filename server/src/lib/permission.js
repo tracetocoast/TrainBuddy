@@ -22,6 +22,7 @@ function getPrimaryBinding(state, studentId) {
 
 /** 教练读学员：需有效绑定；可选类别 */
 function assertCoachReadStudent(state, coachUserId, studentId, category) {
+  if (!(state.userRoles || []).some(role => role.userId === coachUserId && role.role === 'coach' && role.status === 'active')) throw new AppError('FORBIDDEN', '缺少有效教练身份')
   const b = getActiveBinding(state, coachUserId, studentId)
   if (!b) {
     throw new AppError('FORBIDDEN', '无权访问该学员', { status: 403 })

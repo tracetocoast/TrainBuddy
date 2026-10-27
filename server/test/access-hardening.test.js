@@ -1,0 +1,47 @@
+const { it } = require('node:test')
+const assert = require('node:assert/strict')
+const { createTestApp } = require('./helpers')
+const config = require('../src/config')
+
+it('foreign booking reads, student coach actions and unbound coach session creation are forbidden', async t => {
+  const ctx = createTestApp(); t.after(() => ctx.cleanup())
+  const student = await ctx.login('student_only'), other = await ctx.login('student_claim_coach')
+  const coach = await ctx.login('coach_approved'), otherCoach = await ctx.login('coach_b')
+  await ctx.bindStudent(student.sessionToken)
+  const post = (route, who, body) => ctx.request('POST', '/api/v1' + route, { token: who.sessionToken, body })
+  assert.equal((await post('/sessions', student, { coachDraft: true, student_id: 'u_stu_002' })).status, 403)
+  assert.equal((await post('/sessions', coach, { coachDraft: true, student_id: 'u_stu_002' })).status, 403)
+  const slot = await ctx.findOpenSlot(student.sessionToken, 'coach_001')
+  const created = await post('/bookings', student, { coach_id: 'coach_001', start_at: slot.startAt, accepted_rules_version: config.schedule.rulesVersion })
+  assert.equal(created.status, 200)
+  const id = created.body.data.booking_id
+  assert.equal((await post(`/bookings/${id}/accept`, student, {})).status, 403)
+  assert.equal((await post(`/bookings/${id}/accept`, otherCoach, {})).status, 403)
+  assert.equal((await ctx.request('GET', '/api/v1/bookings/' + id, { token: other.sessionToken })).status, 403)
+  assert.equal((await ctx.request('GET', '/api/v1/bookings?student_id=u_stu_001', { token: other.sessionToken })).status, 403)
+  const list = await ctx.request('GET', '/api/v1/bookings?coach_id=coach_001', { token: other.sessionToken })
+  assert.equal(list.status, 200); assert.deepEqual(list.body.data, [])
+  assert.equal((await post('/coaches/coach_001/exceptions', student, {})).status, 403)
+  assert.equal((await post('/coaches/coach_001/exceptions', otherCoach, {})).status, 403)
+})
+
+it('timeline removes private coach notes and ended relationships revoke creator access', async t => {
+  const ctx = createTestApp(); t.after(() => ctx.cleanup())
+  const student = await ctx.login('student_only'), coach = await ctx.login('coach_approved'), stranger = await ctx.login('student_claim_coach')
+  await ctx.bindStudent(student.sessionToken)
+  const draft = await ctx.request('POST', '/api/v1/sessions', { token: coach.sessionToken, body: { coachDraft: true, student_id: student.user.userId } })
+  assert.equal(draft.status, 200)
+  const id = draft.body.data.session_id
+  const row = ctx.store.state.training.sessions.find(item => item.id === id)
+  row.status = 'completed'; row.sharedAt = Date.now(); row.privateNote = 'private coaching note'
+  const timeline = await ctx.request('GET', '/api/v1/students/u_stu_001/timeline', { token: student.sessionToken })
+  assert.equal(timeline.status, 200)
+  assert.equal(JSON.stringify(timeline.body).includes('private coaching note'), false)
+  ctx.store.state.media.assets.push({ id: 'asset-owned', ownerId: student.user.userId })
+  ctx.store.state.media.cleanupTasks.push({ id: 'cleanup-owned', mediaId: 'asset-owned', status: 'completed' })
+  assert.equal((await ctx.request('GET', '/api/v1/media/cleanup-tasks/cleanup-owned', { token: stranger.sessionToken })).status, 403)
+  assert.equal((await ctx.request('GET', '/api/v1/media/cleanup-tasks/cleanup-owned', { token: student.sessionToken })).status, 200)
+  ctx.store.state.bindings.find(binding => binding.studentId === student.user.userId).status = 'ended'
+  assert.equal((await ctx.request('GET', '/api/v1/sessions/' + id, { token: coach.sessionToken })).status, 403)
+  assert.equal((await ctx.request('PATCH', '/api/v1/sessions/' + id, { token: coach.sessionToken, body: { publicNote: 'attempt' } })).status, 403)
+})

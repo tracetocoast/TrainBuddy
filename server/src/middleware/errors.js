@@ -2,7 +2,8 @@ const { AppError } = require('../lib/errors')
 const { requestId } = require('../lib/ids')
 
 function attachRequestId(req, res, next) {
-  req.requestId = req.headers['x-request-id'] || requestId()
+  const provided = req.headers['x-request-id']
+  req.requestId = !req.app.locals.production && typeof provided === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(provided) ? provided : requestId()
   res.setHeader('X-Request-Id', req.requestId)
   next()
 }
@@ -26,7 +27,7 @@ function errorHandler(err, req, res, next) {
       request_id: rid
     })
   }
-  console.error('[api]', rid, err)
+  console.error(JSON.stringify({ event: 'api_error', request_id: rid, type: err && err.name || 'Error' }))
   res.status(500).json({
     error: {
       code: 'INTERNAL',

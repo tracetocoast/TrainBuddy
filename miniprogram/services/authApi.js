@@ -11,6 +11,7 @@ function wechatLogin(code) {
  * 演示登录：accountKey 代替微信 code（服务端校验角色，AC01）
  */
 function mockLogin(payload) {
+  if (!require('../config').ALLOW_DEMO_LOGIN) return Promise.reject({ code: 'FORBIDDEN', message: '当前环境不允许演示登录' })
   return http
     .post('/auth/wechat-session', {
       accountKey: (payload && payload.accountKey) || 'student_only',
@@ -37,5 +38,6 @@ module.exports = {
   mockLogin,
   applyCoachRole,
   getMe,
-  patchMe
+  patchMe,
+  logout: () => http.post('/auth/logout', {})
 }

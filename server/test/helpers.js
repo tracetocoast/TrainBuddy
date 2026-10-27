@@ -8,7 +8,7 @@ const { seed } = require('../src/seed')
 const time = require('../src/lib/time')
 const config = require('../src/config')
 
-function createTestApp() {
+function createTestApp(options = {}) {
   const file = path.join(
     os.tmpdir(),
     'tb_' + Date.now() + '_' + Math.random().toString(16).slice(2) + '.json'
@@ -16,7 +16,7 @@ function createTestApp() {
   const store = new MemoryStore(file)
   store.reset()
   seed(store)
-  const app = createApp({ store })
+  const app = createApp({ ...options, store })
   const server = http.createServer(app)
   let port
   const ready = new Promise((resolve) => {

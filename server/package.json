@@ -9,15 +9,23 @@
     "dev": "node --watch src/server.js",
     "test": "node --test test/*.test.js",
     "seed": "node src/seed-cli.js",
-    "reset": "rm -f data/store.json && node src/seed-cli.js"
+    "reset": "node src/seed-cli.js --reset-demo",
+    "db:migrate": "node scripts/database.js migrate",
+    "db:init": "node scripts/database.js init-empty",
+    "test:postgres": "node scripts/test-postgres.js",
+    "security:scan": "node scripts/scan-secrets.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "pg": "^8.23.1",
     "uuid": "^11.1.0",
     "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "yaml": "^2.9.1"
   }
 }

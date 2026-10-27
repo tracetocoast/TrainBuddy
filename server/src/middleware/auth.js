@@ -1,5 +1,6 @@
 const { fail } = require('../lib/errors')
 const time = require('../lib/time')
+const { tokenHash } = require('../services/authService')
 
 function authRequired(req, res, next) {
   const header = req.headers.authorization || ''
@@ -9,8 +10,8 @@ function authRequired(req, res, next) {
   if (!token) return next(failWrap('UNAUTHORIZED', '未登录'))
 
   const store = req.app.locals.store.state
-  const sess = store.sessions[token]
-  if (!sess || sess.expiresAt < time.nowMs()) {
+  const sess = store.sessions[tokenHash(token)] || (!req.app.locals.production && store.sessions[token])
+  if (!sess || sess.revokedAt || !Number.isFinite(sess.expiresAt) || sess.expiresAt <= time.nowMs()) {
     return next(failWrap('UNAUTHORIZED', '登录已失效'))
   }
   const user = store.users.find((u) => u.userId === sess.userId)

@@ -1,9 +1,11 @@
 const { loginMock, loginWithWeChat } = require('../../utils/session')
 const { isLoggedIn } = require('../../utils/permission')
+const config = require('../../config')
 
 Page({
   data: {
-    privacyOk: false
+    privacyOk: false,
+    allowDemo: config.ALLOW_DEMO_LOGIN
   },
 
   onShow() {
@@ -34,6 +36,7 @@ Page({
   },
 
   onMockLogin(e) {
+    if (!config.ALLOW_DEMO_LOGIN) return
     if (!this.ensurePrivacy()) return
     const app = getApp()
     const accountKey = e.currentTarget.dataset.key

@@ -1,0 +1,15 @@
+.git
+**/node_modules
+**/.env
+**/.env.*
+**/data
+**/backups
+**/secrets
+**/*.dump
+**/*.sql.gz
+**/*.pem
+**/*.key
+**/*.log
+**/project.private.config.json
+miniprogram
+**/migration-input

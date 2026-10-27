@@ -2,13 +2,15 @@
 
 由 `lianzida_clickable_prototype.html` 交互原型改写的微信小程序演示版，覆盖健身房约课、训练打卡、目标成长、AI 体态演示，以及教练排课 / 课后记录 / 学员管理。
 
+生产准备请先读 [架构审计与改造计划](docs/PRODUCTION-AUDIT.md)、[Ubuntu 部署/迁移/备份恢复手册](docs/DEPLOYMENT.md) 和 [验收记录](docs/PRODUCTION-VERIFICATION.md)。当前 PostgreSQL 实现为事务兼容层，未验收的 AI/媒体/语音/支付在生产关闭；不能把演示环境直接作为正式上线版本。
+
 ## 快速开始
 
 ### 1. 启动统一业务 API（必做）
 
 ```bash
 cd server
-npm install
+npm ci
 npm start
 # http://127.0.0.1:8787/api/v1
 npm test   # AC03–09 / AC10–25 / AC26–32 / AC40 等
@@ -18,10 +20,12 @@ npm test   # AC03–09 / AC10–25 / AC26–32 / AC40 等
 
 ### 2. 打开小程序
 
+在仓库根目录先执行 `node scripts/build-miniprogram-config.js`，生成公开环境地址配置；真机地址及 release HTTPS 域名通过环境变量设置，见部署手册。需要 Node.js 22 或以上版本。
+
 1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
 2. 导入本仓库根目录（含 `project.config.json`）
 3. **详情 → 本地设置 → 勾选「不校验合法域名」**
-4. `miniprogram/config.js` 中 `API_BASE_URL` 默认指向本机 `8787`
+4. `miniprogram/config.js` 根据小程序 develop/trial/release 环境选择生成的 API 地址；release 不会回退到 localhost
 
 业务数据在服务端；本地仅缓存登录会话与编辑草稿。
 

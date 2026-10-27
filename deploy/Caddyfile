@@ -1,0 +1,21 @@
+{
+  email {$ACME_EMAIL}
+  admin off
+}
+https://{$API_DOMAIN} {
+  encode gzip
+  header {
+    Strict-Transport-Security "max-age=31536000"
+    X-Content-Type-Options nosniff
+    Referrer-Policy no-referrer
+    -Server
+  }
+  @admin path_regexp admin (?i)^/(ops(?:/|$)|api/v1/admin(?:/|$))
+  respond @admin 403
+  request_body {
+    max_size 128KB
+  }
+  # Application logs contain only request ID, method, status and elapsed time.
+  # No access log here: raw URIs include invitation codes; custom admin headers are sensitive.
+  reverse_proxy api:8787
+}

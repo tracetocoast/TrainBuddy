@@ -75,6 +75,7 @@ function loginWithWeChat(app) {
 }
 
 function logout(app) {
+  const revoke = app.globalData.session ? authApi.logout().catch(() => {}) : Promise.resolve()
   const userId = app.globalData.session && app.globalData.session.user
     ? app.globalData.session.user.userId
     : null
@@ -84,6 +85,7 @@ function logout(app) {
   app.globalData.role = 'student'
   app.globalData.activeSubjectId = null
   app.persist()
+  return revoke
 }
 
 function switchDisplayRole(app, role) {

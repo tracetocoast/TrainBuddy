@@ -9,6 +9,10 @@ function bodyHash(body) {
     .update(JSON.stringify(body || {}))
     .digest('hex')
 }
+function authorizationStamp(req) {
+  const state = req.app.locals.store.state, actor = req.actor
+  return bodyHash({ roles: actor && actor.grantedRoles, bindings: (state.bindings || []).filter(binding => actor && (binding.studentId === actor.userId || binding.coachUserId === actor.userId)) })
+}
 
 /**
  * 写操作幂等：Idempotency-Key
@@ -27,7 +31,7 @@ function idempotency() {
 
     const existing = store.state.idempotency[fullKey]
     if (existing) {
-      if (existing.expiresAt < time.nowMs()) {
+      if (existing.expiresAt < time.nowMs() || (req.app.locals.production && existing.authorizationStamp !== authorizationStamp(req))) {
         delete store.state.idempotency[fullKey]
       } else if (existing.bodyHash !== hash) {
         return next(
@@ -49,7 +53,8 @@ function idempotency() {
           bodyHash: req.idempotencyBodyHash,
           status: res.statusCode || 200,
           response: payload,
-          expiresAt: time.nowMs() + config.idempotencyTtlMs
+          expiresAt: time.nowMs() + config.idempotencyTtlMs,
+          authorizationStamp: authorizationStamp(req)
         }
         store.persist()
       }

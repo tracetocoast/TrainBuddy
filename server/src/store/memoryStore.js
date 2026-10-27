@@ -70,12 +70,13 @@ class MemoryStore {
         const raw = fs.readFileSync(this.filePath, 'utf8')
         this.state = Object.assign(emptyState(), JSON.parse(raw))
       }
-    } catch (e) {
-      this.state = emptyState()
+    } catch (_) {
+      throw new Error('STORE_READ_FAILED: refusing to replace an unreadable store')
     }
   }
 
   persist() {
+    if (this._inTransaction) return
     const dir = path.dirname(this.filePath)
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
     const tmp = this.filePath + '.tmp'
@@ -86,9 +87,17 @@ class MemoryStore {
   /** 串行事务：同一时刻只有一个写路径 */
   async tx(fn) {
     const run = this._queue.then(async () => {
-      const result = await fn(this.state)
-      this.persist()
-      return result
+      const before = JSON.parse(JSON.stringify(this.state))
+      this._inTransaction = true
+      try {
+        const result = await fn(this.state)
+        this._inTransaction = false
+        this.persist()
+        return result
+      } catch (err) {
+        this.state = before
+        throw err
+      } finally { this._inTransaction = false }
     })
     this._queue = run.catch(() => {})
     return run

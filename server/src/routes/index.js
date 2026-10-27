@@ -40,12 +40,24 @@ function buildRouter() {
     try {
       const store = req.app.locals.store
       const data = await store.tx((state) =>
-        authService.wechatSession(state, req.body || {})
+        req.app.locals.production
+          ? require('../services/wechatLogin').login(state, req.wechatIdentity)
+          : authService.wechatSession(state, req.body || {})
       )
       ok(res, data)
     } catch (e) {
       next(e)
     }
+  })
+
+  r.post('/auth/logout', authRequired, async (req, res, next) => {
+    try {
+      await req.app.locals.store.tx(state => {
+        delete state.sessions[authService.tokenHash(req.actor.token)]
+        delete state.sessions[req.actor.token]
+      })
+      ok(res, { revoked: true })
+    } catch (err) { next(err) }
   })
 
   r.post('/auth/apply-coach', authRequired, async (req, res, next) => {
@@ -207,7 +219,10 @@ function buildRouter() {
 
   r.get('/media/cleanup-tasks/:id', authRequired, (req, res, next) => {
     try {
-      ok(res, mediaService.getCleanupTask(req.app.locals.store.state, req.params.id))
+      const task = mediaService.getCleanupTask(req.app.locals.store.state, req.params.id)
+      const asset = mediaService.getAsset(req.app.locals.store.state, task.media_id)
+      if (asset.ownerId !== req.actor.userId && !hasRole(req.actor, 'ops')) throw new AppError('FORBIDDEN', '无权查询该清理任务')
+      ok(res, task)
     } catch (e) {
       next(e)
     }
@@ -469,6 +484,7 @@ function buildRouter() {
 
   r.post('/coaches/:id/exceptions', authRequired, async (req, res, next) => {
     try {
+      if (!hasRole(req.actor, 'coach') || !req.actor.coachProfile || req.actor.coachProfile.coachId !== req.params.id) throw new AppError('FORBIDDEN', '仅本人教练可修改例外排班')
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
         const out = await unwrap(
@@ -561,6 +577,11 @@ function buildRouter() {
           filter.studentId = req.actor.userId
         }
       }
+      const ownCoach = hasRole(req.actor, 'coach') && req.actor.coachProfile && filter.coachId === req.actor.coachProfile.coachId
+      if (!ownCoach) {
+        if (filter.studentId && filter.studentId !== req.actor.userId) throw new AppError('FORBIDDEN', '无权读取其他学员预约')
+        filter.studentId = req.actor.userId
+      }
       const out = await unwrap(bookingService.listBookings(app, filter))
       ok(res, out.data)
     } catch (e) {
@@ -572,13 +593,14 @@ function buildRouter() {
     try {
       const app = asApp(req.app.locals.store)
       const out = await unwrap(bookingService.getBooking(app, req.params.id))
+      assertBookingParty(req, out.data)
       ok(res, out.data)
     } catch (e) {
       next(e)
     }
   })
 
-  r.post('/bookings/:id/accept', authRequired, idempotency(), async (req, res, next) => {
+  r.post('/bookings/:id/accept', authRequired, requireRole('coach'), idempotency(), async (req, res, next) => {
     try {
       const data = await decideBookingRoute(req, 'accept')
       ok(res, data)
@@ -587,7 +609,7 @@ function buildRouter() {
     }
   })
 
-  r.post('/bookings/:id/reject', authRequired, idempotency(), async (req, res, next) => {
+  r.post('/bookings/:id/reject', authRequired, requireRole('coach'), idempotency(), async (req, res, next) => {
     try {
       const data = await decideBookingRoute(req, 'reject')
       ok(res, data)
@@ -639,6 +661,7 @@ function buildRouter() {
   r.post(
     '/booking-changes/:id/decision',
     authRequired,
+    requireRole('coach'),
     idempotency(),
     async (req, res, next) => {
       try {
@@ -661,7 +684,7 @@ function buildRouter() {
     }
   )
 
-  r.get('/booking-changes/pending', authRequired, async (req, res, next) => {
+  r.get('/booking-changes/pending', authRequired, requireRole('coach'), async (req, res, next) => {
     try {
       const app = asApp(req.app.locals.store)
       const coachId = req.actor.coachProfile && req.actor.coachProfile.coachId
@@ -672,7 +695,7 @@ function buildRouter() {
     }
   })
 
-  r.post('/bookings/:id/attendance', authRequired, idempotency(), async (req, res, next) => {
+  r.post('/bookings/:id/attendance', authRequired, requireRole('coach'), idempotency(), async (req, res, next) => {
     try {
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
@@ -701,7 +724,12 @@ function buildRouter() {
       const sessions = await unwrap(
         trainingService.listSessions(app, { studentId, status: ['completed'] })
       )
-      ok(res, { sessions: sessions.data || [] })
+      const visible = (sessions.data || []).filter(session => session.source_type !== 'coach_post_session' || session.shared_at || session.coach_id === req.actor.userId).map(session => {
+        const row = Object.assign({}, session)
+        if (row.coach_id !== req.actor.userId) { delete row.private_note; delete row.privateNote }
+        return row
+      })
+      ok(res, { sessions: visible })
     } catch (e) {
       next(e)
     }
@@ -713,6 +741,8 @@ function buildRouter() {
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
         if (req.body.source_type === 'coach_post_session' || req.body.coachDraft) {
+          if (!hasRole(req.actor, 'coach')) throw new AppError('FORBIDDEN', '仅教练可创建课后训练表')
+          assertCoachReadStudent(req.app.locals.store.state, req.actor.userId, req.body.student_id)
           const out = await unwrap(
             trainingService.createCoachDraftSession(app, {
               studentId: req.body.student_id,
@@ -772,6 +802,7 @@ function buildRouter() {
       const s = out.data
       const isOwnerStudent = s.student_id === req.actor.userId
       const isOwnerCoach = s.coach_id === req.actor.userId
+      if (isOwnerCoach && !isOwnerStudent) assertCoachReadStudent(req.app.locals.store.state, req.actor.userId, s.student_id)
       if (!isOwnerStudent && !isOwnerCoach) {
         assertCoachReadStudent(req.app.locals.store.state, req.actor.userId, s.student_id)
         if (!s.shared_at && s.status !== 'completed') {
@@ -942,8 +973,10 @@ function buildRouter() {
     }
   })
 
-  r.get('/sessions/:id/voice-tasks', authRequired, (req, res, next) => {
+  r.get('/sessions/:id/voice-tasks', authRequired, async (req, res, next) => {
     try {
+      const session = await unwrap(trainingService.getSession(asApp(req.app.locals.store), req.params.id))
+      assertSessionEditor(req, session.data)
       ok(res, voiceTaskService.listTasks(req.app.locals.store.state, req.params.id))
     } catch (e) {
       next(e)
@@ -953,6 +986,10 @@ function buildRouter() {
   r.get('/sessions/:id/voice-tasks/:taskId', authRequired, async (req, res, next) => {
     try {
       const app = asApp(req.app.locals.store)
+      const session = await unwrap(trainingService.getSession(app, req.params.id))
+      assertSessionEditor(req, session.data)
+      const task = req.app.locals.store.state.voice.tasks.find(row => row.id === req.params.taskId && row.sessionId === req.params.id)
+      if (!task) throw new AppError('NOT_FOUND', '语音任务不存在')
       const data = await voiceTaskService.getTask(
         req.app.locals.store.state,
         app,
@@ -1673,6 +1710,7 @@ async function decideBookingRoute(req, action) {
   return req.app.locals.store.tx(async () => {
     const app = asApp(req.app.locals.store)
     const coachId = req.actor.coachProfile && req.actor.coachProfile.coachId
+    if (!hasRole(req.actor, 'coach') || !coachId) throw new AppError('FORBIDDEN', '仅教练可处理预约')
     const out = await unwrap(
       bookingService.decideBooking(app, req.params.id, {
         action,
@@ -1692,9 +1730,21 @@ function assertSelfOrCoach(req, studentId) {
 }
 
 function assertSessionEditor(req, session) {
-  if (session.student_id === req.actor.userId) return
-  if (session.coach_id === req.actor.userId) return
+  if (session.student_id === req.actor.userId) {
+    if (session.source_type === 'coach_post_session' && !session.shared_at) throw new AppError('FORBIDDEN', '教练草稿尚未同步')
+    return
+  }
+  if (session.coach_id === req.actor.userId && hasRole(req.actor, 'coach')) {
+    assertCoachReadStudent(req.app.locals.store.state, req.actor.userId, session.student_id)
+    return
+  }
   throw new AppError('FORBIDDEN', '无权编辑该训练')
+}
+
+function assertBookingParty(req, booking) {
+  if (booking.student_id === req.actor.userId) return
+  if (hasRole(req.actor, 'coach') && req.actor.coachProfile && booking.coach_id === req.actor.coachProfile.coachId) return
+  throw new AppError('FORBIDDEN', '无权读取该预约')
 }
 
 module.exports = { buildRouter }

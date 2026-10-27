@@ -2,6 +2,7 @@ const { MemoryStore } = require('./store/memoryStore')
 const { seed } = require('./seed')
 const config = require('./config')
 
+if (process.env.NODE_ENV === 'production' || !process.argv.includes('--reset-demo')) throw new Error('Reset requires non-production and explicit --reset-demo; this command deletes demo data')
 const store = new MemoryStore(config.storeFile)
 store.reset()
 seed(store)

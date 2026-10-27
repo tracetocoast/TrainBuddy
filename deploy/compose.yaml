@@ -1,0 +1,111 @@
+name: trainbuddy
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: trainbuddy
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD}
+      MIGRATOR_DB_PASSWORD: ${MIGRATOR_DB_PASSWORD:?set MIGRATOR_DB_PASSWORD}
+      BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:?set BACKUP_DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/10-trainbuddy.sh:ro
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d trainbuddy']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: &logging
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+  migrate:
+    build: { context: '..', dockerfile: server/Dockerfile }
+    image: trainbuddy-api:local
+    restart: 'no'
+    command: [node, scripts/database.js, migrate]
+    environment:
+      DATABASE_URL: postgresql://trainbuddy_migrator:${MIGRATOR_DB_PASSWORD:?set MIGRATOR_DB_PASSWORD}@db:5432/trainbuddy
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [database]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ['no-new-privileges:true']
+    logging: *logging
+  api:
+    image: trainbuddy-api:local
+    build: { context: '..', dockerfile: server/Dockerfile }
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      STORE_DRIVER: postgres
+      PORT: '8787'
+      DATABASE_URL: postgresql://trainbuddy_app:${APP_DB_PASSWORD:?set APP_DB_PASSWORD}@db:5432/trainbuddy
+      WECHAT_APP_ID: ${WECHAT_APP_ID:?set WECHAT_APP_ID}
+      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:?set WECHAT_APP_SECRET}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:?set ADMIN_API_KEY}
+      PRODUCTION_COMPAT_STORE_ACK: ${PRODUCTION_COMPAT_STORE_ACK:?review compatibility store limitations}
+      AI_PROVIDER: unavailable
+      VOICE_ASR_PROVIDER: unavailable
+      PAYMENT_ENABLED: 'false'
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    networks: [database, edge]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    stop_grace_period: 35s
+    logging: *logging
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api: { condition: service_healthy }
+    networks: [edge]
+    security_opt: ['no-new-privileges:true']
+    logging: *logging
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    entrypoint: [sh, /scripts/backup-loop.sh]
+    environment:
+      PGHOST: db
+      PGDATABASE: trainbuddy
+      PGUSER: trainbuddy_backup
+      PGPASSWORD: ${BACKUP_DB_PASSWORD:?set BACKUP_DB_PASSWORD}
+      BACKUP_INTERVAL_SECONDS: '86400'
+      BACKUP_RETENTION_DAYS: '30'
+    volumes:
+      - ./backup-loop.sh:/scripts/backup-loop.sh:ro
+      - ./backup-once.sh:/scripts/backup-once.sh:ro
+      - ./backups:/backups
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, 'test -f /backups/last-success && test -z "$$(find /backups/last-success -mmin +1560 -print)"']
+      interval: 5m
+      timeout: 5s
+      retries: 1
+      start_period: 10m
+    logging: *logging
+networks:
+  database: { internal: true }
+  edge: {}
+volumes:
+  pgdata: {}
+  caddy_data: {}
+  caddy_config: {}

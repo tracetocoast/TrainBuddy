@@ -20,3 +20,17 @@ server/data/*.json
 # 大模型密钥（仅本地）
 server/.env
 .env
+.env.*
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+deploy/backups/
+deploy/secrets/
+*.dump
+*.dump.*
+*.pem
+*.key
+*.p12
+*.pfx
+miniprogram/config.generated.js
+migration-input/

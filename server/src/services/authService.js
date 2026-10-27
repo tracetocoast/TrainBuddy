@@ -1,4 +1,5 @@
 const config = require('../config')
+const crypto = require('crypto')
 const time = require('../lib/time')
 const { makeId } = require('../lib/ids')
 const { AppError } = require('../lib/errors')
@@ -13,14 +14,16 @@ const ACCOUNT_MAP = {
 }
 
 function createSession(state, userId) {
-  const token = 'sess_' + makeId('tok')
-  state.sessions[token] = {
+  const token = crypto.randomBytes(32).toString('base64url')
+  state.sessions[tokenHash(token)] = {
     userId,
     createdAt: time.nowMs(),
     expiresAt: time.nowMs() + config.sessionTtlMs
   }
   return token
 }
+
+function tokenHash(token) { return crypto.createHash('sha256').update(String(token)).digest('hex') }
 
 function rolesOf(state, userId) {
   return state.userRoles
@@ -39,6 +42,7 @@ function presentUser(state, user) {
 
 /** API01 mock：用 accountKey 代替微信 code；正式环境换真微信 */
 function wechatSession(state, { code, accountKey, claimRole }) {
+  if (process.env.NODE_ENV === 'production') throw new AppError('FORBIDDEN', '演示登录在生产环境不可用')
   // 正式：用 code 换 openid。此处演示账号映射。
   const key = accountKey || code || 'student_only'
   const userId = ACCOUNT_MAP[key]
@@ -108,5 +112,6 @@ module.exports = {
   applyCoachRole,
   rolesOf,
   presentUser,
-  createSession
+  createSession,
+  tokenHash
 }

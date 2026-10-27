@@ -6,7 +6,7 @@ module.exports = {
   dataDir: path.join(__dirname, '..', 'data'),
   storeFile: path.join(__dirname, '..', 'data', 'store.json'),
   /** mock 会话 token 前缀；正式环境换微信 code 换 session */
-  sessionTtlMs: 7 * 24 * 3600 * 1000,
+  sessionTtlMs: process.env.NODE_ENV === 'production' ? 12 * 3600 * 1000 : 7 * 24 * 3600 * 1000,
   idempotencyTtlMs: 24 * 3600 * 1000,
   /**
    * AI 供应商：unavailable（默认，真实任务不得伪造成功）| mock（本地/演示）
