@@ -1,4 +1,5 @@
-<view class="page">
+<view class="page interaction-scope {{reduced ? 'ix-reduced' : ''}}">
+  <view class="ix-preference"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" bindchange="onMotion" color="#214beb"/></view>
   <view class="top">
     <view class="brand">
       <brand-logo class="brand-emblem-slot" />练搭子
@@ -12,7 +13,7 @@
   <block wx:if="{{role === 'student'}}">
     <view class="eyebrow">FIND YOUR SESSION</view>
     <view class="title">约一节好课</view>
-    <view class="sub" wx:if="{{coachName}}">教练 · {{coachName}} · 确认后才会占用时段</view>
+    <view class="sub" wx:if="{{coachName}}">教练 · {{coachName}} · 提交请求后等待教练确认</view>
     <view class="sub" wx:else>请先绑定教练后再预约</view>
 
     <view class="card flex" wx:if="{{!hasBinding}}">
@@ -38,6 +39,15 @@
           bindtap="onPickDate"
         >{{item.weekday}}<text class="date-day">{{item.day}}</text></button>
       </scroll-view>
+      <training-picker mode="date" label="查找日期" value="{{selectedDate}}" start="{{dateList[0].dateKey}}" end="{{dateList[dateList.length - 1].dateKey}}" disabled="{{submitting || actionState === 'error'}}" bindchange="onPickDate"/>
+      <view class="card sub" wx:if="{{slotsLoading}}">正在更新当日时段…</view>
+      <view class="ix-error" wx:if="{{slotsError}}">{{slotsError}}<button class="secondary" bindtap="refresh">重试加载</button></view>
+      <training-picker label="可约时间" value="{{timeIndex}}" options="{{timeOptions}}" disabled="{{submitting || slotsLoading || !timeOptions.length || actionState === 'error'}}" placeholder="当日暂无可约时间" bindchange="onTimePick"/>
+      <view class="booking-submit">
+        <view class="sub" wx:if="{{selectedSlot}}">{{selectedDate}} · {{selectedSlot.startLabel}} · {{selectedSlot.courseName}}</view>
+        <booking-action-button state="{{actionState}}" error="{{bookingError}}" reduced="{{reduced}}" disabled="{{!selectedSlot || slotsLoading || !!slotsError}}" bindactivate="onBookSelected"/>
+        <button class="secondary" wx:if="{{actionState === 'error'}}" bindtap="onResetBooking">重新加载时段与我的预约</button>
+      </view>
 
       <view class="head">
         <view class="head-title">可选时段</view>
@@ -56,14 +66,14 @@
         <view class="head" style="margin:20rpx 0 0">
           <text class="sub">需教练确认 · 未确认前可撤回</text>
           <button
-            class="{{item.status === 'open' ? 'primary' : 'secondary'}}"
-            disabled="{{item.status !== 'open' || submitting}}"
+            class="secondary"
+            disabled="{{!item.available || submitting || actionState === 'error'}}"
             data-start="{{item.startAt}}"
             data-course="{{item.courseTypeId}}"
             data-name="{{item.courseName}}"
             data-label="{{item.startLabel}}"
-            bindtap="onRequestBook"
-          >预约</button>
+            bindtap="onSelectSlot"
+          >{{selectedSlot.startAt === item.startAt && selectedSlot.courseTypeId === item.courseTypeId ? '已选' : item.available ? '选择' : '不可预约'}}</button>
         </view>
       </view>
       <view class="card sub" wx:if="{{!daySlots.length}}">该日暂无可约时段</view>
@@ -94,6 +104,7 @@
 
   <!-- ========== 教练排课 ========== -->
   <block wx:elif="{{role === 'coach'}}">
+    <view class="ix-error" wx:if="{{slotsError}}">{{slotsError}}<button class="secondary" bindtap="refresh">重试加载</button></view>
     <view class="eyebrow">STUDIO SCHEDULE</view>
     <view class="title">我的排课</view>
     <view class="sub">查看课程安排，处理学员预约。</view>

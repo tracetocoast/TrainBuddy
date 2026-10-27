@@ -1,0 +1,23 @@
+/* Interaction System 2.0: scoped to training/booking, not a global brand replacement. */
+.interaction-scope {
+  --ix-ink: #17202b; --ix-muted: #526071; --ix-surface: #ffffff;
+  --ix-line: #dce2e8; --ix-accent: #214beb; --ix-soft: #edf1ff;
+  --ix-error: #b42332; --ix-fast: 100ms; --ix-state: 200ms; --ix-panel: 280ms;
+}
+.ix-preference { display:flex; justify-content:flex-end; align-items:center; gap:12rpx; color:#526071; font-size:24rpx; margin:16rpx 0; }
+.ix-error { color:#b42332; background:#fff0f1; padding:20rpx; border-radius:12rpx; margin:16rpx 0; }
+.ix-focus { border-left:6rpx solid #214beb; }
+.ix-tools { display:flex; flex-wrap:wrap; gap:12rpx; margin:16rpx 0; }
+.ix-tools button { margin:0; min-height:88rpx; }
+.interaction-scope .primary { background:var(--ix-accent);color:#fff;border-radius:16rpx;min-height:44px; }
+.interaction-scope .secondary { background:#fff;color:var(--ix-ink);border:1rpx solid var(--ix-line);border-radius:12rpx;min-height:44px; }
+.interaction-scope .aset { background:#f3f5f8; }
+.ix-mask { position:fixed; inset:0; background:rgba(17,19,24,.44); z-index:100; }
+.ix-sheet { position:fixed; left:0; right:0; bottom:0; z-index:101; background:#fff; color:#17202b; border-radius:32rpx 32rpx 0 0; padding:28rpx 28rpx calc(28rpx + env(safe-area-inset-bottom)); max-height:82vh; animation:ix-enter 280ms ease-out; }
+.ix-sheet-scroll { max-height:60vh; }
+.ix-sheet .head { margin-top:0; }
+.ix-reduced .ix-sheet { animation:none; }
+@keyframes ix-enter { from { transform:translateY(32rpx); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.ix-sort-row { background:#fff; border-bottom:1rpx solid #dce2e8; padding:20rpx 0; }
+.ix-dragging { opacity:.65; background:#edf1ff; }
+.ix-handle { min-height:88rpx; display:flex; align-items:center; color:#526071; border:1rpx dashed #b4becb; padding:0 20rpx; border-radius:12rpx; }

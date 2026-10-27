@@ -1,3 +1,4 @@
+@import "../../styles/interaction.wxss";
 .dates {
   white-space: nowrap;
   margin: 26rpx 0;
@@ -62,3 +63,6 @@
   font-weight: 600;
   margin-top: 10rpx;
 }
+
+.booking-submit { background:#fff;padding:24rpx;border:1rpx solid #dce2e8;border-radius:16rpx;margin:20rpx 0; }
+.booking-submit .sub { margin-bottom:16rpx; }
