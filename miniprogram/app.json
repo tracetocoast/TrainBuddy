@@ -38,6 +38,9 @@
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
   "permission": {
+    "scope.camera": {
+      "desc": "用于拍摄饮食照片与本人照片，以便识别营养或生成目标预览"
+    },
     "scope.writePhotosAlbum": {
       "desc": "用于将目标预览图保存到你的手机相册"
     }

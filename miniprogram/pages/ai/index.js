@@ -132,9 +132,40 @@ Page({
     })
   },
 
-  onFoodCamera() { wx.navigateTo({url:'/pages/food-photo/index?source=camera'}) },
+  onFoodCamera() {
+    this.openFoodPhoto('camera')
+  },
 
-  onFoodAlbum() { wx.navigateTo({url:'/pages/food-photo/index?source=album'}) },
+  onFoodAlbum() {
+    this.openFoodPhoto('album')
+  },
+
+  /** 真机要求 chooseMedia 在用户点击手势内同步调用，不能跳转后再 onShow 唤起 */
+  openFoodPhoto(source) {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: [source],
+      success: (result) => {
+        const file = result.tempFiles && result.tempFiles[0]
+        if (!file || !file.tempFilePath) {
+          getApp().toast('未能获取照片，请重试')
+          return
+        }
+        getApp().globalData.pendingFoodPhoto = {
+          path: file.tempFilePath,
+          size: file.size || 100000,
+          source
+        }
+        wx.navigateTo({ url: '/pages/food-photo/index' })
+      },
+      fail: (err) => {
+        if (!/cancel/i.test((err && err.errMsg) || '')) {
+          getApp().toast('未能打开相机或相册，请检查权限后重试')
+        }
+      }
+    })
+  },
 
   async onPickFront() {
     await this.pickView('front')
