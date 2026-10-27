@@ -35,11 +35,19 @@ function buildRouter() {
   const r = express.Router()
   r.use('/friends', require('./friends').buildFriendsRouter())
 
-  // ---------- API01 auth（可无 mock accountKey）----------
+  // ---------- API01 auth（accountKey=演示；code=真微信）----------
+  r.get('/auth/wechat-status', (req, res) => {
+    const wechatAuth = require('../services/wechatAuth')
+    ok(res, {
+      configured: wechatAuth.isConfigured(),
+      appid_set: !!(process.env.WECHAT_APPID && String(process.env.WECHAT_APPID).trim())
+    })
+  })
+
   r.post('/auth/wechat-session', async (req, res, next) => {
     try {
       const store = req.app.locals.store
-      const data = await store.tx((state) =>
+      const data = await store.tx(async (state) =>
         authService.wechatSession(state, req.body || {})
       )
       ok(res, data)
