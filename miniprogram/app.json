@@ -28,10 +28,10 @@
     "pages/food-photo/index"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#fafbf7",
+    "navigationBarBackgroundColor": "#f3f5f7",
     "navigationBarTitleText": "练搭子",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#fafbf7",
+    "backgroundColor": "#f3f5f7",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

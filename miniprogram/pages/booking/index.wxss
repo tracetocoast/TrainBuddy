@@ -1,3 +1,4 @@
+@import "../../styles/interaction.wxss";
 .dates {
   white-space: nowrap;
   margin: 26rpx 0;
@@ -14,8 +15,8 @@
   gap: 8rpx;
   margin: 20rpx 0;
   padding: 8rpx;
-  background: #f1f4ee;
-  border-radius: 28rpx;
+  background: var(--surface-raised);
+  border-radius: 20rpx;
 }
 
 .seg-btn {
@@ -26,13 +27,13 @@
   border-radius: 999rpx;
   font-size: 22rpx;
   font-weight: 600;
-  color: #6e7c72;
+  color: var(--muted);
   line-height: 1.2;
 }
 
 .seg-btn.on {
   background: var(--surface);
-  color: #25352c;
+  color: var(--ink);
 }
 
 .week-grid {
@@ -44,7 +45,7 @@
 .week-col {
   flex: 1;
   background: var(--surface);
-  border: 2rpx solid #e0e7dc;
+  border: 2rpx solid var(--line);
   border-radius: 24rpx;
   padding: 16rpx 4rpx;
   text-align: center;
@@ -52,7 +53,7 @@
 
 .week-hd {
   font-size: 18rpx;
-  color: #6e7c72;
+  color: var(--muted);
   white-space: pre-line;
   line-height: 1.3;
 }
@@ -62,3 +63,6 @@
   font-weight: 600;
   margin-top: 10rpx;
 }
+
+.booking-submit { background:#fff;padding:24rpx;border:1rpx solid #dce2e8;border-radius:16rpx;margin:20rpx 0; }
+.booking-submit .sub { margin-bottom:16rpx; }

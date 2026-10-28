@@ -8,8 +8,8 @@
 
   <role-switcher />
 
-  <view class="eyebrow">POST-SESSION · C04 · 7.3</view>
-  <view class="title">记录这一次进步</view>
+  <view class="eyebrow">POST-SESSION</view>
+  <view class="title">课后训练记录</view>
   <view class="sub">点击添加动作，也可以用语音或文字录入。确认后同步给学员。</view>
 
   <view class="head">
@@ -45,11 +45,13 @@
         wx:key="id"
         data-id="{{item.id}}"
         bindtap="onAddLib"
-        disabled="{{session.status === 'completed'}}"
+        disabled="{{session.status === 'completed' || syncing}}"
       >＋ {{item.name}}</button>
     </view>
 
+    <view class="record-entry-tabs"><button class="{{entryMode === 'voice' ? 'on' : ''}}" data-mode="voice" bindtap="onEntryMode" disabled="{{recording || voiceBusy || syncing}}">语音录入</button><button class="{{entryMode === 'text' ? 'on' : ''}}" data-mode="text" bindtap="onEntryMode" disabled="{{recording || voiceBusy || syncing}}">文字录入</button></view>
     <!-- 语音录入 -->
+    <block wx:if="{{entryMode === 'voice'}}">
     <view class="head">
       <view class="head-title">语音录入</view>
       <text class="sub">最长 60 秒 · {{recording ? remainSec + 's' : '可分段'}}</text>
@@ -61,7 +63,7 @@
         bindtouchstart="onRecStart"
         bindtouchend="onRecEnd"
         bindtouchcancel="onRecEnd"
-        disabled="{{session.status === 'completed' || voiceBusy}}"
+        disabled="{{session.status === 'completed' || voiceBusy || syncing}}"
       >{{recording ? '松开结束…' : (voiceBusy ? '识别中…' : '按住录音')}}</button>
     </view>
     <view class="card hidden" wx:else>
@@ -70,7 +72,9 @@
       <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onRequestMic">重试授权</button>
     </view>
 
-    <!-- 文字路径（始终可用） -->
+    </block>
+    <!-- 文字输入保留原始草稿，切换不会清空。 -->
+    <block wx:if="{{entryMode === 'text'}}">
     <view class="head">
       <view class="head-title">文字录入</view>
       <text class="sub">缺字段不自动补全</text>
@@ -82,9 +86,10 @@
       maxlength="-1"
       auto-height
       bindinput="onTextInput"
-      disabled="{{session.status === 'completed'}}"
+      disabled="{{session.status === 'completed' || syncing}}"
     />
-    <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onParseText" disabled="{{session.status === 'completed' || voiceBusy}}">解析为候选</button>
+    <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onParseText" disabled="{{session.status === 'completed' || voiceBusy || syncing}}">解析为候选</button>
+    </block>
 
     <!-- 任务状态 -->
     <view class="card" wx:if="{{voiceTask}}">
@@ -145,7 +150,7 @@
     <!-- 逐组编辑 -->
     <view class="exercise" wx:for="{{session.exercises}}" wx:key="id">
       <view class="flex">
-        <view class="ico">{{item.icon}}</view>
+        <view class="ico"><brand-logo size="48"/></view>
         <view class="grow">
           <view class="card-title">{{item.name}}</view>
           <view class="sub">{{item.sets.length}} 组独立记录</view>
@@ -155,22 +160,21 @@
       <view class="aset" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
         <view class="aset-line">
           <text class="aset-no">#{{set.setNo}}</text>
-          <input class="mini-field" type="digit" value="{{set.actualWeight}}" data-sid="{{set.id}}" data-field="actualWeight" bindblur="onSetField" disabled="{{session.status === 'completed'}}" />
-          <text class="sub">kg</text>
-          <input class="mini-field" type="number" value="{{set.actualReps}}" data-sid="{{set.id}}" data-field="actualReps" bindblur="onSetField" disabled="{{session.status === 'completed'}}" />
-          <text class="sub">次</text>
-          <button class="primary {{set.state === 'done' ? 'done' : ''}}" data-sid="{{set.id}}" bindtap="onMarkDone" disabled="{{session.status === 'completed'}}">{{set.state === 'done' ? '✓' : '完成'}}</button>
+          <view class="record-number"><text>重量 kg</text><input class="mini-field" type="digit" value="{{set.actualWeight}}" data-sid="{{set.id}}" data-field="actualWeight" bindblur="onSetField" disabled="{{session.status === 'completed' || syncing}}" /></view>
+          <view class="record-number"><text>次数</text><input class="mini-field" type="number" value="{{set.actualReps}}" data-sid="{{set.id}}" data-field="actualReps" bindblur="onSetField" disabled="{{session.status === 'completed' || syncing}}" /></view>
+          <button class="primary {{set.state === 'done' ? 'done' : ''}}" data-sid="{{set.id}}" bindtap="onMarkDone" disabled="{{session.status === 'completed' || syncing}}">{{set.state === 'done' ? '✓' : '完成'}}</button>
         </view>
       </view>
     </view>
     <view class="card sub" wx:if="{{!session.exercises.length}}">请添加动作、录音或文字解析后再同步。</view>
 
     <view class="head"><view class="head-title">动作问题与课后建议</view></view>
-    <textarea class="field" value="{{publicNote}}" placeholder="例如：卧推时肩胛不够稳定，下次降低重量，先练习肩胛收紧。确认同步后学员可见。" bindinput="onPublicNote" disabled="{{session.status === 'completed'}}" />
+    <textarea class="field" value="{{publicNote}}" placeholder="例如：卧推时肩胛不够稳定，下次降低重量，先练习肩胛收紧。确认同步后学员可见。" bindinput="onPublicNote" disabled="{{session.status === 'completed' || syncing}}" />
 
     <view class="head"><view class="head-title">私人备注</view></view>
-    <textarea class="field" value="{{privateNote}}" placeholder="不同步给学员…" bindinput="onPrivateNote" disabled="{{session.status === 'completed'}}" />
+    <textarea class="field" value="{{privateNote}}" placeholder="不同步给学员…" bindinput="onPrivateNote" disabled="{{session.status === 'completed' || syncing}}" />
 
+    <view class="ui-state ui-state-error" wx:if="{{syncError}}">{{syncError}}</view>
     <button
       class="primary"
       style="width:100%;margin-top:28rpx"

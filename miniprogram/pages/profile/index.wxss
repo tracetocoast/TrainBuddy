@@ -18,8 +18,8 @@
 .invite-box {
   margin-top: 20rpx;
   padding: 20rpx;
-  background: #f1f4ee;
-  border-radius: 28rpx;
+  background: var(--surface-raised);
+  border-radius: 20rpx;
   text-align: center;
 }
 

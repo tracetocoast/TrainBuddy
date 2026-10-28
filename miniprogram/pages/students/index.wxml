@@ -9,8 +9,10 @@
   <role-switcher />
 
   <view class="eyebrow">YOUR PEOPLE · COACH CRM</view>
-  <view class="title">了解每位学员，<br/>不只看训练数据。</view>
-  <view class="sub">仅展示有效绑定学员，无法搜索全平台。</view>
+  <view class="title">学员管理</view>
+  <view class="sub">查看训练执行、历史记录与下一轮计划。</view>
+  <view class="ui-state" wx:if="{{loading}}">正在同步学员…</view>
+  <view class="ui-state ui-state-error" wx:if="{{error}}">{{error}}<button class="link" bindtap="reload">重试加载</button></view>
 
   <input
     class="field"
@@ -34,10 +36,11 @@
     </view>
     <text class="tag">打开</text>
   </view>
-  <view class="card sub" wx:if="{{!filtered.length}}">暂无绑定学员。请生成邀请码让学员绑定。</view>
+  <view class="card sub" wx:if="{{!loading && !error && !filtered.length}}">暂无绑定学员。请生成邀请码让学员绑定。</view>
 
+  <view class="diagnostic-tools"><button class="link" bindtap="onToggleDiagnostics">开发诊断与演示 {{showDiagnostics ? '收起' : '展开'}}</button><block wx:if="{{showDiagnostics}}">
   <view class="head">
-    <view class="head-title">AC02 测例</view>
+    <view class="head-title">绑定权限检查</view>
     <text class="tag">未绑定不可见</text>
   </view>
   <input
@@ -61,6 +64,7 @@
     </view>
     <button class="link" bindtap="onContact">联系</button>
   </view>
+  </block></view>
 </view>
 
 <bottom-nav active="students" />

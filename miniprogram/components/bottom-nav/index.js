@@ -26,6 +26,7 @@ Component({
 
   data: {
     icons,
+    activeIcons: icons.active,
     items: NAV.student
   },
 
