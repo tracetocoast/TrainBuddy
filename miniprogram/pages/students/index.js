@@ -10,7 +10,7 @@ Page({
     all: [],
     filtered: [],
     probeId: '',
-    probeResult: ''
+    probeResult: '', showDiagnostics: false, loading: false, error: ''
   },
 
   onShow() {
@@ -21,7 +21,8 @@ Page({
 
   reload() {
     const app = getApp()
-    bindingApi.listBoundStudentsForCoachAsync(app).then((bound) => {
+    this.setData({ loading: true, error: '' })
+    return bindingApi.listBoundStudentsForCoachAsync(app).then((bound) => {
       const all = (bound || []).map((b) => ({
         name: b.name,
         studentId: b.studentId,
@@ -36,7 +37,8 @@ Page({
         keyword: '',
         probeResult: ''
       })
-    })
+    }).catch(err => this.setData({ error: err.message || '学员列表读取失败，请重试' }))
+      .then(() => this.setData({ loading: false }))
   },
 
   onSearch(e) {
@@ -48,6 +50,7 @@ Page({
     })
     this.setData({ keyword, filtered })
   },
+  onToggleDiagnostics() { this.setData({ showDiagnostics: !this.data.showDiagnostics }) },
 
   onOpenStudent(e) {
     const app = getApp()

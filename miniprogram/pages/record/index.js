@@ -28,7 +28,7 @@ Page({
     voiceTask: null,
     segments: [],
     segmentPatches: {},
-    mergeMode: 'append'
+    mergeMode: 'append', entryMode: 'voice', syncError: ''
   },
 
   recorder: null,
@@ -70,6 +70,10 @@ Page({
       })
       if (studentId) this.loadDraftSession(studentId, student)
     })
+  },
+  onEntryMode(e) {
+    const mode = e.currentTarget.dataset.mode
+    if (!this.data.syncing && !this.data.recording && !this.data.voiceBusy && ['voice','text'].includes(mode)) this.setData({ entryMode: mode })
   },
 
   initRecorder() {
@@ -228,6 +232,7 @@ Page({
   },
 
   onPickStudent(e) {
+    if (this.data.syncing) return
     const app = getApp()
     const studentId = e.currentTarget.dataset.id
     const name = e.currentTarget.dataset.name
@@ -284,6 +289,7 @@ Page({
   },
 
   onAddLib(e) {
+    if (this.data.syncing) return
     const app = getApp()
     trainingApi
       .addExercise(app, this.data.session.session_id, {
@@ -294,6 +300,7 @@ Page({
   },
 
   onRemoveEx(e) {
+    if (this.data.syncing) return
     trainingApi
       .removeExercise(getApp(), this.data.session.session_id, e.currentTarget.dataset.id)
       .then((res) => this.setData({ session: res.data }))
@@ -433,6 +440,7 @@ Page({
   },
 
   onSetField(e) {
+    if (this.data.syncing || this.data.session.status === 'completed') return
     const app = getApp()
     const setId = e.currentTarget.dataset.sid
     const field = e.currentTarget.dataset.field
@@ -448,6 +456,7 @@ Page({
   },
 
   onMarkDone(e) {
+    if (this.data.syncing || this.data.session.status === 'completed') return
     trainingApi
       .updateActualSet(getApp(), this.data.session.session_id, e.currentTarget.dataset.sid, {
         state: 'done'
@@ -456,11 +465,13 @@ Page({
   },
 
   onPublicNote(e) {
+    if (this.data.syncing) return
     this.setData({ publicNote: e.detail.value })
     this.saveNotes()
   },
 
   onPrivateNote(e) {
+    if (this.data.syncing) return
     this.setData({ privateNote: e.detail.value })
     this.saveNotes()
   },
@@ -477,34 +488,34 @@ Page({
   },
 
   onFinalize() {
-    if (this.data.syncing) return
+    if (this.data.syncing || this._finalizeModal) return
     const app = getApp()
     const session = this.data.session
     if (!session.exercises.length) {
       app.toast('请先添加训练动作')
       return
     }
+    this._finalizeModal = true
     wx.showModal({
       title: '确认并同步',
       content:
         '将生成正式版本并同步给学员（私人备注不同步）。同时按规则生成下次计划草稿，不会自动加 5kg。',
       confirmText: '确认同步',
       success: (res) => {
+        this._finalizeModal = false
         if (!res.confirm) return
-        this.setData({ syncing: true })
-        const marks = []
+        this.setData({ syncing: true, syncError: '' })
+        let marks = Promise.resolve()
         session.exercises.forEach((ex) => {
           ;(ex.sets || []).forEach((set) => {
             if (set.state === 'pending') {
-              marks.push(
-                trainingApi.updateActualSet(app, session.session_id, set.id, {
+              marks = marks.then(() => trainingApi.updateActualSet(app, session.session_id, set.id, {
                   state: 'done'
-                })
-              )
+                })).then(result => this.setData({ session: result.data }))
             }
           })
         })
-        Promise.all(marks)
+        marks
           .then(() =>
             trainingApi.finalizeSession(app, session.session_id, {
               completionKey: session.session_id + ':coach_sync',
@@ -540,10 +551,10 @@ Page({
             })
           })
           .catch((err) => {
-            this.setData({ syncing: false })
+            this.setData({ syncing: false, syncError: (err && err.message) || '同步失败，请重试' })
             app.toast((err && err.message) || '同步失败')
           })
-      }
+      }, fail: () => { this._finalizeModal = false }
     })
   },
 

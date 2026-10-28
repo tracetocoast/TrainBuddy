@@ -5,7 +5,7 @@ Page({
   data: {
     q: '',
     muscle: '',
-    list: [],
+    list: [], loading: false, error: '',
     filters: exerciseApi.filters()
   },
 
@@ -16,9 +16,13 @@ Page({
 
   reload() {
     const app = getApp()
-    exerciseApi
+    const sequence = this._sequence = (this._sequence || 0) + 1
+    this.setData({ loading: true, error: '' })
+    return exerciseApi
       .listExercises(app, { q: this.data.q, muscleGroup: this.data.muscle })
-      .then((res) => this.setData({ list: res.data || [] }))
+      .then((res) => { if (sequence === this._sequence) this.setData({ list: res.data || [] }) })
+      .catch(err => { if (sequence === this._sequence) this.setData({ error: err.message || '动作库加载失败，请重试' }) })
+      .then(() => { if (sequence === this._sequence) this.setData({ loading: false }) })
   },
 
   onSearch(e) {
