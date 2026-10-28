@@ -59,15 +59,27 @@
 
       <view id="set-{{set.id}}" class="aset {{activeSid === set.id ? 'ix-focus' : ''}}" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
         <view class="aset-main">
-          <text class="aset-no">第 {{set.setNo}} 组</text>
-          <text class="sub">目标 {{set.targetWeight != null ? set.targetWeight + 'kg' : '—'}} × {{set.targetReps || '—'}}</text>
-          <text class="sub"> · {{set.state === 'done' ? '✓ 已完成' : set.state === 'skipped' ? '已跳过' : '待完成'}}{{pending[set.id] ? ' · 本机待同步' : ''}}</text>
-          <button wx:if="{{activeSid !== set.id}}" class="secondary" data-sid="{{set.id}}" bindtap="onSelectSet" disabled="{{savingSet || finishing}}">{{set.actualWeight == null ? '—' : set.actualWeight}} kg × {{set.actualReps == null ? '—' : set.actualReps}} 次 · 编辑本组</button>
+          <view class="aset-head">
+            <view class="aset-head-text">
+              <text class="aset-no">第 {{set.setNo}} 组</text>
+              <text class="aset-meta">目标 {{set.targetWeight != null ? set.targetWeight + 'kg' : '—'}} × {{set.targetReps || '—'}} · {{set.state === 'done' ? '已完成' : set.state === 'skipped' ? '已跳过' : '待完成'}}{{pending[set.id] ? ' · 本机待同步' : ''}}</text>
+            </view>
+          </view>
+          <button
+            wx:if="{{activeSid !== set.id}}"
+            class="secondary aset-edit"
+            data-sid="{{set.id}}"
+            bindtap="onSelectSet"
+            disabled="{{savingSet || finishing}}"
+          >{{set.actualWeight == null ? '—' : set.actualWeight}} kg × {{set.actualReps == null ? '—' : set.actualReps}} 次 · 编辑本组</button>
           <view class="aset-inputs" wx:if="{{activeSid === set.id}}">
             <training-number-control reduced="{{reduced}}" label="实际重量" unit="kg" value="{{set.actualWeight}}" min="0" max="2000" step="2.5" ruler data-sid="{{set.id}}" data-field="actualWeight" bindinput="onSetField" disabled="{{savingSet || finishing}}"/>
             <training-number-control reduced="{{reduced}}" label="实际次数" unit="次" value="{{set.actualReps}}" min="1" max="1000" step="1" integer show-slider data-sid="{{set.id}}" data-field="actualReps" bindinput="onSetField" disabled="{{savingSet || finishing}}"/>
           </view>
-          <view class="ix-tools" wx:if="{{activeSid === set.id}}"><button class="secondary" data-sid="{{set.id}}" bindtap="onCopyPrevious" disabled="{{savingSet || finishing}}">沿用上一组</button><button class="secondary" data-sid="{{set.id}}" bindtap="onSetState" disabled="{{savingSet || finishing}}">保存本组</button></view>
+          <view class="ix-tools" wx:if="{{activeSid === set.id}}">
+            <button class="secondary" data-sid="{{set.id}}" bindtap="onCopyPrevious" disabled="{{savingSet || finishing}}">沿用上一组</button>
+            <button class="secondary" data-sid="{{set.id}}" bindtap="onSetState" disabled="{{savingSet || finishing}}">保存本组</button>
+          </view>
         </view>
         <view class="aset-actions" wx:if="{{activeSid === set.id}}">
           <button
@@ -75,7 +87,8 @@
             data-sid="{{set.id}}"
             data-state="done"
             bindtap="onSetState"
-            disabled="{{savingSet || finishing}}" loading="{{savingSet}}"
+            disabled="{{savingSet || finishing}}"
+            loading="{{savingSet}}"
           >{{set.state === 'done' ? '更新并继续' : '完成本组 →'}}</button>
           <button
             class="secondary"
@@ -90,14 +103,14 @@
       </view>
     </view>
 
-    <view class="card flex" style="margin-top:28rpx">
+    <view class="card finish-card">
       <view class="grow">
         <view class="card-title">{{session.done_sets ? '训练进行中' : '尚未完成组'}}</view>
         <view class="sub">已完成 {{session.done_sets}} 组 · 点击结束同步剩余输入</view>
       </view>
       <button class="primary" bindtap="onFinish" disabled="{{finishing || savingSet}}" loading="{{finishing}}">结束训练 ↗</button>
     </view>
-    <button class="secondary" style="width:100%;margin-top:12rpx" bindtap="onAbandon" disabled="{{finishing || savingSet}}">放弃本次（不计次数）</button>
+    <button class="secondary abandon-btn" bindtap="onAbandon" disabled="{{finishing || savingSet}}">放弃本次（不计次数）</button>
   </block>
 </view>
 
