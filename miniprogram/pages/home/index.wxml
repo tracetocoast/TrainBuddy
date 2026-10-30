@@ -6,12 +6,12 @@
   <view class="ui-state ui-state-error" wx:if="{{syncError}}">{{syncError}}<button class="link" bindtap="refreshPage">重新同步</button></view>
   <block wx:if="{{role === 'student'}}">
     <view class="daily-card">
-      <view class="hero-caption"><text>今日训练</text><text class="hero-live">{{activeSession ? '进行中' : todayPlan ? '计划已就绪' : '自主编排'}}</text></view>
+      <view class="hero-caption"><text>今日训练</text><text class="hero-live">{{activeSession ? '进行中' : todayPlanDone ? '今日已完成' : todayPlan ? '计划已就绪' : '自主编排'}}</text></view>
       <view class="daily-title">{{trainingError ? '训练计划暂未加载' : trainingTitle}}</view>
       <view class="home-training-sub">{{trainingError || trainingSubtitle}}</view>
       <view class="training-metrics" wx:if="{{!trainingError && (activeSession || todayPlan)}}"><view><text>{{exerciseCount}}</text>动作</view><view><text>{{totalSets}}</text>计划组数</view><view><text>{{doneSets}}/{{totalSets}}</text>已完成</view></view>
-      <view class="training-progress" wx:if="{{activeSession}}"><view style="width:{{progressPercent}}%"></view></view>
-      <button class="training-start" bindtap="{{trainingError ? 'refreshPage' : 'goWorkout'}}" disabled="{{loading}}">{{trainingError ? '重新加载计划' : trainingAction}} <text>→</text></button>
+      <view class="training-progress" wx:if="{{activeSession || todayPlanDone}}"><view style="width:{{progressPercent}}%"></view></view>
+      <button class="training-start" bindtap="onTrainingCta" disabled="{{loading}}">{{trainingError ? '重新加载计划' : trainingAction}} <text>→</text></button>
       <button class="hero-plan-link" bindtap="goPlans">查看全部训练计划</button>
     </view>
     <view class="home-quote">进步，藏在每一次认真完成的重复里。</view>
