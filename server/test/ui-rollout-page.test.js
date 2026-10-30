@@ -29,10 +29,18 @@ function setup(role = 'student', overrides = {}) {
   return {page,app,calls}
 }
 test('homepage only describes a plan as today when its published date matches; active workout takes priority',()=>{
-  const plans = [{published:{title:'未来计划',planned_date:'2026-12-01',exercises:[]}}]
-  assert.equal(trainingOverview(null,plans,'2026-10-28').todayPlan,null)
-  const view = trainingOverview(active,plans,'2026-10-28')
+  const plans = [{plan_id:'p1',published:{title:'未来计划',planned_date:'2026-12-01',exercises:[]}}]
+  assert.equal(trainingOverview(null,plans,'2026-10-28',[]).todayPlan,null)
+  const view = trainingOverview(active,plans,'2026-10-28',[])
   assert.equal(view.trainingTitle,'进行中卧推');assert.equal(view.progressPercent,50);assert.equal(view.trainingAction,'继续训练')
+})
+test('homepage marks today plan complete and routes CTA to growth copy',()=>{
+  const plans = [{plan_id:'p-today',published:{title:'今日下肢',planned_date:'2026-10-28',exercises:[{name:'深蹲',sets:[{},{}]}]}}]
+  const sessions = [{plan_id:'p-today',status:'completed',business_date:'2026-10-28',source_type:'from_plan',done_sets:2}]
+  const view = trainingOverview(null,plans,'2026-10-28',sessions)
+  assert.equal(view.todayPlanDone,true)
+  assert.equal(view.trainingAction,'今日已完成')
+  assert.equal(view.progressPercent,100)
 })
 test('homepage upcoming course excludes expired and cancelled rows',()=>{
   const now=Date.now(), next={status:'pending',startAt:now+60000}

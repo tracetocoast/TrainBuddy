@@ -2,6 +2,7 @@ const { syncRoleBar } = require('../../utils/role')
 const { requireLogin } = require('../../utils/guard')
 const trainingApi = require('../../services/trainingApi')
 const interaction = require('../../utils/interaction')
+const time = require('../../utils/time')
 
 Page({
   data: {
@@ -85,9 +86,26 @@ Page({
         this.applySession(active, true); this.setData({ plans: [] })
         return
       }
-      return trainingApi.listPlansForStudent(app, studentId).then((pres) => {
+      return Promise.all([
+        trainingApi.listPlansForStudent(app, studentId),
+        trainingApi.listSessions(app, { studentId, status: ['completed'] })
+      ]).then(([pres, sres]) => {
         if (!current()) return
-        const plans = (pres.data || []).filter((p) => p.published)
+        const today = time.todayKey()
+        const doneIds = {}
+        ;(sres.data || []).forEach((row) => {
+          if (
+            row.status === 'completed' &&
+            row.business_date === today &&
+            row.source_type === 'from_plan' &&
+            row.plan_id
+          ) {
+            doneIds[row.plan_id] = true
+          }
+        })
+        const plans = (pres.data || [])
+          .filter((p) => p.published)
+          .map((p) => Object.assign({}, p, { doneToday: !!doneIds[p.plan_id] }))
         this.setData({ session: null, plans })
       })
     }).catch(err => { if (current()) this.setData({ loadError: err.message || '训练加载失败，请重试' }) })
@@ -120,9 +138,14 @@ Page({
 
   onStart(e) {
     if (this._starting) return
+    const planId = e.currentTarget.dataset.id
+    const plan = (this.data.plans || []).find((row) => row.plan_id === planId)
+    if (plan && plan.doneToday) {
+      getApp().toast('今日已完成该计划')
+      return
+    }
     this._starting = true
     const app = getApp()
-    const planId = e.currentTarget.dataset.id
     const studentId = this.studentId()
     const owner = studentId + ':' + app.globalData.role
     this._startKeys = this._startKeys || {}

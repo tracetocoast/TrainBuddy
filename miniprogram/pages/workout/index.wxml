@@ -30,8 +30,9 @@
     </view>
     <view class="card" wx:for="{{plans}}" wx:key="plan_id">
       <view class="card-title">{{item.published.title}}</view>
-      <view class="sub">{{item.published.goal || '已发布计划'}} · v{{item.published.version}}</view>
-      <button class="primary" style="width:100%;margin-top:16rpx" data-id="{{item.plan_id}}" bindtap="onStart">开始训练</button>
+      <view class="sub">{{item.doneToday ? '今日已完成 · 可到成长页查看' : (item.published.goal || '已发布计划')}} · v{{item.published.version}}</view>
+      <button class="primary" style="width:100%;margin-top:16rpx" data-id="{{item.plan_id}}" bindtap="onStart" wx:if="{{!item.doneToday}}">开始训练</button>
+      <button class="secondary" style="width:100%;margin-top:16rpx" disabled wx:else>今日已完成</button>
     </view>
     <view class="card sub" wx:if="{{!plans.length}}">还没有训练计划。去动作库挑选动作，或先体验入门模板。</view>
     <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onEnsureDefault" wx:if="{{!plans.length}}">体验下肢训练模板</button>
