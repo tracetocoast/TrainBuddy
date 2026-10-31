@@ -329,6 +329,23 @@ describe('AC10 / AC15–21 training', () => {
     assert.equal(blocked.body.error.code, 'INVALID_STATE')
   })
 
+  it('cannot start a plan whose planned_date is not today', async () => {
+    const planId = injectPublishedPlan('not_today')
+    const rev = ctx.store.state.training.planRevisions.find(
+      (row) => row.planId === planId && row.status === 'published'
+    )
+    assert.ok(rev)
+    const time = require('../src/lib/time')
+    rev.plannedDate = time.addDays(time.todayKey(), 2)
+    const blocked = await ctx.request('POST', `/api/v1/plans/${planId}/start-session`, {
+      token: stu.sessionToken,
+      headers: { 'Idempotency-Key': 'not_today_start_' + Date.now() }
+    })
+    assert.equal(blocked.status, 409)
+    assert.equal(blocked.body.error.code, 'INVALID_STATE')
+    assert.match(blocked.body.error.message, /安排日不是今天/)
+  })
+
   it('AC21 two plans same day count 2; duplicate finalize no double count', async () => {
     const before = await ctx.request('GET', '/api/v1/growth/summary', {
       token: stu.sessionToken

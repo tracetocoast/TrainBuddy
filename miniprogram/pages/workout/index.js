@@ -8,6 +8,7 @@ Page({
   data: {
     role: 'student',
     plans: [],
+    hasPublishedPlans: false,
     session: null,
     finishing: false, savingSet: false, activeSid: '', activeGroup: null, pending: {}, saveError: '', loadError: '', loading: false, reduced: false
   },
@@ -103,10 +104,16 @@ Page({
             doneIds[row.plan_id] = true
           }
         })
-        const plans = (pres.data || [])
-          .filter((p) => p.published)
-          .map((p) => Object.assign({}, p, { doneToday: !!doneIds[p.plan_id] }))
-        this.setData({ session: null, plans })
+        const published = (pres.data || []).filter((p) => p.published)
+        // 可执行：安排日为今天，且当日尚未完成
+        const plans = published.filter(
+          (p) => p.published.planned_date === today && !doneIds[p.plan_id]
+        )
+        this.setData({
+          session: null,
+          plans,
+          hasPublishedPlans: published.length > 0
+        })
       })
     }).catch(err => { if (current()) this.setData({ loadError: err.message || '训练加载失败，请重试' }) })
       .then(() => { if (current()) this.setData({ loading: false }) })
@@ -139,11 +146,6 @@ Page({
   onStart(e) {
     if (this._starting) return
     const planId = e.currentTarget.dataset.id
-    const plan = (this.data.plans || []).find((row) => row.plan_id === planId)
-    if (plan && plan.doneToday) {
-      getApp().toast('今日已完成该计划')
-      return
-    }
     this._starting = true
     const app = getApp()
     const studentId = this.studentId()
