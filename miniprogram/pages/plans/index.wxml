@@ -1,3 +1,4 @@
+<wxs src="../../utils/swipe-axis.wxs" module="swipeAxis" />
 <page-meta background-color="{{pageBg}}" />
 <view class="page page-solo {{skinClass}}">
   <view class="eyebrow">TRAINING PLANS</view>
@@ -16,6 +17,11 @@
 
   <view class="swipe-row" wx:for="{{plans}}" wx:key="plan_id">
     <view class="swipe-action" wx:if="{{item.can_edit}}">
+      <button
+        class="swipe-edit"
+        catchtap="goEdit"
+        data-id="{{item.plan_id}}"
+      >编辑</button>
       <view
         class="trash-btn"
         catchtap="onAskDelete"
@@ -33,20 +39,24 @@
       </view>
     </view>
     <view
-      wx:if="{{item.can_edit}}"
       class="swipe-front card plan-card {{item.swiping ? 'swiping' : ''}}"
       data-id="{{item.plan_id}}"
       data-index="{{index}}"
-      data-can-edit="1"
+      data-can-edit="{{item.can_edit ? 1 : 0}}"
+      data-offset="{{item.offset}}"
+      data-max="{{actionWidth}}"
+      data-move-method="onSwipeMove"
+      data-snap-method="onSwipeSnap"
+      capture-bind:touchstart="{{swipeAxis.start}}"
       bindtouchstart="onSwipeStart"
-      catchtouchmove="onSwipeMove"
+      bindtouchmove="{{swipeAxis.move}}"
+      capture-bind:touchend="{{swipeAxis.end}}"
       bindtouchend="onSwipeEnd"
+      capture-bind:touchcancel="{{swipeAxis.end}}"
       bindtouchcancel="onSwipeEnd"
+      bindtap="goView"
       style="transform: translateX({{item.offset}}px);"
     >
-      <template is="planBody" data="{{item, isStudent}}"/>
-    </view>
-    <view wx:else class="swipe-front card plan-card">
       <template is="planBody" data="{{item, isStudent}}"/>
     </view>
   </view>
@@ -55,7 +65,6 @@
   <view class="card sub" wx:if="{{isCoach && !studentId && !loading}}">先从学员列表进入一位学员，再为该学员新建计划。</view>
 
   <button class="primary" style="width:100%;margin-top:20rpx" bindtap="onCreatePlan" wx:if="{{canCreate}}" disabled="{{creating}}" loading="{{creating}}">新建训练计划</button>
-  <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onEnsureDefault" wx:if="{{isStudent}}">创建默认下肢计划</button>
 </view>
 
 <template name="planBody">
@@ -67,8 +76,7 @@
     <text class="tag" wx:if="{{item.published}}">已发布 v{{item.published.version}}</text>
     <text class="tag" wx:if="{{item.latest_draft}}">草稿 v{{item.latest_draft.version}}</text>
   </view>
-  <view class="twobtn" style="margin-top:16rpx">
-    <button class="secondary" data-id="{{item.plan_id}}" bindtap="goEdit" wx:if="{{item.can_edit}}">编辑</button>
-    <button class="primary" data-id="{{item.plan_id}}" bindtap="goStart" wx:if="{{item.published && isStudent}}">开练</button>
+  <view class="plan-cta" wx:if="{{item.published && isStudent}}">
+    <button class="primary plan-start" data-id="{{item.plan_id}}" catchtap="goStart">开练</button>
   </view>
 </template>

@@ -188,13 +188,16 @@ Page({
     scheduleTypeChips: [],
     repeatKindChips: [],
     weekChips: [],
-    monthChips: []
+    monthChips: [],
+    setActionWidthPx: 48
   },
   onLoad(q) {
     this.planId = q.id
+    this.viewOnly = !!(q && q.view === '1')
     const windowWidth = ((typeof wx.getSystemInfoSync === 'function' && wx.getSystemInfoSync()) || {}).windowWidth || 375
     this._setActionWidth = Math.round((96 / 750) * windowWidth)
-    this.setData({ sheetIndex: -1, reduced: interaction.reducedMotion(), dragIndex: -1, dragOffset: 0, saveError: '' })
+    this.setData({ sheetIndex: -1, reduced: interaction.reducedMotion(), dragIndex: -1, dragOffset: 0, saveError: '', viewOnly: this.viewOnly, setActionWidthPx: this._setActionWidth })
+    if (this.viewOnly && typeof wx.setNavigationBarTitle === 'function') wx.setNavigationBarTitle({ title: '训练计划' })
   },
   onShow() { if (requireLogin(this) && !this.loaded) this.reload() },
   onHide() { this.cache() },
@@ -257,7 +260,7 @@ Page({
       this.loaded = true
       this.applyPlan(res.data)
       const cached = (getApp().globalData.drafts || {})[this.cacheKey()]
-      if (!ignoreCache && cached) {
+      if (!ignoreCache && cached && !this.viewOnly) {
         const current = this.snapshot(), local = cached.payload
         const conflict = current.base_revision !== local.base_revision || current.version !== local.version
         this.setData(Object.assign({
@@ -271,10 +274,11 @@ Page({
   },
   applyPlan(plan) {
     this._owner = getApp().globalData.session.user.userId + ':' + getApp().globalData.role
-    const draft = plan.latest_draft, content = draft || plan.published || {}
+    const nextPlan = Object.assign({}, plan, { can_edit: !this.viewOnly && !!plan.can_edit })
+    const draft = nextPlan.latest_draft, content = draft || nextPlan.published || {}
     const title = content.title || ''
     this.setData(Object.assign({
-      plan, draft, title, goal: '', reason: '',
+      plan: nextPlan, draft, title, goal: '', reason: '',
       today: todayKey(),
       exercises: decorateExercises(content.exercises || []), changed: false, conflict: false,
       missingNotesText: ((draft && draft.missing_notes) || []).join('；')
@@ -552,8 +556,8 @@ Page({
   onSetSwipeMove(e) {
     const swipe = this._setSwipe
     if (!swipe) return
-    const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0])
-    if (!touch) return
+    const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e
+    if (!touch || touch.clientX == null) return
     const dx = touch.clientX - swipe.startX
     const dy = touch.clientY - swipe.startY
     if (!swipe.axis) {
@@ -569,6 +573,16 @@ Page({
     this.setData({
       ['exercises[' + ei + '].sets[' + swipe.si + '].offset']: offset,
       ['exercises[' + ei + '].sets[' + swipe.si + '].swiping']: true
+    })
+  },
+  onSetSwipeSnap(detail) {
+    const ei = this.data.sheetIndex
+    const si = Number(detail && detail.si)
+    if (ei < 0 || !Number.isFinite(si)) return
+    this._setSwipe = null
+    this.setData({
+      ['exercises[' + ei + '].sets[' + si + '].offset']: Number(detail.offset) || 0,
+      ['exercises[' + ei + '].sets[' + si + '].swiping']: false
     })
   },
   onSetSwipeEnd() {

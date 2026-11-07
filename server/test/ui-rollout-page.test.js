@@ -77,6 +77,12 @@ test('stale homepage response cannot overwrite a different account',async()=>{
   const old=page.refreshPage();app.globalData.session.user.userId='u2';page.setData({trainingTitle:'另一账号'})
   resolve({data:[active]});await old;assert.equal(page.data.trainingTitle,'另一账号')
 })
+test('student homepage start-training shortcut goes to the workout record tab',()=>{
+  const wxml=fs.readFileSync(path.join(root,'pages/home/index.wxml'),'utf8')
+  const match=wxml.match(/<button class="quick-card card-press" bindtap="(\w+)">[\s\S]*?<view class="card-title">开始训练<\/view>/)
+  assert.ok(match)
+  assert.equal(match[1],'goWorkout')
+})
 test('all routed native pages register their custom components and bound handlers',()=>{
   const app=JSON.parse(fs.readFileSync(path.join(root,'app.json'),'utf8'))
   const nativeHyphen=new Set(['scroll-view','swiper-item','picker-view','picker-view-column','radio-group','checkbox-group','rich-text','web-view','cover-view','cover-image','camera','live-player','live-pusher','page-container','root-portal','movable-area','movable-view','match-media','navigation-bar','page-meta'])

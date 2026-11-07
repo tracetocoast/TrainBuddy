@@ -18,7 +18,7 @@ function setup() {
     publishPlan: async (app, id, opts) => { publications.push(opts); plan.published = clone(plan.latest_draft); plan.latest_draft = null; return { data: clone(plan) } }
   }
   const source = fs.readFileSync(path.join(__dirname, '../../miniprogram/pages/plan-edit/index.js'), 'utf8')
-  vm.runInNewContext(source, { Page: p => { page = p }, getApp: () => app, wx: { showModal: opts => opts.success({ confirm: true }) }, require: id => id.includes('guard') ? { requireLogin: () => true } : id.includes('interaction') ? require('../../miniprogram/utils/interaction') : api })
+  vm.runInNewContext(source, { Page: p => { page = p }, getApp: () => app, wx: { showModal: opts => opts.success({ confirm: true }), setNavigationBarTitle() {} }, require: id => id.includes('guard') ? { requireLogin: () => true } : id.includes('interaction') ? require('../../miniprogram/utils/interaction') : api })
   page.setData = function (values) { Object.assign(this.data, values) }
   page.onLoad({ id: 'p1' }); page.applyPlan(clone(plan))
   return { page, api, app, plan, writes, publications, messages }
@@ -129,4 +129,15 @@ it('cached plan edits are isolated by account, role and subject', async () => {
   ctx.app.globalData.role = 'student'
   await p.reload()
   assert.equal(p.data.title, '本地个人草稿')
+})
+it('view query opens the plan read-only even when it can be edited', () => {
+  const ctx = setup(), p = ctx.page
+  p.onLoad({ id: 'p1', view: '1' })
+  p.applyPlan(clone(ctx.plan))
+  assert.equal(p.viewOnly, true)
+  assert.equal(p.data.plan.can_edit, false)
+  const before = p.data.title
+  p.onPickTitle(event({ label: '自定义' }))
+  assert.equal(p.data.title, before)
+  assert.equal(p.data.changed, false)
 })

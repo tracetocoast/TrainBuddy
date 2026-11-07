@@ -2,7 +2,7 @@ const { requireLogin } = require('../../utils/guard')
 const trainingApi = require('../../services/trainingApi')
 const planSchedule = require('../../utils/planSchedule')
 
-const ACTION_RPX = 96
+const ACTION_RPX = 208
 const FILTERS = [
   { key: 'all', label: '全部计划' },
   { key: 'coach', label: '教练计划' },
@@ -34,6 +34,7 @@ Page({
     filters: FILTERS,
     filterKey: 'all',
     hasPlans: false,
+    actionWidth: 104,
     studentId: '', loading: false, error: '', creating: false
   },
 
@@ -50,7 +51,8 @@ Page({
       isCoach: role === 'coach',
       isStudent: role === 'student',
       canCreate: role === 'student' || !!studentId,
-      studentId, loading: !!studentId, error: ''
+      studentId, loading: !!studentId, error: '',
+      actionWidth: this._actionWidth
     })
     if (!studentId) return
     return trainingApi.listPlansForStudent(app, studentId).then((res) => {
@@ -109,8 +111,8 @@ Page({
   onSwipeMove(e) {
     const swipe = this._swipe
     if (!swipe) return
-    const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0])
-    if (!touch) return
+    const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e
+    if (!touch || touch.clientX == null) return
     const dx = touch.clientX - swipe.startX
     const dy = touch.clientY - swipe.startY
     if (!swipe.axis) {
@@ -128,12 +130,21 @@ Page({
   onSwipeEnd() {
     const swipe = this._swipe
     this._swipe = null
+    if (swipe && swipe.axis === 'x') this._skipView = true
     if (!swipe || swipe.axis !== 'x') return
     const current = this.data.plans[swipe.index]
     if (!current) return
     const max = this.actionWidth()
     const open = (current.offset || 0) < -max / 2
     this.setSwipe(swipe.index, open ? -max : 0, false)
+  },
+
+  onSwipeSnap(detail) {
+    const index = Number(detail && detail.index)
+    if (!Number.isFinite(index)) return
+    this._skipView = true
+    this._swipe = null
+    this.setSwipe(index, Number(detail.offset) || 0, false)
   },
 
   onAskDelete(e) {
@@ -188,18 +199,23 @@ Page({
       .then(() => { this._creating = false; this.setData({ creating: false }) })
   },
 
-  onEnsureDefault() {
-    const app = getApp()
-    const user = app.globalData.session.user
-    trainingApi.ensureDefaultPublishedPlan(app, {
-      studentId: user.userId,
-      authorId: user.userId,
-      authorRole: 'student'
-    }).then(() => this.onShow()).catch(err => app.toast(err.message || '创建失败'))
+  goView(e) {
+    if (this._skipView) {
+      this._skipView = false
+      return
+    }
+    const index = Number(e.currentTarget.dataset.index)
+    const item = Number.isFinite(index) ? this.data.plans[index] : null
+    if (item && item.offset) return
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.navigateTo({ url: '/pages/plan-edit/index?id=' + id + '&view=1' })
   },
 
   goEdit(e) {
-    wx.navigateTo({ url: '/pages/plan-edit/index?id=' + e.currentTarget.dataset.id })
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.navigateTo({ url: '/pages/plan-edit/index?id=' + id })
   },
 
   goStart(e) {

@@ -1,24 +1,40 @@
 :host { display: block; width: 100%; }
 .submit {
-  background: var(--ix-accent, var(--accent));
-  color: var(--on-accent);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 16rpx 0 0;
+  padding: 0 24rpx !important;
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
   border-radius: 16rpx;
   min-height: 96rpx;
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
   transition: opacity var(--ix-state, 200ms) ease, transform var(--ix-fast, 100ms) ease;
 }
 .submit::after { border: 0; }
+.submit text {
+  display: block;
+  width: 100%;
+  text-align: center;
+  line-height: 1.2;
+}
 .submit:active { transform: scale(.99); opacity: .92; }
 .submit.is-disabled {
-  background: var(--disabled-bg, var(--disabled-bg));
-  color: var(--disabled-ink, var(--ix-muted, var(--muted)));
+  background: var(--disabled-bg) !important;
+  color: var(--disabled-ink) !important;
   transform: none;
 }
 .submit.submitted,
 .submit.confirmed {
-  background: var(--ok-soft, var(--ok-bg));
-  color: var(--ok-ink, var(--ok-ink));
+  background: var(--ok-soft) !important;
+  color: var(--ok-ink) !important;
 }
 .error {
   font-size: 24rpx;

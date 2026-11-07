@@ -15,6 +15,13 @@ function presentBookingRow(row) {
   })
 }
 
+function recentMyBookings(list, limit) {
+  return (list || [])
+    .slice()
+    .sort((a, b) => (Number(b.startAt) || 0) - (Number(a.startAt) || 0))
+    .slice(0, limit)
+}
+
 function presentSlot(slot, selected) {
   const available = slot.status === 'open' && Number(slot.startAt) > Date.now()
   let displayStatus = slot.displayStatus || ''
@@ -195,7 +202,7 @@ Page({
         .listBookings(app, { studentId: user.userId })
         .then((res) => {
           if (generation !== this._refreshGeneration || owner !== this.studentOwner()) return
-          const myBookings = (res.data || []).map(presentBookingRow)
+          const myBookings = recentMyBookings((res.data || []).map(presentBookingRow), 5)
           this.setData({ myBookings })
         })])
     }).catch(err => {

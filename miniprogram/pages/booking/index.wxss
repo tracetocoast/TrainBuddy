@@ -221,6 +221,8 @@
   text-align: left;
   box-sizing: border-box;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 .slot-btn::after {
   border: none;
@@ -253,6 +255,9 @@
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .slot-btn-mark {
   flex-shrink: 0;
@@ -483,6 +488,34 @@
 .week-hint.is-pending {
   color: var(--warm-ink);
   font-weight: 600;
+}
+
+.skin-dark .slot-btn-open {
+  background: var(--surface-raised);
+  border-color: var(--green-strong);
+}
+.skin-dark .slot-btn-on {
+  background: var(--mint-3);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+.skin-dark .slot-btn-off {
+  opacity: 1;
+  background: var(--paper);
+  border-color: var(--line);
+  border-style: dashed;
+}
+.skin-dark .slot-btn-off .slot-btn-mark {
+  background: var(--tint-2);
+  color: var(--muted-2);
+}
+.skin-dark .bk-summary .submit {
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
+}
+.skin-dark .bk-summary .submit.is-disabled {
+  background: var(--disabled-bg) !important;
+  color: var(--disabled-ink) !important;
 }
 
 .ix-reduced .bk-load-bar,

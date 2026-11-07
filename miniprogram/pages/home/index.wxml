@@ -139,7 +139,7 @@
 
     <view class="head"><view class="head-title">快捷入口</view></view>
     <view class="quick-grid">
-      <button class="quick-card card-press" bindtap="onTrainingCta">
+      <button class="quick-card card-press" bindtap="goWorkout">
         <ui-icon name="play" tone="green" size="36"/>
         <view class="grow"><view class="card-title">开始训练</view><view class="sub">{{trainingAction}}</view></view>
       </button>

@@ -81,6 +81,28 @@ test('batch booking continues after conflict and retry never duplicates successf
   assert.equal(p.data.actionState,'submitted')
 })
 
+test('student bookings list the latest five rows in descending start time', async () => {
+  const rows = [1, 2, 3, 4, 5, 6].map((n) => ({
+    booking_id: 'b' + n,
+    startAt: n * 1000,
+    status: 'confirmed',
+    dateKey: '2026-11-0' + n
+  }))
+  const ctx = setup('booking', {
+    refreshMe: async () => ({ primaryBinding: { coachId: 'c1', coachName: '教练' } }),
+    getActivePrimaryCoach: () => ({ coachId: 'c1', coachName: '教练' }),
+    getSlots: async () => ({ data: { slots: [] } }),
+    listBookings: async () => ({ data: rows }),
+    statusLabel: () => '已确认',
+    statusTone: () => 'ok'
+  })
+  ctx.page.setData({ selectedDate: '2026-11-07' })
+  ctx.page.refreshStudent()
+  await tick()
+  await tick()
+  assert.equal(ctx.page.data.myBookings.length, 5)
+  assert.deepEqual(ctx.page.data.myBookings.map((row) => row.booking_id), ['b6', 'b5', 'b4', 'b3', 'b2'])
+})
 test('out-of-order date responses cannot replace the selected date slots', async () => {
   const responses = [], ctx = setup('booking', {
     refreshMe: async () => ({ primaryBinding: { coachId: 'c1', coachName: '教练' } }),
@@ -183,6 +205,17 @@ test('component refuses events while disabled and retains partial or invalid num
   c.onCommit(); assert.equal(events.length, count); assert.match(c.data.invalid, /数字/)
   c.properties.disabled = true; c.onStep(event({ direction: 1 })); c.onInput({ detail: { value: '9' } })
   assert.equal(events.length, count)
+})
+test('booking confirm button shares page skin and keeps four-character label centered', () => {
+  const json = JSON.parse(fs.readFileSync(path.join(__dirname, '../../miniprogram/components/booking-action-button/index.json'), 'utf8'))
+  const wxss = fs.readFileSync(path.join(__dirname, '../../miniprogram/components/booking-action-button/index.wxss'), 'utf8')
+  const booking = fs.readFileSync(path.join(__dirname, '../../miniprogram/pages/booking/index.wxss'), 'utf8')
+  assert.equal(json.styleIsolation, 'apply-shared')
+  assert.match(wxss, /justify-content:\s*center/)
+  assert.match(wxss, /white-space:\s*nowrap/)
+  assert.match(wxss, /background:\s*var\(--accent\)/)
+  assert.match(booking, /\.skin-dark \.slot-btn-on/)
+  assert.match(booking, /overflow:\s*hidden/)
 })
 test('booking action button emits only idle/error, never pending or confirmed', () => {
   let definition
