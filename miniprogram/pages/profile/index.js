@@ -63,7 +63,7 @@ Page({
       revealX: cx,
       revealY: cy,
       // 半透明底色：扩散时透出旧页面，过渡更柔和（透明度可调）
-      revealBg: target === 'dark' ? 'rgba(15, 21, 18, 0.55)' : 'rgba(243, 245, 247, 0.55)',
+      revealBg: target === 'dark' ? 'rgba(15, 21, 18, 0.55)' : 'rgba(250, 251, 247, 0.55)',
       revealScale: revealScale
     })
     setTimeout(() => {

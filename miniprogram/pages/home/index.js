@@ -7,6 +7,7 @@ const growthApi = require('../../services/growthApi')
 const trainingApi = require('../../services/trainingApi')
 const time = require('../../utils/time')
 const { trainingOverview, upcoming } = require('../../utils/homePresenter')
+const { pickDailyQuote } = require('../../utils/quotes')
 
 Page({
   data: {
@@ -27,7 +28,7 @@ Page({
     exerciseCount: 0, totalSets: 0, doneSets: 0, progressPercent: 0,
     activeSession: null, todayPlan: null, todayPlanDone: false, planCount: 0, recentSessions: [],
     todayCourses: [], todayCourseCount: 0, todayDoneCourseCount: 0, trainingDays: 0, volumeText: '—', todayLabel: '',
-    greetName: '你好', planRate: null, recentSummary: null
+    greetName: '你好', planRate: null, recentSummary: null, dailyQuote: null
   },
 
   onShow() {
@@ -53,7 +54,8 @@ Page({
       hasStats: false, sessions: [], todayCourses: [], todayCourseCount: 0, todayDoneCourseCount: 0, pendingCoachCount: 0,
       boundCount: 0, nextBooking: null, recentSessions: [], recentSummary: null, activeSession: null,
       todayPlan: null, todayPlanDone: false, trainingTitle: '正在读取训练计划', trainingSubtitle: '', trainingAction: '查看训练',
-      exerciseCount: 0, totalSets: 0, doneSets: 0, progressPercent: 0, planCount: 0, planRateText: '—', planRate: null
+      exerciseCount: 0, totalSets: 0, doneSets: 0, progressPercent: 0, planCount: 0, planRateText: '—', planRate: null,
+      dailyQuote: app.globalData.role === 'student' ? pickDailyQuote(today) : null
     })
 
     const profile = bindingApi.refreshMe(app)

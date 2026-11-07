@@ -1,8 +1,9 @@
 .growth-page { padding-top: 8rpx; padding-bottom: calc(156rpx + env(safe-area-inset-bottom)); }
 .growth-header { margin-bottom: 26rpx; }
-.growth-brand { height: 54rpx; display: flex; align-items: center; gap: 8rpx; color: var(--ink); font-size: 32rpx; font-weight: 750; }
-.growth-brand .brand-emblem-slot { width: 38rpx; height: 38rpx; }
-.growth-brand-en { margin-left: 4rpx; color: var(--muted); font-size: 19rpx; letter-spacing: 2rpx; font-weight: 500; }
+.growth-brand { display: flex; align-items: center; gap: 14rpx; min-height: 54rpx; color: var(--ink); }
+.growth-brand-copy { display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 2rpx; }
+.growth-brand-name { font-size: 30rpx; font-weight: 750; line-height: 1.2; }
+.growth-brand-en { color: var(--muted); font-size: 16rpx; letter-spacing: 2rpx; font-weight: 500; line-height: 1.2; }
 .growth-title-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 24rpx; }
 .growth-title-row .title { margin: 0; font-size: 44rpx; letter-spacing: -1rpx; }
 .growth-title-row .sub { margin-top: 6rpx; }

@@ -1,7 +1,13 @@
 <page-meta background-color="{{pageBg}}" />
 <view class="page growth-page {{skinClass}}">
   <view class="growth-header">
-    <view class="growth-brand"><brand-logo class="brand-emblem-slot" /><text>练搭子</text><text class="growth-brand-en">TRAIN BUDDY</text></view>
+    <view class="growth-brand">
+      <brand-logo size="40" />
+      <view class="growth-brand-copy">
+        <text class="growth-brand-name">练搭子</text>
+        <text class="growth-brand-en">TRAIN BUDDY</text>
+      </view>
+    </view>
     <view class="growth-title-row"><view><view class="title">训练进展</view><view class="sub">每一次训练，都在积累改变</view></view><view class="month-pill">{{monthLabel}}</view></view>
   </view>
 

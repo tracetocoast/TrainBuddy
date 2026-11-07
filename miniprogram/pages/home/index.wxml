@@ -91,6 +91,12 @@
       <view class="quiet-empty hero-goal-empty" wx:else>训练统计加载后显示本周完成情况，不会展示虚假进度。</view>
     </button>
 
+    <view class="quote-card" wx:if="{{dailyQuote}}">
+      <view class="quote-cn">{{dailyQuote.cn}}</view>
+      <view class="quote-en" wx:if="{{dailyQuote.en}}">{{dailyQuote.en}}</view>
+      <view class="quote-by" wx:if="{{dailyQuote.by}}">—— {{dailyQuote.by}}</view>
+    </view>
+
     <view class="head"><view class="head-title">下一次课程</view></view>
     <button class="booking-card card-press" wx:if="{{nextBooking}}" bindtap="goNextBooking">
       <view class="booking-time-block">
@@ -129,24 +135,6 @@
         <view class="sub ui-state-inline-error" wx:if="{{trainingError}}">{{trainingError}}</view>
       </view>
       <text class="summary-cta">{{trainingAction}} ›</text>
-    </button>
-
-    <button class="summary-card card-press summary-compact" wx:if="{{recentSummary}}" bindtap="goGrowth">
-      <view class="grow">
-        <view class="card-title">最近训练</view>
-        <view class="sub">{{recentSummary.date}} · {{recentSummary.title}} · {{recentSummary.sets}} 组</view>
-      </view>
-      <view class="summary-stat">
-        <text class="summary-stat-value">{{volumeText}}</text>
-        <text class="summary-stat-label">本周容量</text>
-      </view>
-    </button>
-    <button class="summary-card card-press summary-compact" wx:elif="{{hasStats}}" bindtap="goGrowth">
-      <view class="grow">
-        <view class="card-title">成长摘要</view>
-        <view class="sub">连续打卡 {{streak}} 天 · 本周训练 {{weekCount}} 次</view>
-      </view>
-      <text class="summary-cta">进展 ›</text>
     </button>
 
     <view class="head"><view class="head-title">快捷入口</view></view>

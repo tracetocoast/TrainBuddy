@@ -1,8 +1,9 @@
 const icons = require('../../assets/navigation-icons')
 const coachIcons = require('../../assets/coach-icons')
+const theme = require('../../utils/theme')
 const NAV = {
   student: [
-    { key: 'home', path: '/pages/home/index', text: '课程' },
+    { key: 'home', path: '/pages/home/index', text: '首页' },
     { key: 'workout', path: '/pages/workout/index', text: '记录' },
     { key: 'growth', path: '/pages/growth/index', text: '进展' }
   ],
@@ -53,7 +54,7 @@ Component({
       const currentPath = '/' + (current ? current.route : '')
       if (currentPath === path) return
       if (current && typeof current.canLeave === 'function' && !current.canLeave()) return
-      wx.redirectTo({ url: path })
+      theme.redirectTo(path)
     }
   }
 })

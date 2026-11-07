@@ -4,7 +4,7 @@ const { getDefaultSessionState } = require('./utils/session')
 const bindingApi = require('./services/bindingApi')
 
 /**
- * V1.5 皮肤系统：包装全局 Page()，在每个页面 onShow 前自动应用皮肤（注入 skinClass、同步导航栏颜色），
+ * V1.5 皮肤系统：包装全局 Page()，在每个页面 onLoad / onShow 前自动应用皮肤（注入 skinClass、同步导航栏颜色），
  * 各页面 JS 与 WXML 无需单独接入，仅需根节点 class 绑定 {{skinClass}}。
  */
 const rawPage = Page
@@ -12,12 +12,18 @@ Page = function (config) {
   if (config && typeof config === 'object') {
     if (!config.data) config.data = {}
     // 预载皮肤类与页面背景到初始 data：首次渲染即为当前皮肤，避免跳转/启动瞬间露出浅色内容再切换
-    const _skin = theme.getSkin()
+    const _conf = theme.colors()
     if (config.data.skinClass === undefined) {
-      config.data.skinClass = _skin === 'dark' ? 'skin-dark' : ''
+      config.data.skinClass = _conf.skinClass
     }
     if (config.data.pageBg === undefined) {
-      config.data.pageBg = _skin === 'dark' ? '#0f1512' : '#f3f5f7'
+      config.data.pageBg = _conf.winBg
+    }
+    const rawOnLoad = config.onLoad
+    config.onLoad = function () {
+      theme.applyNativeWindow()
+      theme.applyToPage(this)
+      return rawOnLoad ? rawOnLoad.apply(this, arguments) : undefined
     }
     const rawOnShow = config.onShow
     config.onShow = function () {
@@ -29,7 +35,7 @@ Page = function (config) {
       } catch (_) {}
       const route = this.route || ''
       if (role === 'ops' && route !== 'pages/ops-hint/index' && route !== 'pages/login/index') {
-        wx.redirectTo({ url: '/pages/ops-hint/index' })
+        theme.redirectTo('/pages/ops-hint/index')
         return
       }
       return rawOnShow ? rawOnShow.apply(this, arguments) : undefined
@@ -51,10 +57,15 @@ App({
   ),
 
   onLaunch() {
+    theme.applyNativeWindow()
     const cached = store.load()
     if (cached) {
       Object.assign(this.globalData, cached)
     }
+  },
+
+  onShow() {
+    theme.applyNativeWindow()
   },
 
   persist() {

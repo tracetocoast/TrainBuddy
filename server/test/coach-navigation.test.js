@@ -22,7 +22,7 @@ test('each role exposes exactly its three task-oriented primary tabs and profile
   component.methods.refresh.call(instance)
   const items=instance.data.items
   assert.equal(items.length,3)
-  assert.equal(items.map(x=>x.text).join(','),role==='coach'?'工作台,学员,日程':'课程,记录,进展')
+  assert.equal(items.map(x=>x.text).join(','),role==='coach'?'工作台,学员,日程':'首页,记录,进展')
   assert.ok(!items.some(x=>x.path==='/pages/profile/index'))
   if(role==='coach')assert.ok(items.some(x=>x.key==='students'))
  }
@@ -41,6 +41,26 @@ test('growth tool links select the correct existing tool detail',()=>{
  growth.goTool({currentTarget:{dataset:{tool:'invalid'}}});assert.equal(urls.length,3)
  const profile=fs.readFileSync(path.join(root,'pages/profile/index.wxml'),'utf8')
  assert.ok(!profile.includes('专属工具'));assert.ok(profile.includes('账号信息'))
+})
+test('native window colors follow the current skin',()=>{
+  const theme=require('../../miniprogram/utils/theme')
+  assert.equal(theme.colors('light').winBg,'#fafbf7')
+  assert.equal(theme.colors('dark').winBg,'#0f1512')
+  const prev=global.wx
+  const calls=[]
+  global.wx={
+    getStorageSync:()=>'dark',
+    setNavigationBarColor(opt){calls.push(['nav',opt.backgroundColor])},
+    setBackgroundColor(opt){calls.push(['win',opt.backgroundColor,opt.backgroundColorTop,opt.backgroundColorBottom])}
+  }
+  try{
+    theme.applyNativeWindow()
+    assert.deepEqual(calls[0],['nav','#0f1512'])
+    assert.deepEqual(calls[1],['win','#0f1512','#0f1512','#0f1512'])
+  }finally{
+    if(prev===undefined) delete global.wx
+    else global.wx=prev
+  }
 })
 test('growth calendar month switch keeps week summary independent of viewed month',()=>{
  const growth=loadPage('growth')

@@ -23,7 +23,8 @@ function setup(role = 'student', overrides = {}) {
   }
   const booking = { listBookings: async (app, query) => { calls.push(query.dateKey ? 'today-bookings':'bookings'); return {data:[]} }, statusLabel:value => value, ...overrides.booking }
   const growth = { getSummary:async () => {calls.push('growth');return {data:{sessionCount:2,trainingDays:2,planCompletionRate:50,empty:{volume:false},volumeKg:400}}}, ...overrides.growth }
-  const dependencies = {'../../utils/role':{syncRoleBar(p){p.setData({role:app.globalData.role,canSwitchCoach:app.globalData.role==='coach'})},goProfile(){}},'../../utils/guard':{requireLogin:()=>true},'../../utils/permission':{canActivateRole:()=>role==='coach'},'../../utils/time':time,'../../utils/homePresenter':{trainingOverview,upcoming},'../../services/bindingApi':binding,'../../services/bookingApi':booking,'../../services/growthApi':growth,'../../services/trainingApi':training}
+  const quotes = require('../../miniprogram/utils/quotes')
+  const dependencies = {'../../utils/role':{syncRoleBar(p){p.setData({role:app.globalData.role,canSwitchCoach:app.globalData.role==='coach'})},goProfile(){}},'../../utils/guard':{requireLogin:()=>true},'../../utils/permission':{canActivateRole:()=>role==='coach'},'../../utils/time':time,'../../utils/homePresenter':{trainingOverview,upcoming},'../../utils/quotes':quotes,'../../services/bindingApi':binding,'../../services/bookingApi':booking,'../../services/growthApi':growth,'../../services/trainingApi':training}
   vm.runInNewContext(fs.readFileSync(path.join(root,'pages/home/index.js'),'utf8'),{Page:p=>{page=p},getApp:()=>app,wx:{},require:id=>{if(!(id in dependencies))throw Error(id);return dependencies[id]}})
   page.setData = function(values){Object.assign(this.data,values)}
   return {page,app,calls}
@@ -50,6 +51,16 @@ test('student homepage presents live session and statistics without querying coa
   const {page,calls}=setup();await page.refreshPage()
   assert.equal(page.data.trainingTitle,'进行中卧推');assert.equal(page.data.weekCount,2);assert.equal(page.data.planRateText,'50%')
   assert.equal(page.data.loading,false);assert.equal(calls.includes('students'),false)
+  assert.ok(page.data.dailyQuote && page.data.dailyQuote.cn && page.data.dailyQuote.en)
+})
+test('daily quote stays the same on the same Shanghai day and rotates across dates',()=>{
+  const quotes=require('../../miniprogram/utils/quotes')
+  const a=quotes.pickDailyQuote('2026-11-07')
+  assert.equal(a.cn,quotes.pickDailyQuote('2026-11-07').cn)
+  assert.ok(a.cn && a.en)
+  assert.equal(quotes.QUOTES.length,6)
+  const seen=new Set(quotes.QUOTES.map((_,i)=>quotes.pickDailyQuote('2026-01-'+String(i+1).padStart(2,'0')).cn))
+  assert.ok(seen.size>=2)
 })
 test('coach homepage uses its own profile and actual day courses, without querying learner training',async()=>{
   const {page,calls}=setup('coach',{booking:{listBookings:async(app,query)=>({data:query.dateKey ? [{booking_id:'b1',status:'confirmed',startAt:2},{booking_id:'b2',status:'cancelled',startAt:1}] : [{status:'pending'}]})}})
@@ -68,7 +79,7 @@ test('stale homepage response cannot overwrite a different account',async()=>{
 })
 test('all routed native pages register their custom components and bound handlers',()=>{
   const app=JSON.parse(fs.readFileSync(path.join(root,'app.json'),'utf8'))
-  const nativeHyphen=new Set(['scroll-view','swiper-item','picker-view','picker-view-column','radio-group','checkbox-group','rich-text','web-view','cover-view','cover-image','camera','live-player','live-pusher','page-container','root-portal','movable-area','movable-view','match-media','navigation-bar'])
+  const nativeHyphen=new Set(['scroll-view','swiper-item','picker-view','picker-view-column','radio-group','checkbox-group','rich-text','web-view','cover-view','cover-image','camera','live-player','live-pusher','page-container','root-portal','movable-area','movable-view','match-media','navigation-bar','page-meta'])
   for(const route of app.pages){
     const sourceFile=path.join(root,route+'.js'),wxml=fs.readFileSync(path.join(root,route+'.wxml'),'utf8'),config=JSON.parse(fs.readFileSync(path.join(root,route+'.json'),'utf8'))
     let definition
