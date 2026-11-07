@@ -66,7 +66,7 @@
   <button class="body-entry" bindtap="goBodyData"><view class="body-entry-icon"><view></view><view></view><view></view></view><view class="grow"><view class="body-entry-title">身体数据</view><view class="body-entry-sub">体重、围度与变化趋势</view></view><view class="mini-trend"><view></view><view></view><view></view><view></view><view></view></view><text class="entry-arrow">›</text></button>
 
   <view class="section-head records-heading"><view class="section-title">训练记录</view><button class="link" bindtap="goWorkout">继续训练 <text>↗</text></button></view>
-  <view class="record-list" wx:if="{{records.length}}"><view class="record-item" wx:for="{{records}}" wx:key="id"><view class="record-icon">↗</view><view class="grow"><view class="record-main">{{item.text}}</view></view><text class="entry-arrow">›</text></view></view><view class="empty-card" wx:else>完成一次训练后，你的记录会显示在这里。</view>
+  <view class="record-list" wx:if="{{records.length}}"><view class="record-item" wx:for="{{records}}" wx:key="id"><view class="record-icon">↗</view><view class="grow"><view class="record-main">{{item.text}}</view></view></view></view><view class="empty-card" wx:else>完成一次训练后，你的记录会显示在这里。</view>
 
   <view class="section-head tools-heading"><view class="section-title">记录与学习</view></view>
   <view class="points-card" wx:if="{{role === 'student'}}" bindtap="goPoints"><view class="points-icon">✦</view><view class="grow"><view class="points-title">积分与成就</view><view class="points-sub">查看积分、成就和可兑换服务</view></view><text class="entry-arrow">›</text></view>

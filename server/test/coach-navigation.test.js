@@ -30,6 +30,20 @@ test('each role exposes exactly its three task-oriented primary tabs and profile
  assert.ok(home.includes('bindtap="goRecord"'))
  assert.ok(home.includes('bindtap="goProfile"'))
 })
+test('student selected nav uses the same green as coach',()=>{
+ const decode=uri=>Buffer.from(uri.split(',')[1],'base64').toString('utf8')
+ const student=require(path.join(root,'assets/navigation-icons.js'))
+ const coach=require(path.join(root,'assets/coach-icons.js'))
+ for(const key of ['home','workout','growth']){
+  assert.match(decode(student.active[key]),/#28744e/i)
+  assert.doesNotMatch(decode(student.active[key]),/#214beb/i)
+ }
+ assert.match(decode(coach.green.home),/#28744e/i)
+ const css=fs.readFileSync(path.join(root,'components/bottom-nav/index.wxss'),'utf8')
+ const active=css.split('.nav-coach')[0]
+ assert.match(active,/\.nav-item\.active\s*\{[^}]*color:\s*var\(--accent\)/)
+ assert.match(active,/\.nav-item\.active \.nav-icon\s*\{[^}]*background:\s*var\(--surface-raised\)/)
+})
 test('growth tool links select the correct existing tool detail',()=>{
  const urls=[],wx={navigateTo:x=>urls.push(x.url)}
  const growth=loadPage('growth',wx),ai=loadPage('ai',wx)
@@ -41,6 +55,15 @@ test('growth tool links select the correct existing tool detail',()=>{
  growth.goTool({currentTarget:{dataset:{tool:'invalid'}}});assert.equal(urls.length,3)
  const profile=fs.readFileSync(path.join(root,'pages/profile/index.wxml'),'utf8')
  assert.ok(!profile.includes('专属工具'));assert.ok(profile.includes('账号信息'))
+})
+test('growth training records do not show a trailing chevron',()=>{
+ const xml=fs.readFileSync(path.join(root,'pages/growth/index.wxml'),'utf8')
+ const from=xml.indexOf('class="record-list"')
+ const to=xml.indexOf('empty-card',from)
+ assert.ok(from>=0 && to>from)
+ const chunk=xml.slice(from,to)
+ assert.equal(chunk.includes('entry-arrow'),false)
+ assert.equal(chunk.includes('›'),false)
 })
 test('native window colors follow the current skin',()=>{
   const theme=require('../../miniprogram/utils/theme')

@@ -74,7 +74,10 @@ Page({
   },
 
   onLoad(query) {
-    if (query && query.mode === 'real') this.setData({ mode: 'real' })
+    const patch = {}
+    if (query && query.mode === 'real') patch.mode = 'real'
+    if (query && /^\d{4}-\d{2}-\d{2}$/.test(query.date || '')) patch.localDate = query.date
+    if (Object.keys(patch).length) this.setData(patch)
   },
 
   onShow() {
@@ -571,6 +574,13 @@ Page({
   },
 
   goDiary() {
-    wx.navigateTo({ url: '/pages/diary/index' })
+    const pages = getCurrentPages()
+    const prev = pages.length > 1 ? pages[pages.length - 2] : null
+    if (prev && prev.route === 'pages/diary/index') {
+      wx.navigateBack()
+      return
+    }
+    const date = this.data.localDate
+    wx.navigateTo({ url: '/pages/diary/index' + (date ? '?date=' + date : '') })
   }
 })

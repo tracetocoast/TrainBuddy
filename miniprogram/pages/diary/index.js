@@ -181,7 +181,7 @@ Page({
       {
         id: 'meal',
         title: '饮食',
-        hint: meals.length ? meals.length + ' 条记录' : '添加今日饮食',
+        hint: meals.length ? meals.length + ' 条记录' : '手写或拍照添加',
         badge: shares.meal ? '已共享' : '',
         icon: '◎',
         filled: !!meals.length
@@ -234,15 +234,27 @@ Page({
     const macros = m.macrosG || m.macros_g || null
     const mediaId = m.mediaId || m.media_id || ''
     const photoUrl = m.photoUrl || m.photo_url || m.preview_url || ''
+    const sourceTaskId = m.sourceTaskId || m.source_task_id || ''
+    const isPhoto = !!(photoUrl || mediaId || sourceTaskId)
+    const isEstimate = !!(m.isEstimate || m.is_estimate)
     return Object.assign({}, m, {
       mealTypeLabel: MEAL_LABEL[m.mealType || m.meal_type] || m.mealType || m.meal_type,
       foodText: m.foodText || m.food_text || '',
       portionText: m.portionText || m.portion_text || '',
       hasPhoto: !!(photoUrl || mediaId),
       photoUrl: photoUrl || '',
+      isPhoto,
       macrosViews: presentMacros(macros),
-      showMacros: hasMacroData(macros),
-      isEstimate: !!(m.isEstimate || m.is_estimate)
+      showMacros: isPhoto || hasMacroData(macros),
+      isEstimate,
+      sourceLabel: isPhoto ? (isEstimate ? '拍照估算' : '拍照') : '手写'
+    })
+  },
+
+  goFoodPhoto() {
+    const date = this.data.localDate
+    wx.navigateTo({
+      url: '/pages/food-photo/index' + (date ? '?date=' + date : '')
     })
   },
 

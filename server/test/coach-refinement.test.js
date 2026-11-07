@@ -41,6 +41,12 @@ test('diagnostics fail closed unless development environment and explicit query 
  }
  const missing=loadPage('students');missing.onLoad({diagnostics:'1'});assert.equal(missing.data.diagnosticsAllowed,false)
 })
+test('student booking page keeps last content above the bottom nav',()=>{
+ const wxss=fs.readFileSync(path.join(root,'pages/booking/index.wxss'),'utf8')
+ const match=wxss.match(/\.booking-page\s*\{[^}]*padding-bottom:\s*calc\((\d+)rpx \+ env\(safe-area-inset-bottom\)\)/)
+ assert.ok(match)
+ assert.ok(Number(match[1]) >= 156)
+})
 test('coach schedule defaults to day without removing pending or weekly views',()=>{
  const p=loadPage('booking');assert.equal(p.data.coachTab,'day')
  const xml=fs.readFileSync(path.join(root,'pages/booking/index.wxml'),'utf8')

@@ -96,9 +96,11 @@ function decideChange(app, changeId, payload) {
 }
 
 function setAttendance(app, bookingId, payload) {
+  const status = String((payload && payload.status) || '')
+  const body = { status, note: (payload && payload.note) || '' }
   return http
-    .post('/bookings/' + bookingId + '/attendance', payload, {
-      idempotencyKey: 'att_' + bookingId
+    .post('/bookings/' + bookingId + '/attendance', body, {
+      idempotencyKey: 'att_' + bookingId + '_' + status
     })
     .then((res) => ({ data: res.data, request_id: res.request_id }))
 }

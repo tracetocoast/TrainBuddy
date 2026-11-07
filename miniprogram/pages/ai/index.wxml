@@ -37,7 +37,7 @@
       <text class="ai-badge">拍照识营养</text>
     </view>
     <view class="ai-service-title">拍照记饮食</view>
-    <view class="ai-desc short">拍一餐，估算碳水／蛋白／脂肪；确认后写入日记。</view>
+    <view class="ai-desc short">拍一餐，估算碳水／蛋白／脂肪；确认后写入日记。也可在每日记录里手写。</view>
     <view class="photo-grid">
       <button class="ai-primary food-entry-button" hover-class="ai-btn-press" bindtap="onFoodCamera">拍照</button>
       <button class="ai-outline food-entry-button" hover-class="ai-btn-press" bindtap="onFoodAlbum">相册</button>

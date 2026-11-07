@@ -106,7 +106,8 @@
 
           <!-- 饮食 -->
           <block wx:elif="{{item.id === 'meal'}}">
-            <view class="diary-empty" wx:if="{{!view.meals.length}}">还没有饮食记录</view>
+            <view class="meal-method-note">两种记法：手写描述这一餐；拍照让 AI 估算碳水／蛋白／脂肪，确认后才会写入。估算不是精确值，未知显示为 —。</view>
+            <view class="diary-empty" wx:if="{{!view.meals.length}}">还没有饮食记录，可用手写或拍照添加</view>
             <view class="diary-list" wx:else>
               <view class="meal-card" wx:for="{{view.meals}}" wx:for-item="meal" wx:key="id">
                 <view class="meal-photo {{meal.photoUrl ? '' : 'meal-photo-empty'}}">
@@ -118,7 +119,7 @@
                 <view class="meal-body">
                   <view class="meal-title-row">
                     <text class="diary-item-title">{{meal.mealTypeLabel}}</text>
-                    <text class="meal-est" wx:if="{{meal.isEstimate && meal.showMacros}}">估算</text>
+                    <text class="meal-source {{meal.isPhoto ? 'is-photo' : 'is-hand'}}">{{meal.sourceLabel}}</text>
                   </view>
                   <view class="diary-item-sub">{{meal.foodText || '未命名食物'}}</view>
                   <view class="diary-item-meta">{{meal.portionText || '份量未填'}}</view>
@@ -139,6 +140,8 @@
               </view>
             </view>
             <view class="diary-composer" wx:if="{{view.canEdit}}">
+              <button class="diary-primary" bindtap="goFoodPhoto" hover-class="diary-btn-press">拍照记饮食</button>
+              <view class="meal-hand-label">手写</view>
               <input class="diary-input" placeholder="食物描述，例如：鸡胸肉沙拉" value="{{mealText}}" bindinput="onMealText" />
               <view class="chip-row">
                 <button
@@ -151,8 +154,8 @@
                   hover-class="chip-press"
                 >{{m.label}}</button>
               </view>
-              <button class="diary-primary" bindtap="onAddMeal" hover-class="diary-btn-press" disabled="{{mealSaveState === 'saving'}}">
-                {{mealSaveState === 'saving' ? '添加中…' : '添加饮食'}}
+              <button class="diary-ghost meal-hand-btn" bindtap="onAddMeal" hover-class="diary-btn-press" disabled="{{mealSaveState === 'saving'}}">
+                {{mealSaveState === 'saving' ? '添加中…' : '手写添加'}}
               </button>
               <view class="save-hint state-{{mealSaveState}}" wx:if="{{mealSaveHint}}">{{mealSaveHint}}</view>
             </view>

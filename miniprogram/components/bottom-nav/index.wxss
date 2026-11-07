@@ -53,11 +53,11 @@
 
 .nav-item.active {
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .nav-item.active .nav-icon {
-  background: var(--ix-soft);
+  background: var(--surface-raised);
   border-color: transparent;
 }
 

@@ -491,12 +491,39 @@
   gap: 8rpx;
 }
 
-.meal-est {
+.meal-method-note {
+  margin-bottom: 16rpx;
+  font-size: 23rpx;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.meal-source {
   font-size: 18rpx;
-  color: var(--warm-ink);
-  background: var(--warm-tint);
   padding: 2rpx 10rpx;
   border-radius: 999rpx;
+}
+
+.meal-source.is-photo {
+  color: var(--warm-ink);
+  background: var(--warm-tint);
+}
+
+.meal-source.is-hand {
+  color: var(--muted);
+  background: var(--tint-2);
+}
+
+.meal-hand-label {
+  margin: 22rpx 0 10rpx;
+  font-size: 22rpx;
+  color: var(--muted);
+}
+
+.meal-hand-btn {
+  width: 100% !important;
+  flex: none;
+  margin-top: 16rpx !important;
 }
 
 .meal-macros {

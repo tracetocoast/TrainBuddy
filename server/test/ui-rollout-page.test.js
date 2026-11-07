@@ -106,6 +106,53 @@ test('diary accordion exposes each record section through its toggle handler',()
   for(const section of sections){page.onTogglePanel({currentTarget:{dataset:{id:section.id}}});assert.equal(page.data.openPanel,section.id);page.onTogglePanel({currentTarget:{dataset:{id:section.id}}});assert.equal(page.data.openPanel,'')}
   assert.ok(sections.some(x=>x.id==='training'))
 })
+test('diary meals offer handwritten and photo logging with source labels',()=>{
+  const wxml=fs.readFileSync(path.join(root,'pages/diary/index.wxml'),'utf8')
+  assert.ok(wxml.includes('拍照记饮食'))
+  assert.ok(wxml.includes('手写添加'))
+  assert.ok(wxml.includes('手写描述这一餐'))
+  assert.ok(wxml.includes('bindtap="goFoodPhoto"'))
+  const urls=[]
+  let page
+  const source=path.join(root,'pages/diary/index.js')
+  vm.runInNewContext(fs.readFileSync(source,'utf8'),{Page:p=>{page=p},require:createRequire(source),wx:{navigateTo:x=>urls.push(x.url)},getApp:()=>({})})
+  page.data=JSON.parse(JSON.stringify(page.data))
+  page.setData=function(values){Object.assign(this.data,values)}
+  page.setData({localDate:'2026-11-07'})
+  const photo=page.presentMeal({mealType:'lunch',foodText:'鸡胸',macrosG:{carbs:12,protein:35,fat:8},isEstimate:true,sourceTaskId:'task1'})
+  assert.equal(photo.sourceLabel,'拍照估算')
+  assert.equal(photo.showMacros,true)
+  assert.equal(photo.macrosViews[1].value,'35')
+  const unknown=page.presentMeal({mealType:'dinner',sourceTaskId:'task2',isEstimate:true,macrosG:{carbs:null,protein:null,fat:null}})
+  assert.equal(unknown.sourceLabel,'拍照估算')
+  assert.equal(unknown.showMacros,true)
+  assert.equal(unknown.macrosViews[0].value,'—')
+  const hand=page.presentMeal({mealType:'snack',foodText:'苹果'})
+  assert.equal(hand.sourceLabel,'手写')
+  assert.equal(hand.showMacros,false)
+  page.goFoodPhoto()
+  assert.equal(urls[0],'/pages/food-photo/index?date=2026-11-07')
+  const mealHint=page.buildAccordion({meals:[],sessions:[],coachNotes:[],shares:{}}).find(x=>x.id==='meal').hint
+  assert.equal(mealHint,'手写或拍照添加')
+})
+test('food photo keeps the diary date and can return to handwritten logging',()=>{
+  const wxml=fs.readFileSync(path.join(root,'pages/food-photo/index.wxml'),'utf8')
+  assert.ok(wxml.includes('改用手写记下这一餐'))
+  let page
+  const source=path.join(root,'pages/food-photo/index.js')
+  const urls=[]
+  let stack=[{route:'pages/diary/index'},{route:'pages/food-photo/index'}]
+  vm.runInNewContext(fs.readFileSync(source,'utf8'),{Page:p=>{page=p},require:createRequire(source),wx:{navigateTo:x=>urls.push(x.url),navigateBack:()=>urls.push('back')},getApp:()=>({globalData:{session:{user:{userId:'u1'}},pendingFoodPhoto:null}}),getCurrentPages:()=>stack,console})
+  page.data=JSON.parse(JSON.stringify(page.data))
+  page.setData=function(values){Object.assign(this.data,values)}
+  page.onLoad({date:'2026-11-07'})
+  assert.equal(page.data.localDate,'2026-11-07')
+  page.goDiary()
+  assert.equal(urls[0],'back')
+  stack=[{route:'pages/food-photo/index'}]
+  page.goDiary()
+  assert.equal(urls[1],'/pages/diary/index?date=2026-11-07')
+})
 test('coach record composer keeps typed text while voice handlers exist',()=>{
   let page
   const source=path.join(root,'pages/record/index.js')
