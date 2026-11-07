@@ -42,6 +42,18 @@ test('growth tool links select the correct existing tool detail',()=>{
  const profile=fs.readFileSync(path.join(root,'pages/profile/index.wxml'),'utf8')
  assert.ok(!profile.includes('专属工具'));assert.ok(profile.includes('账号信息'))
 })
+test('growth calendar month switch keeps week summary independent of viewed month',()=>{
+ const growth=loadPage('growth')
+ let reloads=0
+ growth.reload=function(){reloads+=1}
+ growth.data.calendarMonth='2026-11'
+ growth.data.selectedDate='2026-11-07'
+ growth.onMoveMonth({currentTarget:{dataset:{step:'-1'}}})
+ assert.equal(growth.data.calendarMonth,'2026-10')
+ assert.equal(reloads,1)
+ const next=growth.clampSelected({from:'2026-10-01',to:'2026-10-31'},'2026-11-07')
+ assert.equal(next,'2026-10-01')
+})
 test('profile switches both directions only for server-granted roles and restores student subject',()=>{
  const oldGetApp=global.getApp,oldWx=global.wx
  try{

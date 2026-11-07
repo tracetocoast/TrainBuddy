@@ -11,6 +11,7 @@ Page({
   data: {
     role: 'student',
     monthLabel: '',
+    calendarMonth: '',
     calendarCells: [],
     selectedDate: '',
     dayDetail: null,
@@ -44,7 +45,30 @@ Page({
     if (!requireLogin(this)) return
     syncRoleBar(this)
     const today = time.todayKey()
-    this.setData({ selectedDate: this.data.selectedDate || today, chartReady: false })
+    this.setData({
+      calendarMonth: this.data.calendarMonth || today.slice(0, 7),
+      selectedDate: this.data.selectedDate || today,
+      chartReady: false
+    })
+    this.reload()
+  },
+
+  calendarRange() {
+    const month = this.data.calendarMonth || time.todayKey().slice(0, 7)
+    return growthApi.monthRange(month + '-01')
+  },
+
+  clampSelected(range, today) {
+    const selected = this.data.selectedDate
+    if (selected && selected >= range.from && selected <= range.to) return selected
+    if (today >= range.from && today <= range.to) return today
+    return range.from
+  },
+
+  onMoveMonth(e) {
+    const current = this.data.calendarMonth || time.todayKey().slice(0, 7)
+    const month = insights.moveMonth(current, Number(e.currentTarget.dataset.step))
+    this.setData({ calendarMonth: month })
     this.reload()
   },
 
@@ -71,7 +95,8 @@ Page({
     const app = getApp()
     const studentId = this.studentId()
     const today = time.todayKey()
-    const range = growthApi.monthRange(today)
+    const calendarMonth = this.data.calendarMonth || today.slice(0, 7)
+    const range = this.calendarRange()
 
     return Promise.all([
       growthApi.getSummary(app, studentId),
@@ -104,12 +129,15 @@ Page({
           ringDeg: rate != null ? Math.min(100, Math.max(0, rate)) * 3.6 : 0,
           empty: !summary || (!!summary.empty && summary.empty.sessionCount && summary.empty.planCompletionRate)
         }
-        const cells = this.buildCalendar(range.from, range.to, markerMap, measureDates, today)
-        const p = time.parseDateKey(today)
+        const selectedDate = this.clampSelected(range, today)
+        const cells = this.buildCalendar(range.from, range.to, markerMap, measureDates, today, selectedDate)
+        const p = time.parseDateKey(calendarMonth + '-01')
         this.setData({
           summary,
           weekBars,
           weekGoal,
+          calendarMonth,
+          selectedDate,
           monthLabel: p.y + '年' + p.m + '月',
           calendarCells: cells,
           highlights: insights.recentLoadHighlights(sessions),
@@ -127,13 +155,13 @@ Page({
           })),
           chartReady: true
         })
-        return this.loadDayDetail(this.data.selectedDate)
+        return this.loadDayDetail(selectedDate)
       })
       .catch((err) => this.setData({ error: err.message || '训练统计加载失败，请重试' }))
       .then(() => this.setData({ loading: false }))
   },
 
-  buildCalendar(from, to, markerMap, measureDates, today) {
+  buildCalendar(from, to, markerMap, measureDates, today, selectedDate) {
     const firstMs = time.shanghaiLocalToMs(from, '12:00')
     const startWd = time.toShanghaiParts(firstMs).weekday
     const pad = startWd === 0 ? 6 : startWd - 1
@@ -159,7 +187,7 @@ Page({
         date: cursor,
         day: d.day,
         isToday: cursor === today,
-        isSelected: cursor === this.data.selectedDate,
+        isSelected: cursor === selectedDate,
         dots,
         hasAny: dots.length > 0
       })
@@ -198,7 +226,12 @@ Page({
         dayDetail: {
           date,
           markers,
-          sessions: v.sessions || [],
+          sessions: (v.sessions || []).map((s) =>
+            Object.assign({}, s, {
+              id: s.id || s.session_id,
+              doneSets: s.doneSets != null ? s.doneSets : s.done_sets || 0
+            })
+          ),
           measures: measures.map((row) => ({
             id: row.id || row.date + '_' + (row.time || ''),
             time: row.time || row.timeLabel || '时间未记录',

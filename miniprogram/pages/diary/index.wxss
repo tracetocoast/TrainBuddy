@@ -548,11 +548,32 @@
   font-weight: 400;
 }
 
+.diary-session-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
 .diary-item-title {
   font-size: 27rpx;
   font-weight: 500;
   color: var(--ink);
   line-height: 1.4;
+}
+
+.diary-session-row .diary-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diary-item-sets {
+  flex: none;
+  color: var(--muted);
+  font-size: 25rpx;
+  font-variant-numeric: tabular-nums;
 }
 
 .diary-item-sub {

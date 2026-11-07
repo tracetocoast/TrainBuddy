@@ -275,9 +275,9 @@
           <block wx:elif="{{item.id === 'training'}}">
             <view class="diary-empty" wx:if="{{!view.sessions.length}}">当日暂无完成训练</view>
             <view class="diary-list" wx:else>
-              <view class="diary-item" wx:for="{{view.sessions}}" wx:for-item="sess" wx:key="id">
+              <view class="diary-item diary-session-row" wx:for="{{view.sessions}}" wx:for-item="sess" wx:key="id">
                 <view class="diary-item-title">{{sess.title}}</view>
-                <view class="diary-item-sub">已完成 {{sess.doneSets}} 组 · {{sess.sourceType === 'coach_post_session' ? '教练课后表' : '自动关联'}}</view>
+                <text class="diary-item-sets">{{sess.doneSets}} 组完成</text>
               </view>
             </view>
             <view class="diary-item-sub" style="margin-top:16rpx">将当日已完成训练共享给绑定教练；可随时撤回。</view>
