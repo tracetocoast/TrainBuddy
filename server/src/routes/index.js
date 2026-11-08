@@ -745,6 +745,10 @@ function buildRouter() {
           )
           return out.data
         }
+        if(req.body.source_type === 'manual'){
+          const out=await unwrap(trainingService.createFreeSession(app,req.actor.userId))
+          return out.data
+        }
         throw new AppError('VALIDATION', '请使用 /plans/{id}/start-session 开练')
       })
       ok(res, data)
@@ -835,6 +839,20 @@ function buildRouter() {
       next(e)
     }
   })
+
+  for (const method of ['post','delete']) {
+    r[method]('/sessions/:id/exercises/:exerciseId/sets' + (method==='delete'?'/:setId':''), authRequired, idempotency(), async (req,res,next)=>{
+      try{
+        const data=await req.app.locals.store.tx(async()=>{
+          const app=asApp(req.app.locals.store),cur=await unwrap(trainingService.getSession(app,req.params.id))
+          assertSessionEditor(req,cur.data)
+          const out=await unwrap(trainingService.changeSessionSet(app,req.params.id,req.params.exerciseId,req.params.setId))
+          return out.data
+        })
+        ok(res,data)
+      }catch(e){next(e)}
+    })
+  }
 
   r.post('/sessions/:id/exercises', authRequired, async (req, res, next) => {
     try {

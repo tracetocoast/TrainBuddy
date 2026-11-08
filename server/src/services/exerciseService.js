@@ -246,6 +246,13 @@ function listExercises(app, query) {
   const matched = approvedPublic(app)
     .filter((row) => matches(row, query))
     .sort((a, b) => {
+      const priority = row => {
+        const name = String(row.name).toLowerCase()
+        const common = ['barbell bench press', 'barbell bench press - medium grip', 'barbell full squat', 'barbell deadlift', 'pullups', 'wide-grip lat pulldown', 'bent over barbell row', 'dumbbell shoulder press', 'dumbbell bench press', 'side lateral raise', 'barbell curl', 'triceps pushdown', 'leg press', 'lying leg curls', 'standing calf raises', 'crunches']
+        const index = common.indexOf(name)
+        return index < 0 ? 999 : index
+      }
+      if (priority(a) !== priority(b)) return priority(a) - priority(b)
       if (a.origin === 'curated' && b.origin !== 'curated') return -1
       if (b.origin === 'curated' && a.origin !== 'curated') return 1
       return String(translateName(a.name)).localeCompare(String(translateName(b.name)), 'zh')

@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm')
 function setup(api={},wx={}) {
- let page;const timers=[],app={globalData:{session:{user:{userId:'u'}}}},defaults={listFacets:async()=>({data:{body_parts:[],equipment:[]}}),listExercises:async()=>({data:[],total:0})}
+ let page;const timers=[],app={globalData:{session:{user:{userId:'u'}}}},defaults={listSessions:async()=>({data:[]}),listFacets:async()=>({data:{body_parts:[],equipment:[]}}),listExercises:async()=>({data:[],total:0})}
  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../../miniprogram/pages/exercises/index.js'),'utf8'),{Page:p=>page=p,require:id=>id.includes('guard')?{requireLogin:()=>true}:Object.assign(defaults,api),getApp:()=>app,wx:Object.assign({navigateTo(){}},wx),setTimeout:fn=>{timers.push(fn);return timers.length},clearTimeout(){}})
  page.data=JSON.parse(JSON.stringify(page.data));page.setData=function(v){Object.assign(this.data,v)};return {page,timers}
 }

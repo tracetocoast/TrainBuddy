@@ -3,7 +3,7 @@
         <view class="exercise-grid">
           <button class="exercise-tile {{pickedIds[item.id] ? 'picked' : ''}}" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="onTileTap" aria-label="{{pickMode ? '选择' : '查看'}}{{item.name}}">
             <view class="exercise-art"><image wx:if="{{item.imageUrl && !item.imageFailed}}" class="exercise-image" src="{{item.imageUrl}}" mode="aspectFit" lazy-load data-id="{{item.id}}" binderror="onImageError"/><view class="image-placeholder" wx:else><ui-icon name="body" size="48"/><text>{{item.imageFailed ? '示范图未加载' : '暂无示范图'}}</text></view></view>
-            <view class="exercise-name">{{item.name}}</view><view class="exercise-meta">{{item.equipmentLabel || item.equipment || '器械未标注'}}</view>
+            <view class="exercise-use-count" wx:if="{{item.usageCount}}">{{item.usageCount}}次</view><view class="exercise-name">{{item.name}}</view><view class="exercise-meta">{{item.equipmentLabel || item.equipment || '器械未标注'}}</view>
             <view class="pick-mark" wx:if="{{pickedIds[item.id]}}">已选</view>
           </button>
         </view>

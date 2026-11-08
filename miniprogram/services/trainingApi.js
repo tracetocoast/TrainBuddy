@@ -246,6 +246,8 @@ function countDoneSets(session) {
 }
 
 module.exports = {
+  createFreeSession: (app,key) => http.post('/sessions',{source_type:'manual'},{idempotencyKey:key}),
+  changeSessionSet: (app,id,exId,setId,key) => setId ? http.del('/sessions/'+id+'/exercises/'+exId+'/sets/'+setId,{idempotencyKey:key}) : http.post('/sessions/'+id+'/exercises/'+exId+'/sets',{}, {idempotencyKey:key}),
   EXERCISE_LIBRARY,
   ensureStore,
   createManualPlan,

@@ -54,7 +54,7 @@ function baselineOf(ex) {
 
 Page({
   data: {
-    role: 'student',
+    role: 'student', setEditor:null, editorKeyboardHeight:0, showHistory:false, exerciseHistory:[],
     plans: [],
     hasPublishedPlans: false,
     session: null,
@@ -83,11 +83,20 @@ Page({
     imageFailed: {}
   },
 
+  onLoad(query) { this._newFree=!!(query && query.new==='1') },
   onShow() {
     if (!requireLogin(this)) return
     syncRoleBar(this)
     this.setData({ reduced: interaction.reducedMotion() })
+    if(this._newFree){this._newFree=false;this.startFreeSession();return}
     this.reload()
+  },
+  startFreeSession() {
+    this.setData({loading:true,loadError:''})
+    const owner=this.studentId()
+    return trainingApi.createFreeSession(getApp(),'free:'+owner+':'+Date.now()).then(res=>{
+      if(!this._unloaded && owner===this.studentId())this.applySession(res.data,true)
+    }).catch(err=>this.setData({loadError:err.message||'创建训练失败'})).then(()=>this.setData({loading:false}))
   },
   onHide() { this.cacheDraft(); this.closeRest(true) },
   onUnload() {
@@ -571,6 +580,94 @@ Page({
     })
   },
 
+  onNewTraining() { wx.navigateTo({url:'/pages/new-workout/index'}) },
+  onOpenSetEditor(e) {
+    const sid=e.currentTarget.dataset.sid,field=e.currentTarget.dataset.field||'type'
+    const ex=this.data.session.exercises.find(row=>row.id===this.data.lockedExerciseId)
+    const set=ex && ex.sets.find(row=>row.id===sid)
+    if(this._writeBusy || this.data.finishing || !set || !['actualWeight','actualReps','type'].includes(field))return
+    this.setData({setEditor:{sid,field,no:set.setNo,kind:set.setType||'working',value:set[field]==null?'':String(set[field])},editorKeyboardHeight:0})
+  },
+  onEditorInput(e) {
+    const editor=this.data.setEditor
+    if(!editor || editor.field==='type')return
+    this.onSetField({currentTarget:{dataset:{sid:editor.sid,field:editor.field}},detail:{value:e.detail.value}})
+    this.setData({setEditor:Object.assign({},editor,{value:e.detail.value})})
+  },
+  onEditorKeyboard(e) { this.setData({editorKeyboardHeight:e.detail.height||0}) },
+  onCloseSetEditor() { this.setData({setEditor:null,editorKeyboardHeight:0});if(wx.hideKeyboard)wx.hideKeyboard() },
+  async onSetType(e) {
+    if(this._writeBusy || this.data.finishing)return
+    this._writeBusy=true;this.setData({savingSet:true,saveError:''})
+    const editor=this.data.setEditor
+    const id=editor ? editor.sid : e.currentTarget.dataset.sid
+    const kind=e.currentTarget.dataset.kind
+    try{
+      const res=await trainingApi.updateActualSet(getApp(),this.data.session.session_id,id,{setType:kind})
+      this.applySession(res.data,false)
+      this.onCloseSetEditor()
+    }catch(err){this.setData({saveError:err.message||'切换失败'})}
+    finally{this._writeBusy=false;this.setData({savingSet:false})}
+  },
+  onAddActions() {
+    if(this._writeBusy || this.data.finishing)return
+    wx.navigateTo({url:'/pages/exercises/index?pick=1',events:{selectExercises:items=>this.addLibraryExercises(items)}})
+  },
+  async addLibraryExercises(items) {
+    if(this._writeBusy || !this.data.session)return
+    this._writeBusy=true
+    try{
+      for(const item of items){
+        const res=await trainingApi.addExercise(getApp(),this.data.session.session_id,{exerciseId:item.id,name:item.name,sets:3,reps:10,weight:item.defaultWeight==null?0:item.defaultWeight})
+        this.applySession(res.data,false)
+      }
+    }catch(err){this.setData({saveError:err.message||'添加失败，请核对已添加动作'})}
+    finally{this._writeBusy=false}
+  },
+  async onChangeGroup(e) {
+    if(this._writeBusy || this.data.finishing)return
+    const exId=this.data.lockedExerciseId,setId=e.currentTarget.dataset.sid
+    this._writeBusy=true;this.setData({savingSet:true,saveError:''})
+    try{
+      const pending=Object.keys(this.data.pending)
+      for(const id of pending)await this.saveSet(id)
+      const res=await trainingApi.changeSessionSet(getApp(),this.data.session.session_id,exId,setId,'group:'+Date.now()+':'+Math.random())
+      this.applySession(res.data,false)
+    }catch(err){this.setData({saveError:err.message||'修改失败，输入已保留'})}
+    finally{this._writeBusy=false;this.setData({savingSet:false})}
+  },
+  onRemoveAction() {
+    if(this._writeBusy || this.data.finishing)return
+    const id=this.data.lockedExerciseId
+    wx.showModal({title:'移除这个动作？',content:'本次训练中该动作的训练组也会删除。',success:async result=>{
+      if(!result.confirm || this._writeBusy)return
+      this._writeBusy=true
+      try{
+        const res=await trainingApi.removeExercise(getApp(),this.data.session.session_id,id)
+        const pending=Object.assign({},this.data.pending)
+        const ex=this.data.session.exercises.find(row=>row.id===id)
+        ;(ex.sets||[]).forEach(set=>delete pending[set.id])
+        this.setData({pending,lockedExerciseId:'',phase:'picker',showHistory:false})
+        this.applySession(res.data,false)
+      }catch(err){this.setData({saveError:err.message||'删除失败'})}
+      finally{this._writeBusy=false}
+    }})
+  },
+  onExerciseHistory() {
+    const current=this.data.session.exercises.find(ex=>ex.id===this.data.lockedExerciseId)
+    if(!current)return
+    const owner=this.studentId()
+    return trainingApi.listSessions(getApp(),{studentId:owner,status:['completed']}).then(res=>{
+      if(owner!==this.studentId())return
+      const rows=(res.data||[]).filter(row=>row.session_id!==this.data.session.session_id).map(row=>{
+        const ex=(row.exercises||[]).find(ex=>current.exerciseId ? ex.exerciseId===current.exerciseId : ex.name===current.name)
+        if(!ex)return null
+        const sets=(ex.sets||[]).filter(set=>set.state==='done')
+        return sets.length?{sessionId:row.session_id,date:row.business_date,summary:sets.map((set,i)=>(i+1)+'. '+set.actualWeight+' kg × '+set.actualReps+' 次').join('；')}:null
+      }).filter(Boolean).sort((a,b)=>String(b.date).localeCompare(String(a.date)))
+      this.setData({exerciseHistory:rows,showHistory:true})
+    }).catch(err=>getApp().toast(err.message||'历史加载失败'))
+  },
   goPlans() { wx.navigateTo({ url: '/pages/plans/index' }) },
   goExercises() { wx.navigateTo({ url: '/pages/exercises/index' }) },
   goDiary() { wx.navigateTo({ url: '/pages/diary/index' }) },

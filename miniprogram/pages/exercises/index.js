@@ -1,6 +1,7 @@
 const { requireLogin } = require('../../utils/guard')
 const exerciseApi = require('../../services/exerciseApi')
 
+const trainingApi = require('../../services/trainingApi')
 const PAGE_SIZE = 30
 
 Page({
@@ -39,6 +40,21 @@ Page({
     if (this._owner === owner) return
     this._owner = owner
     this._unloaded = false
+    this._usage = {}
+    trainingApi.listSessions(getApp(), {studentId:owner,status:['completed']}).then(res=>{
+      if(this._unloaded || this._owner!==owner)return
+      const counts={}
+      ;(res.data||[]).forEach(session=>{
+        const seen={}
+        ;(session.exercises||[]).forEach(ex=>{
+          if(!(ex.sets||[]).some(set=>set.state==='done'))return
+          const key=ex.exerciseId||ex.name
+          if(!seen[key]){counts[key]=(counts[key]||0)+1;seen[key]=true}
+        })
+      })
+      this._usage=counts
+      this.setData({list:this.withUsage(this.data.list),sectionHistory:this.data.sectionHistory.map(group=>Object.assign({},group,{list:this.withUsage(group.list)}))})
+    }).catch(()=>{})
     this.loadFacets()
     this.reload()
   },
@@ -61,6 +77,8 @@ Page({
     }).catch(() => { if (!this._unloaded) this.setData({ filterError:'分类加载失败，可继续搜索', }) })
   },
 
+  withUsage(list) { return (list||[]).map(item=>Object.assign({},item,{usageCount:(this._usage||{})[item.id]||(this._usage||{})[item.name]||0})) },
+
   query() {
     return {
       q: this.data.q,
@@ -82,7 +100,7 @@ Page({
       .listExercises(app, Object.assign(this.query(), { page: 1 }))
       .then((res) => {
         if (sequence !== this._sequence) return
-        const list = res.data || []
+        const list = this.withUsage(res.data || [])
         const total = res.total == null ? list.length : res.total
         this.setData({ list, total, page: 1, hasMore: list.length < total })
         this.updateContinuation()
@@ -110,7 +128,7 @@ Page({
       .listExercises(app, Object.assign(this.query(), { page }))
       .then((res) => {
         if (sequence !== this._sequence) return
-        const extra = res.data || []
+        const extra = this.withUsage(res.data || [])
         const list = this.data.list.concat(extra)
         const total = res.total == null ? this.data.total : res.total
         this.setData({ list, total, page, hasMore: extra.length > 0 && list.length < total })
@@ -177,7 +195,7 @@ Page({
     return exerciseApi.listExercises(getApp(),Object.assign(this.query(),{body_part:next.value,page:1})).then(res=>{
       if(sequence!==this._sequence)return
       const history=this.data.sectionHistory.concat([{key:this.data.bodyPart,label:this.data.selectedLabel,total:this.data.total,list:this.data.list}])
-      const list=res.data||[],total=res.total==null?list.length:res.total
+      const list=this.withUsage(res.data||[]),total=res.total==null?list.length:res.total
       this.setData({sectionHistory:history,bodyPart:next.value,selectedLabel:next.label,list,total,page:1,hasMore:list.length<total})
       this.updateContinuation()
     }).catch(err=>{if(sequence===this._sequence){this._nextPartFailed=true;this.setData({error:err.message||'下一部位加载失败，请重试'})}})

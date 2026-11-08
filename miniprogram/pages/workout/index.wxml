@@ -13,17 +13,11 @@
   </view>
 
   <block wx:if="{{!session}}">
-    <view class="eyebrow">WORKOUT SESSION</view>
-    <view class="title">开始你的训练</view>
-    <view class="sub">记好每一组，看见每一点进步。</view>
-
-    <view class="twobtn workout-entry-btns">
-      <button class="secondary entry-btn" bindtap="goPlans">配置训练模板</button>
-      <button class="secondary entry-btn" bindtap="goDiary">日记记录</button>
-    </view>
-
+    <view class="eyebrow">TRAINING LOG</view>
+    <view class="title">记录</view>
+    <button class="primary new-training" bindtap="onNewTraining">＋ 新建训练</button>
     <view class="head">
-      <view class="head-title">可执行计划</view>
+      <view class="head-title">我的待练计划</view>
       <button class="link" bindtap="goExercises">动作库 ↗</button>
     </view>
     <view class="card" wx:for="{{plans}}" wx:key="plan_id">
@@ -50,7 +44,9 @@
 
     <!-- 摩天轮选择 -->
     <block wx:if="{{phase === 'picker'}}">
-      <view class="wheel-section">
+      <view class="free-empty" wx:if="{{!wheelItems.length}}"><view class="title">从第一个动作开始</view><view class="sub">选择今天想练的动作，随时添加和调整。</view></view>
+      <button class="primary new-training" bindtap="onAddActions">＋ 添加动作</button>
+      <view class="wheel-section" wx:if="{{wheelItems.length}}">
         <view class="wheel-eyebrow">TODAY'S WORKOUT</view>
         <view class="wheel-h1">先选一个动作开始</view>
         <view class="wheel-sub">左右滑动，像摩天轮一样选择今天想先练的动作。</view>
@@ -63,7 +59,7 @@
         </view>
       </view>
 
-      <view
+      <view wx:if="{{wheelItems.length}}"
         class="carousel-wrap"
         bindtouchstart="onWheelTouchStart"
         bindtouchend="onWheelTouchEnd"
@@ -112,61 +108,28 @@
     <!-- 锁定执行：放大进入 -->
     <block wx:if="{{phase === 'locked' && focusView}}">
       <view id="focus-card" class="current-card {{reduced ? '' : 'current-card-pop'}}">
-        <view class="demo">
-          <text class="demo-tag">{{focusView.muscle}}</text>
-          <text class="demo-lock">已锁定动作</text>
-          <image
-            wx:if="{{focusView.imageUrl && !focusView.imageFailed}}"
-            class="demo-figure"
-            src="{{focusView.imageUrl}}"
-            mode="aspectFit"
-            binderror="onFocusImageError"
-          />
-          <view wx:else class="demo-fallback">
-            <text class="demo-fallback-icon">{{focusView.icon}}</text>
-          </view>
-        </view>
         <view class="info">
           <view class="info-name">{{focusView.exerciseName}}</view>
           <view class="info-meta">{{focusView.muscle}} · 第 {{focusView.exerciseOrder}} / {{focusView.exerciseTotal}} 个动作</view>
 
-          <view class="baseline">
-            <text class="baseline-small">计划默认值 · 不修改训练计划</text>
-            <text class="baseline-value">{{focusView.baselineLabel}}</text>
-          </view>
-          <view class="adjust-note">下面的调整仅对本次训练临时生效，不会改变原训练计划。改计划请点右上角 ···</view>
-
-          <view class="setline">
-            <view>
-              <text class="setline-small">当前组</text>
-              <view class="setline-no">
-                <text class="setline-b">{{focusView.setNo}}</text>
-                <text class="setline-small"> / {{focusView.setTotal}} 组</text>
-              </view>
-            </view>
-            <text class="setline-small">本动作 {{focusView.doneInExercise}} / {{focusView.setTotal}} 组</text>
-          </view>
-          <view class="set-bar"><view class="set-bar-fill" style="width: {{focusView.progressPercent}}%;"></view></view>
-
-          <view class="controls">
-            <view class="control">
-              <text class="control-label">本次实际重量</text>
-              <view class="stepper">
-                <button class="step" data-field="actualWeight" data-delta="-2.5" bindtap="onStepValue" disabled="{{savingSet || finishing}}">−</button>
-                <view class="value-wrap"><text class="value">{{focusView.weightText}}</text><text class="unit">kg</text></view>
-                <button class="step" data-field="actualWeight" data-delta="2.5" bindtap="onStepValue" disabled="{{savingSet || finishing}}">＋</button>
-              </view>
-            </view>
-            <view class="control">
-              <text class="control-label">本次实际次数</text>
-              <view class="stepper">
-                <button class="step" data-field="actualReps" data-delta="-1" bindtap="onStepValue" disabled="{{savingSet || finishing}}">−</button>
-                <view class="value-wrap"><text class="value">{{focusView.repsText}}</text><text class="unit">次</text></view>
-                <button class="step" data-field="actualReps" data-delta="1" bindtap="onStepValue" disabled="{{savingSet || finishing}}">＋</button>
-              </view>
+          <view class="sub">点击组号切换热身 / 正式，右侧勾选完成本组。</view>
+          <view class="compact-heading"><text>组</text><text>重量 kg</text><text>次数</text><text></text><text>完成</text></view>
+          <view class="compact-set" wx:for="{{session.exercises}}" wx:for-item="ex" wx:key="id" wx:if="{{ex.id === lockedExerciseId}}">
+            <view class="compact-set-row {{set.state === 'done' ? 'set-is-done' : ''}}" wx:for="{{ex.sets}}" wx:for-item="set" wx:key="id">
+              <button class="set-type {{set.setType === 'warmup' ? 'is-warmup' : ''}}" data-sid="{{set.id}}" data-kind="{{set.setType}}" bindtap="onOpenSetEditor" disabled="{{savingSet || finishing}}" aria-label="调整本组类型">{{set.setType === 'warmup' ? '热' : set.setNo}}</button>
+              <button class="set-value" data-sid="{{set.id}}" data-field="actualWeight" bindtap="onOpenSetEditor" disabled="{{savingSet || finishing}}"><text class="set-unit">kg</text><text>{{set.actualWeight == null ? '—' : set.actualWeight}}</text></button>
+              <button class="set-value" data-sid="{{set.id}}" data-field="actualReps" bindtap="onOpenSetEditor" disabled="{{savingSet || finishing}}"><text class="set-unit">次</text><text>{{set.actualReps == null ? '—' : set.actualReps}}</text></button>
+              <button class="group-delete" data-sid="{{set.id}}" bindtap="onChangeGroup" disabled="{{savingSet || finishing}}" aria-label="删除本组">−</button>
+              <button class="set-check {{set.state === 'done' ? 'is-checked' : ''}}" data-sid="{{set.id}}" data-state="{{set.state === 'done' ? 'pending' : 'done'}}" bindtap="onSetState" disabled="{{savingSet || finishing || restVisible}}" aria-label="{{set.state === 'done' ? '重新编辑本组' : '完成本组'}}">✓</button>
             </view>
           </view>
-
+          <view class="sub">{{focusView.muscle}} · 重量按当前动作计重方式填写</view>
+          <view class="group-tools"><button class="secondary" bindtap="onChangeGroup" disabled="{{savingSet || finishing}}">＋ 新增一组</button><button class="link" bindtap="onRemoveAction" disabled="{{savingSet || finishing}}">移除动作</button></view>
+          <button class="link" bindtap="onExerciseHistory">动作历史 ›</button>
+          <view wx:if="{{showHistory}}">
+            <view class="compact-history" wx:for="{{exerciseHistory}}" wx:key="sessionId"><text>{{item.date}}</text><text>{{item.summary}}</text></view>
+            <view class="sub" wx:if="{{!exerciseHistory.length}}">暂无已完成训练记录</view>
+          </view>
           <view class="locked-tools" wx:if="{{focusView.exerciseId}}">
             <button class="tool" data-id="{{focusView.exerciseId}}" bindtap="goExerciseDetail">动作详情</button>
           </view>
@@ -230,4 +193,15 @@
   </view>
   <button class="wheel-start" bindtap="onChooseNextExercise">选择下一个动作</button>
   <button class="link done-finish" bindtap="onFinish">结束整次训练</button>
+</view>
+
+<view class="set-editor-mask" wx:if="{{setEditor}}" bindtap="onCloseSetEditor"></view>
+<view class="set-editor {{skinClass}}" wx:if="{{setEditor}}" style="bottom:{{editorKeyboardHeight}}px" catchtouchmove="noop">
+  <view class="set-editor-head"><view><text class="card-title">第 {{setEditor.no}} 组</text><view class="sub">{{setEditor.field === 'type' ? '调整训练组' : (setEditor.field === 'actualWeight' ? '实际重量 · kg' : '实际次数')}}</view></view><button class="link" bindtap="onCloseSetEditor">收起</button></view>
+  <input wx:if="{{setEditor.field !== 'type'}}" class="set-editor-input" type="{{setEditor.field === 'actualWeight' ? 'digit' : 'number'}}" value="{{setEditor.value}}" focus="{{true}}" adjust-position="{{false}}" bindinput="onEditorInput" bindkeyboardheightchange="onEditorKeyboard" placeholder="输入数值"/>
+  <view class="set-editor-options">
+    <button class="secondary {{setEditor.kind === 'warmup' ? 'type-selected' : ''}}" data-kind="warmup" bindtap="onSetType" disabled="{{savingSet}}">热身组</button>
+    <button class="secondary {{setEditor.kind === 'working' ? 'type-selected' : ''}}" data-kind="working" bindtap="onSetType" disabled="{{savingSet}}">正式组</button>
+  </view>
+  <view class="set-editor-foot"><text>输入会暂存，勾选后同步</text><button class="primary" bindtap="onCloseSetEditor">完成输入</button></view>
 </view>

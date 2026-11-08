@@ -35,3 +35,5 @@
 .retry-button { width:auto !important; min-height:44px; color:var(--accent); text-align:left; font-size:25rpx; }
 .end-state { text-align:center; padding-bottom:40rpx; }
 @media (max-width:340px) { .body-sidebar { width:120rpx; } .body-option { font-size:25rpx; } .exercise-grid { gap:12rpx; padding:0 12rpx 12rpx; } .exercise-tile { padding:10rpx; } .exercise-art { height:140rpx; } .exercise-name { font-size:24rpx; } }
+
+.exercise-tile{position:relative;}.exercise-use-count{position:absolute;top:8rpx;right:8rpx;padding:4rpx 10rpx;border-radius:10rpx;background:var(--surface);color:var(--accent);font-size:22rpx;}

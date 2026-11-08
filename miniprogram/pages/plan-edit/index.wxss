@@ -351,3 +351,5 @@
 .ix-tools button {
   min-height: 72rpx;
 }
+
+.compact-plan-values{display:flex;gap:12rpx;align-items:center;padding:12rpx 0;}.compact-plan-values input{flex:1;min-width:0;height:72rpx;text-align:center;background:var(--surface);border:1rpx solid var(--line);border-radius:10rpx;font-size:30rpx;}

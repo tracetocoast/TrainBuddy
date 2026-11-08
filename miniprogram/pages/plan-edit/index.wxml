@@ -1,4 +1,97 @@
-<wxs src="../../utils/swipe-axis.wxs" module="swipeAxis" />
+<wxs module="swipeAxis">
+function point(event) {
+  var list = event.touches
+  if (!list || !list.length) list = event.changedTouches
+  if (!list || !list.length) return null
+  return list[0]
+}
+
+function numberOf(value, fallback) {
+  var n = value * 1
+  if (n !== n) return fallback
+  return n
+}
+
+function start(event, ownerInstance) {
+  var touch = point(event)
+  var state = ownerInstance.getState()
+  var dataset = event.currentTarget && event.currentTarget.dataset
+  if (!touch) return
+  state.startX = touch.clientX
+  state.startY = touch.clientY
+  state.axis = ''
+  state.ready = 1
+  state.offset = dataset ? numberOf(dataset.offset, 0) : 0
+  state.startOffset = state.offset
+  state.max = dataset ? numberOf(dataset.max, 104) : 104
+  state.index = dataset ? dataset.index : ''
+}
+
+function move(event, ownerInstance) {
+  var state = ownerInstance.getState()
+  var touch = point(event)
+  if (!touch) return
+  if (!state.ready) {
+    start(event, ownerInstance)
+    return
+  }
+  var dx = touch.clientX - state.startX
+  var dy = touch.clientY - state.startY
+  if (!state.axis) {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+    state.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+  }
+  if (state.axis !== 'x') return
+  var offset = state.startOffset + dx
+  if (offset > 0) offset = 0
+  if (offset < -state.max) offset = -state.max
+  state.offset = offset
+  if (event.instance && event.instance.setStyle) {
+    event.instance.setStyle({
+      transform: 'translateX(' + offset + 'px)',
+      transition: 'none'
+    })
+  }
+  var method = 'onSwipeMove'
+  var dataset = event.currentTarget && event.currentTarget.dataset
+  if (dataset && dataset.moveMethod) method = dataset.moveMethod
+  ownerInstance.callMethod(method, {
+    clientX: touch.clientX,
+    clientY: touch.clientY,
+    touches: [{ clientX: touch.clientX, clientY: touch.clientY }]
+  })
+  return false
+}
+
+function end(event, ownerInstance) {
+  var state = ownerInstance.getState()
+  var dataset = event.currentTarget && event.currentTarget.dataset
+  if (state.axis === 'x') {
+    var open = state.offset < -state.max / 2
+    var final = open ? -state.max : 0
+    if (event.instance && event.instance.setStyle) {
+      event.instance.setStyle({
+        transform: 'translateX(' + final + 'px)',
+        transition: 'transform 180ms ease'
+      })
+    }
+    var snap = 'onSwipeSnap'
+    if (dataset && dataset.snapMethod) snap = dataset.snapMethod
+    ownerInstance.callMethod(snap, {
+      index: state.index,
+      si: dataset && dataset.si,
+      offset: final
+    })
+  }
+  state.ready = 0
+  state.axis = ''
+}
+
+module.exports.start = start
+module.exports.move = move
+module.exports.end = end
+
+</wxs>
 <page-meta background-color="{{pageBg}}" />
 <view class="page page-solo plan-edit-page interaction-scope {{reduced ? 'ix-reduced' : ''}} {{skinClass}}">
   <view class="eyebrow">TRAINING PLAN</view>
@@ -46,57 +139,7 @@
         bindinput="onField"
         disabled="{{!draft || saving || conflict || !plan.can_edit}}"
       />
-      <view class="field-label">训练日期</view>
-      <view class="chip-row">
-        <button
-          class="choice {{item.on ? 'on' : ''}}"
-          wx:for="{{scheduleTypeChips}}"
-          wx:key="key"
-          data-key="{{item.key}}"
-          bindtap="onScheduleMode"
-          disabled="{{!draft || saving || conflict || !plan.can_edit}}"
-        >{{item.label}}</button>
-      </view>
-      <view class="range-row" wx:if="{{scheduleMode === 'range'}}">
-        <picker mode="date" value="{{plannedDate}}" data-field="plannedDate" bindchange="onField" disabled="{{!draft || saving || conflict || !plan.can_edit}}">
-          <view class="date-row {{!draft || saving || conflict || !plan.can_edit ? 'is-disabled' : ''}}">开始 {{plannedDate || '选择日期'}} ▾</view>
-        </picker>
-        <picker mode="date" value="{{scheduleEnd}}" data-field="scheduleEnd" bindchange="onField" disabled="{{!draft || saving || conflict || !plan.can_edit}}">
-          <view class="date-row {{!draft || saving || conflict || !plan.can_edit ? 'is-disabled' : ''}}">结束 {{scheduleEnd || '选择日期'}} ▾</view>
-        </picker>
-      </view>
-      <block wx:if="{{scheduleMode === 'repeat'}}">
-        <view class="chip-row compact">
-          <button
-            class="choice mini {{item.on ? 'on' : ''}}"
-            wx:for="{{repeatKindChips}}"
-            wx:key="key"
-            data-key="{{item.key}}"
-            bindtap="onRepeatKind"
-            disabled="{{!draft || saving || conflict || !plan.can_edit}}"
-          >{{item.label}}</button>
-        </view>
-        <view class="chip-row compact" wx:if="{{repeatKind === 'weekly'}}">
-          <button
-            class="choice mini {{item.on ? 'on' : ''}}"
-            wx:for="{{weekChips}}"
-            wx:key="value"
-            data-value="{{item.value}}"
-            bindtap="onToggleWeekday"
-            disabled="{{!draft || saving || conflict || !plan.can_edit}}"
-          >{{item.label}}</button>
-        </view>
-        <view class="day-grid" wx:if="{{repeatKind === 'monthly'}}">
-          <button
-            class="choice mini day {{item.on ? 'on' : ''}}"
-            wx:for="{{monthChips}}"
-            wx:key="value"
-            data-value="{{item.value}}"
-            bindtap="onToggleMonthDay"
-            disabled="{{!draft || saving || conflict || !plan.can_edit}}"
-          >{{item.value}}</button>
-        </view>
-      </block>
+
     </view>
 
     <view class="section-head">
@@ -208,8 +251,8 @@
               <text class="card-title">第 {{si + 1}} 组</text>
             </view>
           </view>
-          <training-number-control reduced="{{reduced}}" label="{{exercises[sheetIndex].loadBasis === 'bodyweight' ? '额外重量' : '目标重量'}}" unit="kg" value="{{set.targetWeight}}" min="0" max="2000" step="2.5" ruler data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetWeight" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/>
-          <training-number-control reduced="{{reduced}}" label="目标次数" unit="次" value="{{set.targetReps}}" min="1" max="1000" step="1" integer show-slider data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetReps" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/>
+          <view class="compact-plan-values"><input type="digit" value="{{set.targetWeight}}" placeholder="kg" data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetWeight" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/><text>kg ×</text><input type="number" value="{{set.targetReps}}" placeholder="次数" data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetReps" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/><text>次</text></view>
+
         </view>
       </scroll-view>
       <view class="sub">用加减和滑条设置，不用键盘输入。</view>

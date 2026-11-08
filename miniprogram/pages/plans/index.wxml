@@ -1,4 +1,97 @@
-<wxs src="../../utils/swipe-axis.wxs" module="swipeAxis" />
+<wxs module="swipeAxis">
+function point(event) {
+  var list = event.touches
+  if (!list || !list.length) list = event.changedTouches
+  if (!list || !list.length) return null
+  return list[0]
+}
+
+function numberOf(value, fallback) {
+  var n = value * 1
+  if (n !== n) return fallback
+  return n
+}
+
+function start(event, ownerInstance) {
+  var touch = point(event)
+  var state = ownerInstance.getState()
+  var dataset = event.currentTarget && event.currentTarget.dataset
+  if (!touch) return
+  state.startX = touch.clientX
+  state.startY = touch.clientY
+  state.axis = ''
+  state.ready = 1
+  state.offset = dataset ? numberOf(dataset.offset, 0) : 0
+  state.startOffset = state.offset
+  state.max = dataset ? numberOf(dataset.max, 104) : 104
+  state.index = dataset ? dataset.index : ''
+}
+
+function move(event, ownerInstance) {
+  var state = ownerInstance.getState()
+  var touch = point(event)
+  if (!touch) return
+  if (!state.ready) {
+    start(event, ownerInstance)
+    return
+  }
+  var dx = touch.clientX - state.startX
+  var dy = touch.clientY - state.startY
+  if (!state.axis) {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+    state.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y'
+  }
+  if (state.axis !== 'x') return
+  var offset = state.startOffset + dx
+  if (offset > 0) offset = 0
+  if (offset < -state.max) offset = -state.max
+  state.offset = offset
+  if (event.instance && event.instance.setStyle) {
+    event.instance.setStyle({
+      transform: 'translateX(' + offset + 'px)',
+      transition: 'none'
+    })
+  }
+  var method = 'onSwipeMove'
+  var dataset = event.currentTarget && event.currentTarget.dataset
+  if (dataset && dataset.moveMethod) method = dataset.moveMethod
+  ownerInstance.callMethod(method, {
+    clientX: touch.clientX,
+    clientY: touch.clientY,
+    touches: [{ clientX: touch.clientX, clientY: touch.clientY }]
+  })
+  return false
+}
+
+function end(event, ownerInstance) {
+  var state = ownerInstance.getState()
+  var dataset = event.currentTarget && event.currentTarget.dataset
+  if (state.axis === 'x') {
+    var open = state.offset < -state.max / 2
+    var final = open ? -state.max : 0
+    if (event.instance && event.instance.setStyle) {
+      event.instance.setStyle({
+        transform: 'translateX(' + final + 'px)',
+        transition: 'transform 180ms ease'
+      })
+    }
+    var snap = 'onSwipeSnap'
+    if (dataset && dataset.snapMethod) snap = dataset.snapMethod
+    ownerInstance.callMethod(snap, {
+      index: state.index,
+      si: dataset && dataset.si,
+      offset: final
+    })
+  }
+  state.ready = 0
+  state.axis = ''
+}
+
+module.exports.start = start
+module.exports.move = move
+module.exports.end = end
+
+</wxs>
 <page-meta background-color="{{pageBg}}" />
 <view class="page page-solo {{skinClass}}">
   <view class="eyebrow">TRAINING PLANS</view>
@@ -71,7 +164,7 @@
   <view class="card-title">
     {{item.published ? item.published.title : (item.latest_draft && item.latest_draft.title) || '未命名计划'}}
   </view>
-  <view class="sub">{{item.author_role === 'coach' ? '教练制定' : '个人计划'}} · {{item.scheduleText || '尚未发布'}}</view>
+  <view class="sub">{{item.author_role === 'coach' ? '教练制定' : '个人模板'}}</view>
   <view class="tag-row">
     <text class="tag" wx:if="{{item.published}}">已发布 v{{item.published.version}}</text>
     <text class="tag" wx:if="{{item.latest_draft}}">草稿 v{{item.latest_draft.version}}</text>

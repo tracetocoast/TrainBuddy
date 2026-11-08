@@ -437,6 +437,33 @@ function createCoachDraftSession(app, payload) {
   return Promise.resolve({ data: presentSession(session), request_id: makeId('req') })
 }
 
+function createFreeSession(app, studentId) {
+  const store=ensureStore(app)
+  const existing=store.sessions.find(row=>row.studentId===studentId && row.sourceType==='manual' && ['draft','in_progress'].includes(row.status))
+  if(existing)return Promise.resolve({data:presentSession(existing)})
+  const session={id:makeId('sess'),studentId,studentName:'',coachId:null,bookingId:null,planId:null,planRevision:null,sourceType:'manual',status:'in_progress',title:'自主训练',businessDate:todayBusinessDate(),startedAt:time.nowMs(),endedAt:null,sharedAt:null,revision:1,publicNote:'',privateNote:'',exercises:[],completionKey:null,createdAt:time.nowMs(),updatedAt:time.nowMs()}
+  store.sessions.push(session);persist(app)
+  return Promise.resolve({data:presentSession(session)})
+}
+function changeSessionSet(app, sessionId, exerciseId, setId) {
+  const store=ensureStore(app),session=findSession(store,sessionId)
+  if(!session)throw new AppError('NOT_FOUND','训练不存在')
+  if(!['draft','in_progress'].includes(session.status))throw new AppError('INVALID_STATE','该训练不能编辑')
+  const ex=session.exercises.find(row=>row.id===exerciseId)
+  if(!ex)throw new AppError('NOT_FOUND','动作不存在')
+  if(setId){
+    if(!ex.sets.some(row=>row.id===setId))throw new AppError('NOT_FOUND','训练组不存在')
+    if(ex.sets.length<=1)throw new AppError('VALIDATION','至少保留一组，或删除整个动作')
+    ex.sets=ex.sets.filter(row=>row.id!==setId)
+  }else{
+    if(ex.sets.length>=30)throw new AppError('VALIDATION','每个动作最多30组')
+    const prev=ex.sets[ex.sets.length-1]||{}
+    ex.sets.push({id:makeId('aset'),setNo:ex.sets.length+1,targetWeight:prev.targetWeight, targetReps:prev.targetReps,actualWeight:prev.actualWeight,actualReps:prev.actualReps,state:'pending',required:true,effort:null})
+  }
+  ex.sets.forEach((row,i)=>{row.setNo=i+1});session.revision++;session.updatedAt=time.nowMs();persist(app)
+  return Promise.resolve({data:presentSession(session)})
+}
+
 function getSession(app, sessionId) {
   const store = ensureStore(app)
   const s = findSession(store, sessionId)
@@ -530,6 +557,10 @@ function updateActualSet(app, sessionId, setId, patch) {
   })
   if (!hit) return Promise.reject({ code: 'NOT_FOUND', message: '组不存在' })
 
+  if(patch.setType != null){
+    if(!['warmup','working'].includes(patch.setType))throw new AppError('VALIDATION','训练组类型不合法')
+    hit.setType=patch.setType
+  }
   if (patch.actualWeight != null) hit.actualWeight = patch.actualWeight
   if (patch.actualReps != null) hit.actualReps = patch.actualReps
   if (patch.state) {
@@ -1151,6 +1182,7 @@ function addExerciseToPersonalPlan(app, studentId, exerciseMeta) {
 }
 
 module.exports = {
+  createFreeSession, changeSessionSet,
   EXERCISE_LIBRARY,
   ensureStore,
   ensureDefaultPublishedPlan,
