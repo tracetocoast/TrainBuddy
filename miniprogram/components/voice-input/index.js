@@ -1,7 +1,7 @@
 const ACTIVE = ['recording','paused','interrupted']
 Component({
   properties: {
-    text:String, label:String, placeholder:String,
+    text:String, label:String, placeholder:String, variant:String,
     state:{type:String,value:'idle'}, seconds:{type:Number,value:0},
     canPause:Boolean, micDenied:Boolean, disabled:Boolean, busy:Boolean,
     reduced:Boolean, mock:Boolean, showParse:Boolean
@@ -14,6 +14,7 @@ Component({
     }
   },
   methods:{
+    onTextToggle() { this.setData({showText: !this.data.showText}) },
     onText(e) { this.triggerEvent('textinput',{value:e.detail.value}) },
     onStart() { if(this.data.active||this.data.waiting||this.properties.disabled||this.properties.micDenied)return;this.triggerEvent('toggle') },
     onStop() { if(!this.data.active||this.data.waiting)return;this.triggerEvent('stop') },

@@ -30,3 +30,14 @@
 .reduced .pulsing,.reduced .spinner { animation:none; }
 @media (prefers-reduced-motion:reduce) { .pulsing,.spinner { animation:none; } }
 @media (max-width:340px) { .voice-input { padding:20rpx; } .voice-running { flex-wrap:wrap; } .voice-copy { min-width:140rpx; } }
+/* Capture variant is opt-in; other voice-input callers retain their layout. */
+.capture-input { border:0; padding:32rpx 0; background:transparent; }
+.capture-input .voice-heading { font-size:24rpx; color:var(--muted); }
+.capture-prompt { font-size:38rpx; text-align:center; margin:52rpx 0 36rpx; }
+.capture-input .voice-controls { border:0; padding:32rpx 0; }
+.capture-input .voice-start { flex-direction:column; text-align:center; gap:24rpx; }
+.capture-input .mic-button { width:176rpx !important; height:176rpx; border-radius:50%; background:var(--surface-raised); border:2rpx solid var(--accent); }
+.capture-input .voice-running { flex-wrap:wrap; justify-content:center; }
+.capture-input .voice-running .voice-copy { flex-basis:100%; text-align:center; }
+.capture-input .clock { font-size:64rpx; font-variant-numeric:tabular-nums; margin:20rpx; }
+.capture-input .text-action { width:100%; min-height:44px; margin-top:36rpx; border-top:1rpx solid var(--line); padding-top:24rpx; }

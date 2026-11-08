@@ -9,7 +9,7 @@ const interaction = require('../../utils/interaction')
 
 Page({
   data: {
-    role: 'coach',
+    role: 'coach', showStudents: false, studentSearch: '', filteredStudents: [],
     students: [],
     student: '',
     studentId: '',
@@ -82,7 +82,7 @@ Page({
       this._pickStudent = false
       this.setData({
         studentLoading: false,
-        students: bound || [],
+        students: bound || [], filteredStudents: bound || [],
         studentId: studentId || '',
         student: student || ''
       })
@@ -130,6 +130,8 @@ Page({
           stageMeta: this.rebuildStageMeta(this.data.recordStage)
         })
         if (target === 'note') this.saveNotes()
+        else if (!info.error && this._recordTaskCreated && this.data.voiceTask) this.applyVoiceTask(this.data.voiceTask)
+        else if (!info.error && !this._recordTaskCreated && this.data.textInput.trim()) this.onParseText()
       },
       onError: err => {
         this.setData({
@@ -142,6 +144,10 @@ Page({
       onNeedAsr: job => this.transcribeAudioToText(job, { applyTask: target === 'entry', ...(target === 'note' ? { demoPhrase: '肩胛再稳定一些，下次先降一点重量。' } : {}) })
     }
   },
+  onToggleStudents() { this.setData({ showStudents: !this.data.showStudents }) },
+  onStudentSearch(e) { const q = e.detail.value.trim(); this.setData({ studentSearch: e.detail.value, filteredStudents: this.data.students.filter(s => s.name.includes(q)) }) },
+  onSupplement() { if (!this.commitFieldInputs() || this.voiceActive() || this.data.syncing) return; this.saveLocalDraft(); this.setData({ recordStage: 'capture' }) },
+  onMarkSkipped(e) { if (this.data.syncing || this.data.session.status === 'completed') return; const id=e.currentTarget.dataset.sid; this.queueWrite('done:'+id, () => trainingApi.updateActualSet(getApp(), this.data.session.session_id, id, {state:'skipped'})) },
   onVoiceToggle() {
     if (this.voiceActive() && this.data.speechTarget !== 'entry') return
     if (['requesting','recording','paused','interrupted'].includes(this.data.speechState)) return this.stopSpeech()
@@ -284,6 +290,7 @@ Page({
 
   beginSpeech(which) {
     if (!this.data.session || this.data.session.status === 'completed' || this.voiceActive() || this.data.syncing) return
+    this._recordTaskCreated = false
     this.setData({ speechState: 'requesting', speechTarget: which })
     if (which === 'entry' && this.data.noteRecording) return
     if (which === 'note' && this.data.recording) return
@@ -364,7 +371,7 @@ Page({
               job.fail && job.fail(task.error || { message: '转写失败' })
               return
             }
-            if (options.applyTask) this.applyVoiceTask(task)
+            if (options.applyTask) { this._recordTaskCreated = true; this.applyVoiceTask(task) }
             else this.setData({ voiceBusy: false })
             job.finish && job.finish(transcript)
           })
@@ -395,12 +402,16 @@ Page({
       voiceTask: task,
       syncError: task.error ? task.error.message || '整理失败，请重试或手填' : '',
       segments,
-      recordStage: 'review',
+      recordStage: 'edit',
       unmergedCount: segments.filter(s => !s.merged).length,
       segmentPatches: {},
       speechBanner: task.error ? ((task.error && task.error.message) || '整理失败') : '识别结果待核对'
     })
-    this.setData({ stageMeta: this.rebuildStageMeta('review') })
+    this.setData({ stageMeta: this.rebuildStageMeta('edit') })
+    const ready = segments.filter(s => !s.merged && !s.requires_confirmation)
+    const names = new Set((this.data.session.exercises || []).map(e => e.name))
+    const unique = ready.filter(s => { if(names.has(s.display_name)) return false; names.add(s.display_name); return true })
+    if (!this.voiceActive() && !this._autoMerging && unique.length && !(task.conflicts || []).length && !task.error) { this._autoMerging = true; this.doMerge(unique.map(s=>s.segment_id)) }
     if (task.status === 'failed') {
       getApp().toast((task.error && task.error.message) || '识别失败')
     }
@@ -426,7 +437,7 @@ Page({
     app.persist()
     this.setData({
       studentId,
-      student: name,
+      student: name, showStudents: false,
       session: null, publicNote: '', privateNote: '', saveError: '', saveOkHint: '', syncError: '', speechState: 'idle', speechBanner: '',
       recordStage: 'capture', unmergedCount: 0,
       textInput: '',
@@ -601,6 +612,7 @@ Page({
       app.toast('请先解析或录音')
       return
     }
+    const scope = this.data.session.session_id
     this.setData({ voiceBusy: true })
     voiceApi
       .mergeTask(
@@ -616,6 +628,7 @@ Page({
         'merge_' + task.task_id + '_' + segmentIds.join('_')
       )
       .then((res) => {
+        if (this._unloaded || !this.data.session || this.data.session.session_id !== scope) { this._autoMerging = false; return }
         const skipped = res.data.skipped || []
         if (skipped.length) {
           const msg = skipped
@@ -627,12 +640,14 @@ Page({
           session: res.data.session,
           voiceBusy: false
         })
+        this._autoMerging = false
         this.applyVoiceTask(res.data.task)
         if (!skipped.length) this.setData({ recordStage: 'edit' })
       })
       .catch((err) => {
+        this._autoMerging = false
         this.setData({ voiceBusy: false })
-        app.toast((err && err.message) || '合并失败')
+        app.toast((err && err.message) || '整理未保存，请重试')
       })
   },
 
@@ -720,27 +735,18 @@ Page({
       app.toast('请先添加训练动作')
       return
     }
+    if (session.exercises.some(ex => (ex.sets || []).some(set => set.state === 'pending'))) { app.toast('请先逐组确认完成或未做，不会自动推断执行状态'); this.setData({recordStage:'edit'}); return }
     this._finalizeModal = true
     wx.showModal({
       title: '确认并同步',
       content:
-        '将同步训练表和公开建议，私人备注不共享。本次会将 ' + (session.total_sets - session.done_sets) + ' 个待完成组标为完成，请先核对。下次计划仅生成草稿。',
+        '将发布当前训练报告和公开建议给' + this.data.student + '，私人备注不共享。下次计划仅生成草稿。',
       confirmText: '确认同步',
       success: (res) => {
         this._finalizeModal = false
         if (!res.confirm) return
         this.setData({ syncing: true, syncError: '' })
-        let marks = Promise.resolve()
-        session.exercises.forEach((ex) => {
-          ;(ex.sets || []).forEach((set) => {
-            if (set.state === 'pending') {
-              marks = marks.then(() => trainingApi.updateActualSet(app, session.session_id, set.id, {
-                  state: 'done'
-                })).then(result => this.setData({ session: result.data }))
-            }
-          })
-        })
-        marks
+        Promise.resolve()
           .then(() =>
             trainingApi.finalizeSession(app, session.session_id, {
               completionKey: session.session_id + ':coach_sync',
