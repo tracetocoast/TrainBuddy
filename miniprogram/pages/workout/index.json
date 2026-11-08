@@ -4,6 +4,7 @@
   "backgroundColor": "#fafbf7",
   "usingComponents": {
     "bottom-nav": "/components/bottom-nav/index",
-    "brand-logo": "/components/brand-logo/index"
+    "brand-logo": "/components/brand-logo/index",
+    "report-history": "/components/report-history/index"
   }
 }

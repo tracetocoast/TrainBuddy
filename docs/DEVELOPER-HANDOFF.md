@@ -85,3 +85,7 @@ node scripts/check-interaction-build.cjs
 **P1：同步前自动完成 pending。** record 页先逐组 PATCH done 再 finalize，可能记入未实练组，也可能只完成了一部分就失败。本轮仅逐项披露后果，未改业务规则；需要服务端确认状态语义与事务边界。
 
 随后做真实微信与手机验收：新建有效课次→语音→核对→逐组调整→共享→学员查看；320/375/430px、键盘最后字段、断网重试、录音暂停/中断和角色切换，记录实际设备、时间、截图与失败点。没有真实证据前，不宣称“所有功能可上线”。
+
+## V1.24 学员报告接手补充（2026-11-09）
+
+学员训练页通过report-history组件读取completed历史，独立training-report详情重新GET授权并以trainingReport白名单投影展示；教练课后记录须shared_at有效。只用public_note，不拆独立建议、不复制私人备注。原始方案标题V1.3保留在来源，代码版本V1.24。见docs/design-archive/student-report-p0/README.md与docs/releases/V1.24.md。肌群图/导出/分享未实施，模拟器实际截图和真机视觉未验证。API/ASR/Prompt不变。

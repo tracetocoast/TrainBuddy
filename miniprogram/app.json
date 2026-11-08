@@ -31,7 +31,8 @@
     "pages/body-history/index",
     "pages/coach/index",
     "pages/friends/index",
-    "pages/food-photo/index"
+    "pages/food-photo/index",
+    "pages/training-report/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fafbf7",

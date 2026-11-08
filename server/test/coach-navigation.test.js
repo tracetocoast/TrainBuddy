@@ -22,7 +22,7 @@ test('each role exposes exactly its three task-oriented primary tabs and profile
   component.methods.refresh.call(instance)
   const items=instance.data.items
   assert.equal(items.length,3)
-  assert.equal(items.map(x=>x.text).join(','),role==='coach'?'工作台,学员,日程':'首页,记录,进展')
+  assert.equal(items.map(x=>x.text).join(','),role==='coach'?'工作台,学员,日程':'首页,训练,进展')
   assert.ok(!items.some(x=>x.path==='/pages/profile/index'))
   if(role==='coach')assert.ok(items.some(x=>x.key==='students'))
  }

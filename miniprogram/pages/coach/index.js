@@ -9,7 +9,7 @@ const mealLabel = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snac
 Page({
   data: {
     loading: true, error: '', binding: null, tab: 'training',
-    tabs: [{ key: 'training', label: '课后反馈' }, { key: 'meal', label: '饮食点评' }, { key: 'booking', label: '约课' }],
+    tabs: [{ key: 'training', label: '训练报告' }, { key: 'meal', label: '饮食点评' }, { key: 'booking', label: '约课' }],
     sessions: [], expandedId: '', localDate: '', today: '', day: { meals: [], shares: {} }, feedbacks: [], busy: false
   },
   onShow() {
@@ -56,6 +56,7 @@ Page({
     } catch (err) { if (current()) this.setData({ loading: false, error: err.message || '读取失败，请重试' }) }
   },
   onTab(e) { this.setData({ tab: e.currentTarget.dataset.tab }) },
+  goReport(e) { wx.navigateTo({url:'/pages/training-report/index?id='+encodeURIComponent(e.currentTarget.dataset.id)}) },
   onExpand(e) { const id = e.currentTarget.dataset.id; this.setData({ expandedId: this.data.expandedId === id ? '' : id }) },
   onDate(e) { this.setData({ localDate: e.detail.value }); this.reload() },
   goBind() { wx.navigateTo({ url: '/pages/bind/index' }) },

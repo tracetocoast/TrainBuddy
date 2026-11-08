@@ -4,7 +4,7 @@ const theme = require('../../utils/theme')
 const NAV = {
   student: [
     { key: 'home', path: '/pages/home/index', text: '首页' },
-    { key: 'workout', path: '/pages/workout/index', text: '记录' },
+    { key: 'workout', path: '/pages/workout/index', text: '训练' },
     { key: 'growth', path: '/pages/growth/index', text: '进展' }
   ],
   coach: [

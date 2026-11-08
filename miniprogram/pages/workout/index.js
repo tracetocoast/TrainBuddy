@@ -83,7 +83,7 @@ Page({
     imageFailed: {}
   },
 
-  onLoad(query) { this._newFree=!!(query && query.new==='1') },
+  onLoad(query) { if(query && query.history==='1')this._browsePlans=true; this._newFree=!!(query && query.new==='1') },
   onShow() {
     if (!requireLogin(this)) return
     syncRoleBar(this)

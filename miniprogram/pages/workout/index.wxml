@@ -14,8 +14,9 @@
 
   <block wx:if="{{!session}}">
     <view class="eyebrow">TRAINING LOG</view>
-    <view class="title">记录</view>
+    <view class="title">训练</view>
     <button class="primary new-training" bindtap="onNewTraining">＋ 新建训练</button>
+    <report-history/>
     <view class="head">
       <view class="head-title">我的待练计划</view>
       <button class="link" bindtap="goExercises">动作库 ↗</button>
