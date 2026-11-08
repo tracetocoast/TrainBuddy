@@ -3,7 +3,11 @@
   <view class="top">
     <view class="home-greet">
       <view class="title">{{role === 'coach' ? '工作台' : '你好，' + greetName}}</view>
-      <view class="sub">{{todayLabel}}</view>
+      <view class="sub home-date">{{todayLabel}}</view>
+      <view class="home-quote" wx:if="{{role === 'student' && dailyQuote}}">
+        <view class="quote-cn"><text class="quote-mark">「</text>{{dailyQuote.cn}}<text class="quote-mark">」</text></view>
+        <view class="quote-by" wx:if="{{dailyQuote.by}}">{{dailyQuote.by}}</view>
+      </view>
     </view>
     <button class="msg-btn" bindtap="goProfile" aria-label="账户与身份设置">{{avatarChar}}</button>
   </view>
@@ -90,12 +94,6 @@
       </block>
       <view class="quiet-empty hero-goal-empty" wx:else>训练统计加载后显示本周完成情况，不会展示虚假进度。</view>
     </button>
-
-    <view class="quote-card" wx:if="{{dailyQuote}}">
-      <view class="quote-cn">{{dailyQuote.cn}}</view>
-      <view class="quote-en" wx:if="{{dailyQuote.en}}">{{dailyQuote.en}}</view>
-      <view class="quote-by" wx:if="{{dailyQuote.by}}">—— {{dailyQuote.by}}</view>
-    </view>
 
     <view class="head"><view class="head-title">下一次课程</view></view>
     <button class="booking-card card-press" wx:if="{{nextBooking}}" bindtap="goNextBooking">

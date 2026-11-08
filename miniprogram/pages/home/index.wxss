@@ -1,8 +1,11 @@
 @import "../../styles/coach.wxss";
 
 .home-page { padding-top: 4rpx; }
-.home-greet { min-width: 0; flex: 1; }
-.home-greet .title { margin: 0 0 6rpx; font-size: 40rpx; }
+.home-page .top { align-items: flex-start; padding-bottom: 20rpx; }
+.home-greet { min-width: 0; flex: 1; padding-right: 12rpx; }
+.home-greet .title { margin: 0; font-size: 40rpx; }
+.home-date { margin-top: 6rpx; font-size: 22rpx; line-height: 1.4; letter-spacing: 0.4rpx; }
+.home-page .msg-btn { margin-top: 2rpx; flex-shrink: 0; }
 
 .card-press { transition: transform var(--ix-state) var(--ease-spring), opacity var(--ix-fast) ease; }
 .card-press:active { transform: scale(.985); opacity: .92; }
@@ -41,31 +44,26 @@
 .hero-goal-hint { margin-top: 16rpx; }
 .hero-goal-empty { padding: 12rpx 0 0; }
 
-.quote-card {
-  margin-top: 16rpx;
-  padding: 22rpx 24rpx;
-  background: var(--surface);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-card);
+.home-quote {
+  margin-top: 18rpx;
 }
 .quote-cn {
-  color: var(--ink);
+  color: var(--ink-2);
   font-size: 26rpx;
-  font-weight: 600;
-  line-height: 1.65;
-}
-.quote-en {
-  margin-top: 10rpx;
-  color: var(--muted);
-  font-size: 22rpx;
+  font-weight: 400;
   line-height: 1.55;
-  font-style: italic;
+  letter-spacing: 0.6rpx;
+}
+.quote-mark {
+  color: var(--accent);
+  font-weight: 500;
 }
 .quote-by {
-  margin-top: 12rpx;
-  color: var(--accent);
-  font-size: 22rpx;
-  font-weight: 600;
+  margin-top: 8rpx;
+  color: var(--muted-2);
+  font-size: 20rpx;
+  line-height: 1.3;
+  letter-spacing: 1.2rpx;
 }
 
 /* 学员：预约时间优先卡 */

@@ -1,2 +1,4 @@
 :host { display: inline-flex; flex-shrink: 0; vertical-align: middle; }
 .brand-emblem { display: block; flex-shrink: 0; }
+/* The square crop contains the original ivory canvas outside the rounded app tile. */
+.brand-emblem { border-radius: 25%; }
