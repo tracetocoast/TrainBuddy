@@ -54,7 +54,7 @@ function baselineOf(ex) {
 
 Page({
   data: {
-    role: 'student', setEditor:null, editorKeyboardHeight:0, showHistory:false, exerciseHistory:[],
+    role: 'student', setEditor:null, showHistory:false, exerciseHistory:[],
     plans: [],
     hasPublishedPlans: false,
     session: null,
@@ -69,7 +69,6 @@ Page({
     selectedIndex: 0,
     selectedCard: null,
     planDots: [],
-    exerciseDone: null,
     pending: {},
     lockedExerciseId: '',
     saveError: '',
@@ -167,7 +166,7 @@ Page({
       if (selectedIndex < 0) selectedIndex = 0
     }
 
-    this.setData({ session, pending, lockedExerciseId, phase: phase === 'exerciseDone' ? 'picker' : phase, selectedIndex, exerciseDone: null })
+    this.setData({ session, pending, lockedExerciseId, phase: phase === 'exerciseDone' ? 'picker' : phase, selectedIndex })
     this.refreshWheel(selectedIndex)
 
     if (phase === 'locked' && lockedExerciseId) {
@@ -261,6 +260,7 @@ Page({
       setNo: current.setNo,
       setTotal: sets.length,
       doneInExercise: doneCount,
+      exerciseComplete: progress.complete,
       progressPercent: sets.length ? Math.round((doneCount / sets.length) * 100) : 0,
       state: current.state,
       baselineLabel: baseline.label,
@@ -283,7 +283,7 @@ Page({
     } else if (!progress.complete) {
       nextHint = {
         title: '本动作即将完成',
-        line: '完成后进入动作完成反馈'
+        line: '记录后可继续下一个动作'
       }
     } else {
       nextHint = {
@@ -355,8 +355,7 @@ Page({
     this.setData({
       phase: 'locked',
       lockedExerciseId: card.id,
-      justCompleted: false,
-      exerciseDone: null
+      justCompleted: false
     })
     this.selectActive(pendingSet.id, card.id)
     this.cacheDraft()
@@ -365,13 +364,12 @@ Page({
   },
 
   onBackToPicker() {
-    if (this.data.restVisible || this._writeBusy || this.data.finishing) return
+    if (this._writeBusy || this.data.finishing) return
     this.closeRest(true)
     this.setData({
       phase: 'picker',
       lockedExerciseId: '',
       justCompleted: false,
-      exerciseDone: null,
       focusView: null,
       activeSid: '',
       activeGroup: null,
@@ -383,11 +381,11 @@ Page({
   },
 
   onSessionBack() {
-    if (this.data.phase === 'locked' || this.data.phase === 'exerciseDone') {
+    if (this.data.phase === 'locked') {
       this.onBackToPicker()
       return
     }
-    if (this.data.restVisible || this._writeBusy || this.data.finishing) return
+    if (this._writeBusy || this.data.finishing) return
     wx.showModal({
       title: '返回计划列表？',
       content: '当前训练会保留，之后可再次点击开始训练继续。',
@@ -408,7 +406,6 @@ Page({
           activeSid: '',
           activeGroup: null,
           lockedExerciseId: '',
-          exerciseDone: null,
           justCompleted: false
         })
         this.reload()
@@ -432,7 +429,9 @@ Page({
   },
 
   onChooseNextExercise() {
-    this.setData({ exerciseDone: null, phase: 'picker', lockedExerciseId: '', focusView: null, activeSid: '', activeGroup: null, nextHint: null })
+    if (this._writeBusy || this.data.finishing) return
+    this.closeRest(true)
+    this.setData({ phase: 'picker', lockedExerciseId: '', focusView: null, activeSid: '', activeGroup: null, nextHint: null })
     const exercises = this.data.session.exercises || []
     let next = (this.data.selectedIndex + 1) % Math.max(exercises.length, 1)
     for (let i = 0; i < exercises.length; i++) {
@@ -519,7 +518,7 @@ Page({
   reload() {
     if (this._writeBusy || this.data.finishing) return Promise.resolve()
     this.closeRest(true)
-    this.setData({ loading: true, loadError: '', justCompleted: false, exerciseDone: null })
+    this.setData({ loading: true, loadError: '', justCompleted: false })
     const app = getApp()
     const studentId = this.studentId()
     const generation = this._reloadGeneration = (this._reloadGeneration || 0) + 1
@@ -582,20 +581,13 @@ Page({
 
   onNewTraining() { wx.navigateTo({url:'/pages/new-workout/index'}) },
   onOpenSetEditor(e) {
-    const sid=e.currentTarget.dataset.sid,field=e.currentTarget.dataset.field||'type'
-    const ex=this.data.session.exercises.find(row=>row.id===this.data.lockedExerciseId)
-    const set=ex && ex.sets.find(row=>row.id===sid)
-    if(this._writeBusy || this.data.finishing || !set || !['actualWeight','actualReps','type'].includes(field))return
-    this.setData({setEditor:{sid,field,no:set.setNo,kind:set.setType||'working',value:set[field]==null?'':String(set[field])},editorKeyboardHeight:0})
+    const sid = e.currentTarget.dataset.sid
+    const ex = this.data.session.exercises.find(row => row.id === this.data.lockedExerciseId)
+    const set = ex && ex.sets.find(row => row.id === sid)
+    if (this._writeBusy || this.data.finishing || !set) return
+    this.setData({ setEditor: { sid, no: set.setNo, kind: set.setType || 'working' } })
   },
-  onEditorInput(e) {
-    const editor=this.data.setEditor
-    if(!editor || editor.field==='type')return
-    this.onSetField({currentTarget:{dataset:{sid:editor.sid,field:editor.field}},detail:{value:e.detail.value}})
-    this.setData({setEditor:Object.assign({},editor,{value:e.detail.value})})
-  },
-  onEditorKeyboard(e) { this.setData({editorKeyboardHeight:e.detail.height||0}) },
-  onCloseSetEditor() { this.setData({setEditor:null,editorKeyboardHeight:0});if(wx.hideKeyboard)wx.hideKeyboard() },
+  onCloseSetEditor() { this.setData({ setEditor: null }) },
   async onSetType(e) {
     if(this._writeBusy || this.data.finishing)return
     this._writeBusy=true;this.setData({savingSet:true,saveError:''})
@@ -735,7 +727,7 @@ Page({
     pending[setId] = Object.assign({}, pending[setId], { [field]: e.detail.value })
     const session = JSON.parse(JSON.stringify(this.data.session))
     const hit = session.exercises.reduce((all, ex) => all.concat(ex.sets), []).find((set) => set.id === setId)
-    if (!hit) return
+    if (!hit || hit.state === 'done') return
     hit[field] = e.detail.value
     this.setData({ session, pending, saveError: '', justCompleted: false })
     this.selectActive(this.data.activeSid, this.data.lockedExerciseId)
@@ -768,25 +760,10 @@ Page({
     return nextSession
   },
 
-  showExerciseDone(exercise) {
-    const baseline = baselineOf(exercise)
-    const progress = exerciseProgress(exercise)
-    this.setData({
-      phase: 'exerciseDone',
-      exerciseDone: {
-        name: exercise.name,
-        doneSets: progress.done,
-        weight: baseline.weight == null ? '—' : baseline.weight,
-        reps: baseline.reps == null ? '—' : baseline.reps
-      },
-      justCompleted: false
-    })
-    this.cacheDraft()
-  },
-
   onSetState(e) {
-    if (this._writeBusy || this.data.finishing || this._finishModal || this._abandonModal || this.data.restVisible) return Promise.resolve()
+    if (this._writeBusy || this.data.finishing || this._finishModal || this._abandonModal) return Promise.resolve()
     if (this.data.phase !== 'locked') return Promise.resolve()
+    this.closeRest(true)
     this._writeBusy = true
     this.setData({ savingSet: true, saveError: '' })
     const setId = e.currentTarget.dataset.sid
@@ -802,9 +779,6 @@ Page({
             this.setData({ lockedExerciseId: lockedId, phase: 'locked' })
             this.selectActive(setId, lockedId)
             getApp().toast('本组已记录')
-            setTimeout(() => {
-              if (!this._unloaded) this.showExerciseDone(exercise)
-            }, this.data.reduced ? 0 : 300)
             return
           }
           const next = firstPendingSet(exercise)
@@ -813,8 +787,10 @@ Page({
           if (state === 'done') {
             this.setData({ justCompleted: true })
             getApp().toast('本组已记录')
-            if (next) setTimeout(() => { if (!this._unloaded) this.openRest() }, this.data.reduced ? 0 : 280)
+            if (next && !this._unloaded) this.openRest()
           }
+        } else {
+          this.selectActive(setId, lockedId)
         }
       })
       .catch((err) => this.setData({ saveError: (err.message || '保存失败') + '；本地输入仍保留，请重试。' }))
@@ -865,7 +841,6 @@ Page({
               activeGroup: null,
               lockedExerciseId: '',
               phase: 'picker',
-              exerciseDone: null,
               justCompleted: false
             })
             const idem = resp.data.idempotent ? '\n（幂等：未重复计数）' : ''
@@ -932,7 +907,6 @@ Page({
               activeGroup: null,
               lockedExerciseId: '',
               phase: 'picker',
-              exerciseDone: null,
               justCompleted: false
             })
             this.reload()

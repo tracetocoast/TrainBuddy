@@ -37,7 +37,7 @@
       <button class="wheel-back" bindtap="onSessionBack" aria-label="{{phase === 'locked' ? '返回选择动作' : '返回计划列表'}}">‹</button>
       <view class="wheel-top-title">
         <text class="wheel-top-name">{{session.title}}</text>
-        <text class="wheel-top-mode">{{phase === 'locked' ? '当前动作 · 已锁定' : (phase === 'exerciseDone' ? '动作完成' : '选择训练动作')}}</text>
+        <text class="wheel-top-mode">{{phase === 'locked' ? '当前动作 · 已锁定' : '选择训练动作'}}</text>
       </view>
       <button class="wheel-more" bindtap="goEditPlan" wx:if="{{session.plan_id}}" aria-label="编辑计划">···</button>
       <view class="wheel-back-space" wx:else></view>
@@ -108,22 +108,26 @@
 
     <!-- 锁定执行：放大进入 -->
     <block wx:if="{{phase === 'locked' && focusView}}">
-      <view id="focus-card" class="current-card {{reduced ? '' : 'current-card-pop'}}">
+      <view id="focus-card" class="current-card">
         <view class="info">
           <view class="info-name">{{focusView.exerciseName}}</view>
           <view class="info-meta">{{focusView.muscle}} · 第 {{focusView.exerciseOrder}} / {{focusView.exerciseTotal}} 个动作</view>
 
-          <view class="sub">点击组号切换热身 / 正式，右侧勾选完成本组。</view>
-          <view class="compact-heading"><text>组</text><text>重量 kg</text><text>次数</text><text></text><text>完成</text></view>
+          <view class="sub">点重量或次数直接修改，点右侧「完成」记录本组。</view>
+          <view class="compact-heading"><text>组</text><text>重量 <text class="column-unit">kg</text></text><text>次数</text><text></text><text>完成</text></view>
           <view class="compact-set" wx:for="{{session.exercises}}" wx:for-item="ex" wx:key="id" wx:if="{{ex.id === lockedExerciseId}}">
             <view class="compact-set-row {{set.state === 'done' ? 'set-is-done' : ''}}" wx:for="{{ex.sets}}" wx:for-item="set" wx:key="id">
               <button class="set-type {{set.setType === 'warmup' ? 'is-warmup' : ''}}" data-sid="{{set.id}}" data-kind="{{set.setType}}" bindtap="onOpenSetEditor" disabled="{{savingSet || finishing}}" aria-label="调整本组类型">{{set.setType === 'warmup' ? '热' : set.setNo}}</button>
-              <button class="set-value" data-sid="{{set.id}}" data-field="actualWeight" bindtap="onOpenSetEditor" disabled="{{savingSet || finishing}}"><text class="set-unit">kg</text><text>{{set.actualWeight == null ? '—' : set.actualWeight}}</text></button>
-              <button class="set-value" data-sid="{{set.id}}" data-field="actualReps" bindtap="onOpenSetEditor" disabled="{{savingSet || finishing}}"><text class="set-unit">次</text><text>{{set.actualReps == null ? '—' : set.actualReps}}</text></button>
+              <input class="set-value" type="digit" value="{{set.actualWeight == null ? '' : set.actualWeight}}" placeholder="—" data-sid="{{set.id}}" data-field="actualWeight" bindinput="onSetField" cursor-spacing="24" disabled="{{savingSet || finishing || set.state === 'done'}}" aria-label="第 {{set.setNo}} 组重量，公斤" />
+              <input class="set-value" type="number" value="{{set.actualReps == null ? '' : set.actualReps}}" placeholder="—" data-sid="{{set.id}}" data-field="actualReps" bindinput="onSetField" cursor-spacing="24" disabled="{{savingSet || finishing || set.state === 'done'}}" aria-label="第 {{set.setNo}} 组次数" />
               <button class="group-delete" data-sid="{{set.id}}" bindtap="onChangeGroup" disabled="{{savingSet || finishing}}" aria-label="删除本组">−</button>
-              <button class="set-check {{set.state === 'done' ? 'is-checked' : ''}}" data-sid="{{set.id}}" data-state="{{set.state === 'done' ? 'pending' : 'done'}}" bindtap="onSetState" disabled="{{savingSet || finishing || restVisible}}" aria-label="{{set.state === 'done' ? '重新编辑本组' : '完成本组'}}">✓</button>
+              <button class="set-check {{set.state === 'done' ? 'is-checked' : ''}}" data-sid="{{set.id}}" data-state="{{set.state === 'done' ? 'pending' : 'done'}}" bindtap="onSetState" disabled="{{savingSet || finishing}}" aria-label="{{set.state === 'done' ? '本组已完成，点击撤销' : '完成本组'}}">{{set.state === 'done' ? '✓' : '完成'}}</button>
             </view>
           </view>
+          <view class="inline-training-status" wx:if="{{restVisible}}"><text>组间休息 {{restText}}</text><button class="link" bindtap="closeRest">结束休息</button></view>
+          <view class="inline-training-status" wx:if="{{focusView.exerciseComplete}}"><text>本动作已记录</text><button class="link" bindtap="onChooseNextExercise">选择下一个动作 ›</button></view>
+          <button class="link" wx:elif="{{focusView.state === 'pending'}}" data-sid="{{focusView.setId}}" data-state="skipped" bindtap="onSetState" disabled="{{savingSet || finishing}}">跳过第 {{focusView.setNo}} 组</button>
+          <button class="link" wx:if="{{focusView.exerciseComplete}}" bindtap="onFinish" disabled="{{finishing || savingSet}}">结束整次训练</button>
           <view class="sub">{{focusView.muscle}} · 重量按当前动作计重方式填写</view>
           <view class="group-tools"><button class="secondary" bindtap="onChangeGroup" disabled="{{savingSet || finishing}}">＋ 新增一组</button><button class="link" bindtap="onRemoveAction" disabled="{{savingSet || finishing}}">移除动作</button></view>
           <button class="link" bindtap="onExerciseHistory">动作历史 ›</button>
@@ -150,59 +154,11 @@
   <bottom-nav active="workout" />
 </view>
 
-<view class="proto-dock" wx:if="{{session && phase === 'locked' && focusView && !restVisible}}">
-  <text class="dock-big">{{focusView.weightText}}kg × {{focusView.repsText}}次 · 第 {{focusView.setNo}} 组</text>
-  <view class="dock-actions">
-    <button
-      class="dock-skip"
-      data-sid="{{focusView.setId}}"
-      data-state="skipped"
-      bindtap="onSetState"
-      wx:if="{{focusView.state !== 'skipped'}}"
-      disabled="{{savingSet || finishing}}"
-    >跳过</button>
-    <button
-      class="dock-btn"
-      data-sid="{{focusView.setId}}"
-      data-state="done"
-      bindtap="onSetState"
-      disabled="{{savingSet || finishing}}"
-      loading="{{savingSet}}"
-    >{{savingSet ? '保存中' : '完成本组'}}</button>
-  </view>
-</view>
-
-<view class="rest {{restVisible ? 'show' : ''}}" wx:if="{{session}}" catchtouchmove="noop">
-  <view class="rest-sheet">
-    <view class="rest-eyebrow">REST BETWEEN SETS</view>
-    <view class="rest-timer">{{restText}}</view>
-    <view class="rest-p">休息一下，准备下一组。</view>
-    <view class="rest-actions">
-      <button class="rest-go" bindtap="closeRest">直接进入下一组</button>
-    </view>
-  </view>
-</view>
-
-<view class="exercise-done {{phase === 'exerciseDone' ? 'show' : ''}}" wx:if="{{session && exerciseDone}}">
-  <view class="done-badge">✓</view>
-  <view class="done-h2">动作完成</view>
-  <view class="done-p">{{exerciseDone.name}}已经完成。临时调整不会改变你的训练计划。</view>
-  <view class="done-summary">
-    <view class="done-cell"><text class="done-b">{{exerciseDone.doneSets}}</text><text class="done-s">完成组数</text></view>
-    <view class="done-cell"><text class="done-b">{{exerciseDone.weight}}</text><text class="done-s">默认重量 kg</text></view>
-    <view class="done-cell"><text class="done-b">{{exerciseDone.reps}}</text><text class="done-s">默认次数</text></view>
-  </view>
-  <button class="wheel-start" bindtap="onChooseNextExercise">选择下一个动作</button>
-  <button class="link done-finish" bindtap="onFinish">结束整次训练</button>
-</view>
-
 <view class="set-editor-mask" wx:if="{{setEditor}}" bindtap="onCloseSetEditor"></view>
-<view class="set-editor {{skinClass}}" wx:if="{{setEditor}}" style="bottom:{{editorKeyboardHeight}}px" catchtouchmove="noop">
-  <view class="set-editor-head"><view><text class="card-title">第 {{setEditor.no}} 组</text><view class="sub">{{setEditor.field === 'type' ? '调整训练组' : (setEditor.field === 'actualWeight' ? '实际重量 · kg' : '实际次数')}}</view></view><button class="link" bindtap="onCloseSetEditor">收起</button></view>
-  <input wx:if="{{setEditor.field !== 'type'}}" class="set-editor-input" type="{{setEditor.field === 'actualWeight' ? 'digit' : 'number'}}" value="{{setEditor.value}}" focus="{{true}}" adjust-position="{{false}}" bindinput="onEditorInput" bindkeyboardheightchange="onEditorKeyboard" placeholder="输入数值"/>
+<view class="set-editor {{skinClass}}" wx:if="{{setEditor}}" catchtouchmove="noop">
+  <view class="set-editor-head"><view><text class="card-title">第 {{setEditor.no}} 组</text><view class="sub">调整训练组类型</view></view><button class="link" bindtap="onCloseSetEditor">收起</button></view>
   <view class="set-editor-options">
     <button class="secondary {{setEditor.kind === 'warmup' ? 'type-selected' : ''}}" data-kind="warmup" bindtap="onSetType" disabled="{{savingSet}}">热身组</button>
     <button class="secondary {{setEditor.kind === 'working' ? 'type-selected' : ''}}" data-kind="working" bindtap="onSetType" disabled="{{savingSet}}">正式组</button>
   </view>
-  <view class="set-editor-foot"><text>输入会暂存，勾选后同步</text><button class="primary" bindtap="onCloseSetEditor">完成输入</button></view>
 </view>

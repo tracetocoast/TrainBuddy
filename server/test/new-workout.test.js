@@ -46,14 +46,26 @@ test('HTTP free training, group mutation, type persistence and unauthenticated d
   const unauthorized=await ctx.request('POST',url,{body:{}});assert.equal(unauthorized.status,401)
  }finally{await ctx.cleanup()}
 })
-test('set editor opens correct field, retains raw decimal input and closes without completing a set',()=>{
- const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');let page,hidden=false
- vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../../miniprogram/pages/workout/index.js'),'utf8'),{Page:p=>page=p,require:()=>({}),wx:{hideKeyboard(){hidden=true}},getApp:()=>({})})
- page.data=JSON.parse(JSON.stringify(page.data));page.setData=patch=>Object.assign(page.data,patch)
- page.data.session={exercises:[{id:'ex',sets:[{id:'s',setNo:2,actualWeight:7.5,state:'pending'}]}]};page.data.lockedExerciseId='ex'
- let input;page.onSetField=e=>input=e
- page.onOpenSetEditor({currentTarget:{dataset:{sid:'s',field:'actualWeight'}}})
- assert.equal(page.data.setEditor.value,'7.5');assert.equal(page.data.setEditor.no,2)
- page.onEditorInput({detail:{value:'8.'}});assert.equal(input.detail.value,'8.');assert.equal(page.data.setEditor.value,'8.')
- page.onCloseSetEditor();assert.equal(page.data.setEditor,null);assert.equal(hidden,true);assert.equal(page.data.session.exercises[0].sets[0].state,'pending')
+test('four inline groups save individually, keep the last row visible and allow reopening', async () => {
+ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');let page,release
+ const app={globalData:{role:'student',session:{user:{userId:'student'}},drafts:{}},persist(){},toast(){}}
+ const saved={session_id:'w',exercises:[{id:'ex',name:'卧推',sets:[1,2,3,4].map(n=>({id:'s'+n,setNo:n,actualWeight:7.5,actualReps:5,state:'pending'}))}]}
+ const clone=v=>JSON.parse(JSON.stringify(v))
+ const api={updateActualSet:(_app,_id,id,patch)=>new Promise((resolve,reject)=>{release=(ok=true)=>{if(!ok){reject(new Error('断网'));return} Object.assign(saved.exercises[0].sets.find(s=>s.id===id),patch);resolve({data:clone(saved)})}})}
+ vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../../miniprogram/pages/workout/index.js'),'utf8'),{Page:p=>page=p,require:id=>id.endsWith('/interaction')?require('../../miniprogram/utils/interaction'):id.endsWith('/trainingApi')?api:{},wx:{},getApp:()=>app,clearInterval})
+ page.setData=patch=>Object.assign(page.data,patch)
+ page.setData({session:clone(saved),lockedExerciseId:'ex',phase:'locked',activeSid:'s1',reduced:true})
+ const event=(sid,extra,value)=>({currentTarget:{dataset:{sid,...extra}},detail:{value}})
+ page.onSetField(event('s2',{field:'actualWeight'},'8.25'))
+ page.onSetField(event('s2',{field:'actualReps'},'9'))
+ let write=page.onSetState(event('s2',{state:'done'}));release(false);await write
+ assert.equal(page.data.session.exercises[0].sets[1].state,'pending');assert.equal(page.data.pending.s2.actualWeight,'8.25')
+ for(const id of ['s1','s2','s3','s4']){
+  write=page.onSetState(event(id,{state:'done'}));assert.equal(page.data.session.exercises[0].sets.find(s=>s.id===id).state,'pending');release();await write
+ }
+ assert.equal(saved.exercises[0].sets[1].actualWeight,8.25);assert.equal(saved.exercises[0].sets[1].actualReps,9)
+ assert.equal(page.data.phase,'locked');assert.equal(page.data.focusView.exerciseComplete,true)
+ write=page.onSetState(event('s2',{state:'pending'}));release();await write
+ assert.equal(page.data.focusView.exerciseComplete,false);assert.equal(saved.exercises[0].sets[1].state,'pending')
+ page.onOpenSetEditor(event('s2',{}));assert.equal(page.data.setEditor.kind,'working');page.onCloseSetEditor();assert.equal(page.data.setEditor,null)
 })
