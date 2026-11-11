@@ -17,11 +17,13 @@ function getToken() {
  * 失败：reject { code, message, retryable, status, fields }
  */
 function request(method, path, options = {}) {
+  if (!config.API_BASE_URL) return Promise.reject({ code: 'API_NOT_CONFIGURED', message: '当前环境尚未配置 HTTPS 服务地址', retryable: false })
+  const requestToken = getToken()
   const url = config.API_BASE_URL.replace(/\/$/, '') + path
   const header = Object.assign(
     {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + getToken()
+      Authorization: 'Bearer ' + requestToken
     },
     options.headers || {}
   )
@@ -42,6 +44,22 @@ function request(method, path, options = {}) {
           return
         }
         const err = (body && body.error) || {}
+        // 只撤销发起本次请求的失效会话，避免旧请求清掉刚登录的新身份。
+        if (res.statusCode === 401 && requestToken && path.indexOf('/auth/') !== 0) {
+          const app = getApp()
+          if (app.globalData.session && app.globalData.session.sessionToken === requestToken) {
+            app.globalData.session = null
+            app.globalData.grantedRoles = []
+            app.globalData.role = 'student'
+            app.globalData.activeSubjectId = null
+            app.globalData.bindings = []
+            app.globalData._meCache = null
+            app.globalData._boundStudentsCache = []
+            app.persist()
+            wx.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+            wx.reLaunch({ url: '/pages/login/index' })
+          }
+        }
         reject({
           code: err.code || 'HTTP_' + res.statusCode,
           message: err.message || '请求失败',

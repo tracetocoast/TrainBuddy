@@ -26,6 +26,9 @@ const consultationService = require('../services/consultationService')
 const entitlementService = require('../services/entitlementService')
 const outboxService = require('../services/outboxService')
 const opsService = require('../services/opsService')
+const pointsService = require('../services/pointsService')
+const achievementService = require('../services/achievementService')
+const redemptionService = require('../services/redemptionService')
 const paymentService = require('../services/paymentService')
 const nutritionService = require('../services/nutritionService')
 const time = require('../lib/time')
@@ -58,7 +61,9 @@ function buildRouter() {
 
   r.post('/auth/apply-coach', authRequired, async (req, res, next) => {
     try {
-      const data = authService.applyCoachRole(req.app.locals.store.state, req.actor)
+      const data = await req.app.locals.store.tx((state) =>
+        authService.applyCoachRole(state, req.actor)
+      )
       ok(res, data)
     } catch (e) {
       next(e)
@@ -477,6 +482,14 @@ function buildRouter() {
 
   r.post('/coaches/:id/exceptions', authRequired, async (req, res, next) => {
     try {
+      const mine = req.actor.coachProfile && req.actor.coachProfile.coachId === req.params.id
+      if (!mine || !hasRole(req.actor, 'coach')) throw new AppError('FORBIDDEN', '仅本人教练可写排班')
+      const { startAt, endAt, type } = req.body
+      if (typeof startAt !== 'number' || typeof endAt !== 'number' || !Number.isFinite(startAt) ||
+          !Number.isFinite(endAt) || startAt <= 0 || endAt <= startAt ||
+          (type != null && !['open', 'closed'].includes(type))) {
+        throw new AppError('VALIDATION', '请填写有效的开始时间、结束时间和排班类型')
+      }
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
         const out = await unwrap(
@@ -732,6 +745,10 @@ function buildRouter() {
           )
           return out.data
         }
+        if(req.body.source_type === 'manual'){
+          const out=await unwrap(trainingService.createFreeSession(app,req.actor.userId))
+          return out.data
+        }
         throw new AppError('VALIDATION', '请使用 /plans/{id}/start-session 开练')
       })
       ok(res, data)
@@ -822,6 +839,20 @@ function buildRouter() {
       next(e)
     }
   })
+
+  for (const method of ['post','delete']) {
+    r[method]('/sessions/:id/exercises/:exerciseId/sets' + (method==='delete'?'/:setId':''), authRequired, idempotency(), async (req,res,next)=>{
+      try{
+        const data=await req.app.locals.store.tx(async()=>{
+          const app=asApp(req.app.locals.store),cur=await unwrap(trainingService.getSession(app,req.params.id))
+          assertSessionEditor(req,cur.data)
+          const out=await unwrap(trainingService.changeSessionSet(app,req.params.id,req.params.exerciseId,req.params.setId))
+          return out.data
+        })
+        ok(res,data)
+      }catch(e){next(e)}
+    })
+  }
 
   r.post('/sessions/:id/exercises', authRequired, async (req, res, next) => {
     try {
@@ -1013,6 +1044,32 @@ function buildRouter() {
   })
 
   // ---------- API15–17 plans ----------
+  r.post('/plans', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(async () => {
+        const app = asApp(req.app.locals.store)
+        const actor = req.actor
+        const studentId = req.body.student_id || actor.userId
+        let authorRole = 'student'
+        if (studentId !== actor.userId) {
+          assertCoachReadStudent(req.app.locals.store.state, actor.userId, studentId)
+          if (!hasRole(actor, 'coach')) throw new AppError('FORBIDDEN', '只有教练可为学员创建计划')
+          authorRole = 'coach'
+        }
+        const out = await unwrap(trainingService.createManualPlan(app, {
+          studentId,
+          authorId: actor.userId,
+          authorRole,
+          title: req.body.title
+        }))
+        return presentForActor(req.app.locals.store.state, actor, out.data)
+      })
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
   r.get('/plans', authRequired, async (req, res, next) => {
     try {
       const studentId = req.query.student_id || req.actor.userId
@@ -1037,6 +1094,21 @@ function buildRouter() {
       const app = asApp(req.app.locals.store)
       const out = await unwrap(trainingService.getPlan(app, req.params.id))
       ok(res, presentForActor(req.app.locals.store.state, req.actor, out.data))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.delete('/plans/:id', authRequired, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(async () => {
+        const app = asApp(req.app.locals.store)
+        const current = (await unwrap(trainingService.getPlan(app, req.params.id))).data
+        presentForActor(req.app.locals.store.state, req.actor, current, true)
+        const out = await unwrap(trainingService.deletePlan(app, req.params.id))
+        return out.data
+      })
+      ok(res, data)
     } catch (e) {
       next(e)
     }
@@ -1386,11 +1458,21 @@ function buildRouter() {
   })
 
   // ---------- API22 exercises ----------
+  r.get('/exercises/facets', authRequired, async (req, res, next) => {
+    try {
+      const app = asApp(req.app.locals.store)
+      const out = await unwrap(exerciseService.listFacets(app))
+      ok(res, out.data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
   r.get('/exercises', authRequired, async (req, res, next) => {
     try {
       const app = asApp(req.app.locals.store)
       const out = await unwrap(exerciseService.listExercises(app, req.query))
-      ok(res, out.data)
+      ok(res, out.data, { total: out.total, page: out.page, limit: out.limit })
     } catch (e) {
       next(e)
     }
@@ -1521,8 +1603,187 @@ function buildRouter() {
     }
   })
 
+  r.get('/points', authRequired, (req, res) => {
+    ok(res, pointsService.summary(req.app.locals.store.state, req.actor.userId))
+  })
+
+  r.get('/points/ledger', authRequired, (req, res) => {
+    ok(
+      res,
+      pointsService.listLedger(req.app.locals.store.state, req.actor.userId, { type: req.query.type })
+    )
+  })
+
+  r.get('/achievements', authRequired, (req, res) => {
+    ok(res, achievementService.listForUser(req.app.locals.store.state, req.actor.userId))
+  })
+
+  r.get('/rewards', authRequired, (req, res) => {
+    ok(res, redemptionService.listCatalog(req.app.locals.store.state))
+  })
+
+  r.post('/redemptions', authRequired, async (req, res, next) => {
+    try {
+      const key = req.headers['idempotency-key']
+      if (!key) throw new AppError('VALIDATION', '兑换需要 Idempotency-Key')
+      const data = await req.app.locals.store.tx((state) =>
+        redemptionService.redeem(asApp(req.app.locals.store), req.actor, req.body || {}, String(key))
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/redemptions', authRequired, (req, res) => {
+    ok(res, redemptionService.listOrders(req.app.locals.store.state, req.actor.userId))
+  })
+
+  r.get('/redemptions/:id', authRequired, (req, res, next) => {
+    try {
+      ok(res, redemptionService.getOrder(req.app.locals.store.state, req.actor.userId, req.params.id))
+    } catch (e) {
+      next(e)
+    }
+  })
+
   // ---------- 最小运营后台 /admin/*（ops 角色）----------
   const opsOnly = [authRequired, requireRole('ops')]
+
+  r.get('/admin/points/rules', ...opsOnly, (req, res) => {
+    ok(res, pointsService.getRules(req.app.locals.store.state))
+  })
+
+  r.patch('/admin/points/rules', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        pointsService.patchRules(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.post('/admin/points/adjustments', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        pointsService.adjust(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/achievements', ...opsOnly, (req, res) => {
+    ok(res, achievementService.listDefinitions(req.app.locals.store.state))
+  })
+
+  r.patch('/admin/achievements/:key', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        achievementService.patchDefinition(state, req.actor, req.params.key, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/rewards', ...opsOnly, (req, res) => {
+    ok(res, redemptionService.listCatalog(req.app.locals.store.state, { includeDisabled: true }))
+  })
+
+  r.post('/admin/rewards', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        redemptionService.createReward(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.patch('/admin/rewards/:sku', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        redemptionService.patchReward(state, req.actor, req.params.sku, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/redemptions', ...opsOnly, (req, res) => {
+    ok(
+      res,
+      redemptionService.listAdminOrders(req.app.locals.store.state, req.query.status || '')
+    )
+  })
+
+  r.post('/admin/redemptions/:id/retry', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx(() =>
+        redemptionService.retryOrder(asApp(req.app.locals.store), req.actor, req.params.id, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/accounts', ...opsOnly, (req, res) => {
+    ok(res, opsService.listAccounts(req.app.locals.store.state))
+  })
+
+  r.post('/admin/accounts/enable', ...opsOnly, async (req, res, next) => {
+    try {
+      const data = await req.app.locals.store.tx((state) =>
+        opsService.enableAccount(state, req.actor, req.body || {})
+      )
+      ok(res, data)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/coach-applications', ...opsOnly, (req, res) => {
+    ok(
+      res,
+      opsService.listCoachApplications(req.app.locals.store.state, {
+        status: req.query.status || 'pending'
+      })
+    )
+  })
+
+  r.get('/admin/entitlements', ...opsOnly, (req, res, next) => {
+    try {
+      ok(
+        res,
+        opsService.listUserEntitlements(req.app.locals.store.state, req.query.user_id)
+      )
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  r.get('/admin/ai-tasks', ...opsOnly, (req, res) => {
+    ok(
+      res,
+      opsService.listAiTasks(req.app.locals.store.state, { status: req.query.status || '' })
+    )
+  })
+
+  r.get('/admin/notifications', ...opsOnly, (req, res, next) => {
+    try {
+      ok(res, opsService.listNotifications(req.app.locals.store.state, req.query.user_id))
+    } catch (e) {
+      next(e)
+    }
+  })
 
   r.get('/admin/config', ...opsOnly, (req, res) => {
     ok(res, opsService.getConfig(req.app.locals.store.state))

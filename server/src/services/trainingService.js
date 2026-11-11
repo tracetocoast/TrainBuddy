@@ -6,7 +6,9 @@
 const time = require('../lib/time')
 const { makeId: makeIdLib } = require('../lib/ids')
 const planValidation = require('../lib/planValidation')
+const { isOpenOnDate } = require('../lib/planSchedule')
 const { AppError } = require('../lib/errors')
+const pointsService = require('./pointsService')
 
 const EXERCISE_LIBRARY = [
   { id: 'squat', name: '杠铃深蹲', icon: '🏋️', defaultSets: 4, defaultReps: 10, defaultWeight: 60 },
@@ -84,6 +86,23 @@ function countRequiredSets(session) {
   return n
 }
 
+function catalogImageUrl(exerciseId) {
+  if (!exerciseId) return ''
+  try {
+    return require('./exerciseService').imageUrlForId(exerciseId) || ''
+  } catch (_) {
+    return ''
+  }
+}
+
+function withCatalogImages(exercises) {
+  return (exercises || []).map((ex) => {
+    const imageUrl = ex.imageUrl || catalogImageUrl(ex.exerciseId)
+    if (!imageUrl || imageUrl === ex.imageUrl) return ex
+    return Object.assign({}, ex, { imageUrl })
+  })
+}
+
 function presentSession(s) {
   const done = countDoneSets(s)
   const total = countRequiredSets(s)
@@ -104,12 +123,22 @@ function presentSession(s) {
     revision: s.revision,
     public_note: s.publicNote || '',
     private_note: s.privateNote || '',
-    exercises: s.exercises,
+    exercises: withCatalogImages(s.exercises),
     done_sets: done,
     total_sets: total,
     progress_percent: total ? Math.min(100, Math.round((done / total) * 100)) : 0,
     booking_id: s.bookingId || null,
     has_booking: !!s.bookingId
+  }
+}
+
+function presentSchedule(rev) {
+  return {
+    planned_date: rev.plannedDate || null,
+    schedule_type: rev.scheduleType || 'once',
+    schedule_end: rev.scheduleEnd || null,
+    weekdays: rev.weekdays || [],
+    month_days: rev.monthDays || []
   }
 }
 
@@ -124,7 +153,7 @@ function presentPlan(store, plan) {
     source_type: plan.sourceType,
     current_published_revision: plan.currentPublishedRevision,
     published: pub
-      ? {
+      ? Object.assign({
           version: pub.version,
           status: pub.status,
           title: pub.title,
@@ -132,11 +161,11 @@ function presentPlan(store, plan) {
           planned_date: pub.plannedDate,
           exercises: pub.exercises,
           published_at: pub.publishedAt
-        }
+        }, presentSchedule(pub))
       : null,
     latest_draft:
       latest && latest.status === 'draft'
-        ? {
+        ? Object.assign({
             version: latest.version,
             revision: latest.revision || 1,
             title: latest.title,
@@ -145,7 +174,7 @@ function presentPlan(store, plan) {
             exercises: latest.exercises,
             reason: latest.reason,
             missing_notes: latest.missingNotes || []
-          }
+          }, presentSchedule(latest))
         : null
   }
 }
@@ -191,6 +220,7 @@ function cloneExercisesForSession(planExercises) {
     name: ex.name,
     nameSnapshot: ex.name,
     icon: ex.icon || '🏋️',
+    imageUrl: ex.imageUrl || catalogImageUrl(ex.exerciseId) || '',
     order: ex.order || idx + 1,
     loadBasis: ex.loadBasis || 'unknown',
     sets: (ex.sets || []).map((s) => ({
@@ -239,6 +269,10 @@ function ensureDefaultPublishedPlan(app, { studentId, authorId, authorRole }) {
     title: '下肢力量 · A 计划',
     goal: '动作稳定、节奏可控',
     plannedDate: todayBusinessDate(),
+    scheduleType: 'permanent',
+    scheduleEnd: null,
+    weekdays: [],
+    monthDays: [],
     exercises: defaultLowerBodyExercises(),
     reason: '系统默认模板',
     missingNotes: [],
@@ -294,6 +328,32 @@ function startSessionFromPlan(app, planId, { studentId, idempotencyKey }) {
       request_id: makeId('req'),
       resumed: true
     })
+  }
+
+  const today = todayBusinessDate()
+  if (!isOpenOnDate(pub, today)) {
+    return Promise.reject(
+      new AppError('INVALID_STATE', '该计划今天不可执行，请到计划页查看训练日期', {
+        extra: { planned_date: pub.plannedDate, schedule_type: pub.scheduleType || 'once' }
+      })
+    )
+  }
+
+  // 同一计划当日已完成后不可再开，避免重复累计训练次数
+  const doneToday = store.sessions.find(
+    (s) =>
+      s.studentId === studentId &&
+      s.planId === planId &&
+      s.status === 'completed' &&
+      s.businessDate === today &&
+      s.sourceType === 'from_plan'
+  )
+  if (doneToday) {
+    return Promise.reject(
+      new AppError('INVALID_STATE', '今日已完成该计划，请到成长页查看记录', {
+        extra: { session_id: doneToday.id }
+      })
+    )
   }
 
   const session = {
@@ -375,6 +435,33 @@ function createCoachDraftSession(app, payload) {
   store.sessions.push(session)
   persist(app)
   return Promise.resolve({ data: presentSession(session), request_id: makeId('req') })
+}
+
+function createFreeSession(app, studentId) {
+  const store=ensureStore(app)
+  const existing=store.sessions.find(row=>row.studentId===studentId && row.sourceType==='manual' && ['draft','in_progress'].includes(row.status))
+  if(existing)return Promise.resolve({data:presentSession(existing)})
+  const session={id:makeId('sess'),studentId,studentName:'',coachId:null,bookingId:null,planId:null,planRevision:null,sourceType:'manual',status:'in_progress',title:'自主训练',businessDate:todayBusinessDate(),startedAt:time.nowMs(),endedAt:null,sharedAt:null,revision:1,publicNote:'',privateNote:'',exercises:[],completionKey:null,createdAt:time.nowMs(),updatedAt:time.nowMs()}
+  store.sessions.push(session);persist(app)
+  return Promise.resolve({data:presentSession(session)})
+}
+function changeSessionSet(app, sessionId, exerciseId, setId) {
+  const store=ensureStore(app),session=findSession(store,sessionId)
+  if(!session)throw new AppError('NOT_FOUND','训练不存在')
+  if(!['draft','in_progress'].includes(session.status))throw new AppError('INVALID_STATE','该训练不能编辑')
+  const ex=session.exercises.find(row=>row.id===exerciseId)
+  if(!ex)throw new AppError('NOT_FOUND','动作不存在')
+  if(setId){
+    if(!ex.sets.some(row=>row.id===setId))throw new AppError('NOT_FOUND','训练组不存在')
+    if(ex.sets.length<=1)throw new AppError('VALIDATION','至少保留一组，或删除整个动作')
+    ex.sets=ex.sets.filter(row=>row.id!==setId)
+  }else{
+    if(ex.sets.length>=30)throw new AppError('VALIDATION','每个动作最多30组')
+    const prev=ex.sets[ex.sets.length-1]||{}
+    ex.sets.push({id:makeId('aset'),setNo:ex.sets.length+1,targetWeight:prev.targetWeight, targetReps:prev.targetReps,actualWeight:prev.actualWeight,actualReps:prev.actualReps,state:'pending',required:true,effort:null})
+  }
+  ex.sets.forEach((row,i)=>{row.setNo=i+1});session.revision++;session.updatedAt=time.nowMs();persist(app)
+  return Promise.resolve({data:presentSession(session)})
 }
 
 function getSession(app, sessionId) {
@@ -470,6 +557,10 @@ function updateActualSet(app, sessionId, setId, patch) {
   })
   if (!hit) return Promise.reject({ code: 'NOT_FOUND', message: '组不存在' })
 
+  if(patch.setType != null){
+    if(!['warmup','working'].includes(patch.setType))throw new AppError('VALIDATION','训练组类型不合法')
+    hit.setType=patch.setType
+  }
   if (patch.actualWeight != null) hit.actualWeight = patch.actualWeight
   if (patch.actualReps != null) hit.actualReps = patch.actualReps
   if (patch.state) {
@@ -691,6 +782,10 @@ function generateNextPlanDraft(app, sourceSession, generationType) {
     title: (sourceSession.title || '训练') + ' · 下次计划',
     goal: '沿用上次完成情况，请教练复核后再发布',
     plannedDate,
+    scheduleType: 'once',
+    scheduleEnd: null,
+    weekdays: [],
+    monthDays: [],
     exercises,
     reason: '规则生成：复制来源会话，未自动加量',
     missingNotes,
@@ -724,7 +819,8 @@ function finalizeSession(app, sessionId, { completionKey, share, actorRole }) {
         session: presentSession(existing),
         next_plan: null,
         next_plan_error: null,
-        idempotent: true
+        idempotent: true,
+        reward: pointsService.lookupTraining(app.globalData, existing.id)
       },
       request_id: makeId('req')
     })
@@ -737,7 +833,8 @@ function finalizeSession(app, sessionId, { completionKey, share, actorRole }) {
         session: presentSession(s),
         next_plan: null,
         next_plan_error: null,
-        idempotent: true
+        idempotent: true,
+        reward: pointsService.lookupTraining(app.globalData, s.id)
       },
       request_id: makeId('req')
     })
@@ -770,6 +867,7 @@ function finalizeSession(app, sessionId, { completionKey, share, actorRole }) {
   })
 
   store.finalizeKeys[key] = s.id
+  const reward = pointsService.rewardTraining(app.globalData, store, s, done)
 
   let nextPlan = null
   let nextPlanError = null
@@ -787,9 +885,10 @@ function finalizeSession(app, sessionId, { completionKey, share, actorRole }) {
   return Promise.resolve({
     data: {
       session: presentSession(s),
-      next_plan: nextPlan,
-      next_plan_error: nextPlanError,
-      idempotent: false
+        next_plan: nextPlan,
+        next_plan_error: nextPlanError,
+        idempotent: false,
+        reward
     },
     request_id: makeId('req')
   })
@@ -829,6 +928,44 @@ function listSessions(app, filter) {
 /**
  * 获取计划草稿并更新（C05）
  */
+function createManualPlan(app, { studentId, authorId, authorRole, title }) {
+  const store = ensureStore(app)
+  const plan = {
+    id: makeId('plan'),
+    studentId,
+    authorId,
+    authorRole: authorRole === 'coach' ? 'coach' : 'student',
+    sourceType: 'manual',
+    sourceId: null,
+    currentPublishedRevision: null,
+    createdAt: time.nowMs(),
+    updatedAt: time.nowMs()
+  }
+  store.plans.push(plan)
+  const name = typeof title === 'string' && title.trim() ? title.trim().slice(0, 60) : '我的训练计划'
+  store.planRevisions.push({
+    id: makeId('prev'),
+    planId: plan.id,
+    version: 1,
+    revision: 1,
+    status: 'draft',
+    title: name,
+    goal: '',
+    plannedDate: todayBusinessDate(),
+    scheduleType: 'permanent',
+    scheduleEnd: null,
+    weekdays: [],
+    monthDays: [],
+    exercises: [],
+    reason: '手动创建',
+    missingNotes: [],
+    publishedAt: null,
+    createdAt: time.nowMs()
+  })
+  persist(app)
+  return Promise.resolve({ data: presentPlan(store, plan), request_id: makeId('req') })
+}
+
 function getPlan(app, planId) {
   const store = ensureStore(app)
   const plan = findPlan(store, planId)
@@ -836,7 +973,20 @@ function getPlan(app, planId) {
   return Promise.resolve({ data: presentPlan(store, plan), request_id: makeId('req') })
 }
 
-function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exercises, reason, base_revision }) {
+function deletePlan(app, planId) {
+  const store = ensureStore(app)
+  const plan = findPlan(store, planId)
+  if (!plan) return Promise.reject({ code: 'NOT_FOUND', message: '计划不存在' })
+  store.plans = store.plans.filter((item) => item.id !== planId)
+  store.planRevisions = store.planRevisions.filter((item) => item.planId !== planId)
+  Object.keys(store.nextPlanGenKeys || {}).forEach((key) => {
+    if (store.nextPlanGenKeys[key] === planId) delete store.nextPlanGenKeys[key]
+  })
+  persist(app)
+  return Promise.resolve({ data: { plan_id: planId, deleted: true }, request_id: makeId('req') })
+}
+
+function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exercises, reason, base_revision, scheduleType, scheduleEnd, weekdays, monthDays }) {
   const store = ensureStore(app)
   const plan = findPlan(store, planId)
   if (!plan) return Promise.reject({ code: 'NOT_FOUND', message: '计划不存在' })
@@ -851,7 +1001,13 @@ function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exerc
   const nextReason = reason != null ? reason : base.reason || '手动编辑'
   if (typeof nextTitle !== 'string' || !nextTitle.trim() || nextTitle.trim().length > 60) planValidation.invalid('标题需为 1–60 字')
   if (typeof nextGoal !== 'string' || nextGoal.length > 500 || typeof nextReason !== 'string' || nextReason.length > 500) planValidation.invalid('目标和修改说明最多 500 字')
-  const nextDate = planValidation.date(plannedDate != null ? plannedDate : base.plannedDate || todayBusinessDate())
+  const nextSchedule = planValidation.schedule({
+    scheduleType: scheduleType != null ? scheduleType : base.scheduleType || 'once',
+    plannedDate: plannedDate != null ? plannedDate : (base.plannedDate || todayBusinessDate()),
+    scheduleEnd: scheduleEnd != null ? scheduleEnd : base.scheduleEnd,
+    weekdays: weekdays != null ? weekdays : base.weekdays,
+    monthDays: monthDays != null ? monthDays : base.monthDays
+  }, false)
   const nextExercises = planValidation.exercises(exercises != null ? exercises : base.exercises || [], false)
   if (!rev || rev.status !== 'draft') {
     // 基于已发布版新建草稿
@@ -865,6 +1021,10 @@ function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exerc
       title: (pub && pub.title) || '训练计划',
       goal: (pub && pub.goal) || '',
       plannedDate: (pub && pub.plannedDate) || todayBusinessDate(),
+      scheduleType: (pub && pub.scheduleType) || 'once',
+      scheduleEnd: (pub && pub.scheduleEnd) || null,
+      weekdays: JSON.parse(JSON.stringify((pub && pub.weekdays) || [])),
+      monthDays: JSON.parse(JSON.stringify((pub && pub.monthDays) || [])),
       exercises: JSON.parse(JSON.stringify((pub && pub.exercises) || [])),
       reason: '手动编辑',
       missingNotes: [],
@@ -875,7 +1035,11 @@ function updatePlanDraft(app, planId, { version, title, goal, plannedDate, exerc
   }
   rev.title = nextTitle.trim()
   rev.goal = nextGoal
-  rev.plannedDate = nextDate
+  rev.plannedDate = nextSchedule.plannedDate
+  rev.scheduleType = nextSchedule.scheduleType
+  rev.scheduleEnd = nextSchedule.scheduleEnd
+  rev.weekdays = nextSchedule.weekdays
+  rev.monthDays = nextSchedule.monthDays
   rev.exercises = nextExercises
   rev.reason = nextReason
   rev.revision = (rev.revision || 1) + 1
@@ -918,8 +1082,21 @@ function publishPlan(app, planId, { version, reviewConfirmation, baseRevision })
   }
   if (rev !== latestRevision(store, planId) || (baseRevision != null && baseRevision !== (rev.revision || 1))) throw new AppError('REVISION_CONFLICT', '草稿已更新，请重新核对后发布')
   planValidation.exercises(rev.exercises, true)
-  planValidation.date(rev.plannedDate)
-  if (rev.plannedDate < todayBusinessDate()) planValidation.invalid('不能发布过去日期的训练计划')
+  const sch = planValidation.schedule({
+    scheduleType: rev.scheduleType || 'once',
+    plannedDate: rev.plannedDate,
+    scheduleEnd: rev.scheduleEnd,
+    weekdays: rev.weekdays,
+    monthDays: rev.monthDays
+  }, true)
+  const today = todayBusinessDate()
+  if (sch.scheduleType === 'once' && sch.plannedDate < today) planValidation.invalid('不能发布过去日期的训练计划')
+  if (sch.scheduleType === 'range' && sch.scheduleEnd < today) planValidation.invalid('长期计划的结束日期不能早于今天')
+  rev.plannedDate = sch.plannedDate
+  rev.scheduleType = sch.scheduleType
+  rev.scheduleEnd = sch.scheduleEnd
+  rev.weekdays = sch.weekdays
+  rev.monthDays = sch.monthDays
   // 旧已发布 → superseded
   if (plan.currentPublishedRevision) {
     const old = findRevision(store, planId, plan.currentPublishedRevision)
@@ -973,7 +1150,8 @@ function addExerciseToPersonalPlan(app, studentId, exerciseMeta) {
   // 确保有 draft
   return updatePlanDraft(app, planId, {
     title: (latestRevision(store, planId) || {}).title || '我的自主训练计划',
-    reason: '从动作库加入'
+    reason: '从动作库加入',
+    scheduleType: (latestRevision(store, planId) || {}).scheduleType || 'permanent'
   }).then(() => {
     const draft = latestRevision(store, planId)
     if (!draft || draft.status !== 'draft') {
@@ -1004,6 +1182,7 @@ function addExerciseToPersonalPlan(app, studentId, exerciseMeta) {
 }
 
 module.exports = {
+  createFreeSession, changeSessionSet,
   EXERCISE_LIBRARY,
   ensureStore,
   ensureDefaultPublishedPlan,
@@ -1020,7 +1199,9 @@ module.exports = {
   finalizeSession,
   abandonSession,
   listSessions,
+  createManualPlan,
   getPlan,
+  deletePlan,
   updatePlanDraft,
   updateDraftSet,
   publishPlan,

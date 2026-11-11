@@ -1,11 +1,13 @@
 {
   "pages": [
     "pages/login/index",
+    "pages/ops-hint/index",
     "pages/home/index",
     "pages/booking/index",
     "pages/booking-detail/index",
     "pages/schedule-rules/index",
     "pages/workout/index",
+    "pages/new-workout/index",
     "pages/plans/index",
     "pages/plan-edit/index",
     "pages/exercises/index",
@@ -13,6 +15,10 @@
     "pages/diary/index",
     "pages/ai/index",
     "pages/growth/index",
+    "pages/points/index",
+    "pages/achievements/index",
+    "pages/rewards/index",
+    "pages/redemption-detail/index",
     "pages/body-data/index",
     "pages/body-metric/index",
     "pages/body-record/index",
@@ -25,7 +31,8 @@
     "pages/body-history/index",
     "pages/coach/index",
     "pages/friends/index",
-    "pages/food-photo/index"
+    "pages/food-photo/index",
+    "pages/training-report/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fafbf7",
@@ -43,6 +50,9 @@
     },
     "scope.writePhotosAlbum": {
       "desc": "用于将目标预览图保存到你的手机相册"
+    },
+    "scope.record": {
+      "desc": "用于课后语音录入转文字"
     }
   }
 }

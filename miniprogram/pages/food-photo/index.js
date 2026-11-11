@@ -1,6 +1,7 @@
 const { requireLogin } = require('../../utils/guard')
 const aiApi = require('../../services/aiApi')
 const time = require('../../utils/time')
+const interaction = require('../../utils/interaction')
 
 const MEAL_TYPES = [
   { key: 'breakfast', label: '早餐' },
@@ -15,6 +16,12 @@ function emptyMacros() {
 
 function macroDisplay(v) {
   return v == null || v === '' ? '—' : String(v)
+}
+
+function macroKind(v) {
+  if (v == null || v === '') return 'unknown'
+  if (Number(v) === 0) return 'zero'
+  return 'value'
 }
 
 function macroInput(v) {
@@ -48,7 +55,10 @@ Page({
       name: m.name,
       shortName: m.shortName,
       value: '—',
-      input: ''
+      input: '',
+      kind: 'unknown',
+      unitVisible: false,
+      kindLabel: '未知'
     })),
     isEstimate: true,
     uncertainties: [],
@@ -59,11 +69,15 @@ Page({
     syncHint: '默认关闭。需绑定教练、饮食授权且主动开启。',
     syncEnabled: false,
     saveMessage: '',
-    confirmedMeal: null
+    confirmedMeal: null,
+    reduced: false
   },
 
   onLoad(query) {
-    if (query && query.mode === 'real') this.setData({ mode: 'real' })
+    const patch = {}
+    if (query && query.mode === 'real') patch.mode = 'real'
+    if (query && /^\d{4}-\d{2}-\d{2}$/.test(query.date || '')) patch.localDate = query.date
+    if (Object.keys(patch).length) this.setData(patch)
   },
 
   onShow() {
@@ -73,6 +87,7 @@ Page({
       this.resetSession()
     }
     this.owner = owner
+    this.setData({ reduced: interaction.reducedMotion() })
     if (!this.data.localDate) {
       this.setData({ localDate: time.todayKey() })
     }
@@ -128,13 +143,20 @@ Page({
 
   buildMacroViews(macros) {
     const m = macros || emptyMacros()
-    return MACRO_META.map((meta) => ({
-      key: meta.key,
-      name: meta.name,
-      shortName: meta.shortName,
-      value: macroDisplay(m[meta.key]),
-      input: macroInput(m[meta.key])
-    }))
+    return MACRO_META.map((meta) => {
+      const raw = m[meta.key]
+      const kind = macroKind(raw)
+      return {
+        key: meta.key,
+        name: meta.name,
+        shortName: meta.shortName,
+        value: macroDisplay(raw),
+        input: macroInput(raw),
+        kind,
+        unitVisible: kind !== 'unknown',
+        kindLabel: kind === 'unknown' ? '未知' : kind === 'zero' ? '为零' : '估算'
+      }
+    })
   },
 
   async refreshProviders() {
@@ -260,11 +282,15 @@ Page({
       const n = Number(raw)
       macros[key] = Number.isNaN(n) ? null : n
     }
+    const kind = macroKind(macros[key])
     const macroViews = (this.data.macroViews || []).map((row) => {
       if (row.key !== key) return row
       return Object.assign({}, row, {
         input: raw == null ? '' : String(raw),
-        value: macroDisplay(macros[key])
+        value: macroDisplay(macros[key]),
+        kind,
+        unitVisible: kind !== 'unknown',
+        kindLabel: kind === 'unknown' ? '未知' : kind === 'zero' ? '为零' : '估算'
       })
     })
     this.setData({ macros, macroViews })
@@ -548,6 +574,13 @@ Page({
   },
 
   goDiary() {
-    wx.navigateTo({ url: '/pages/diary/index' })
+    const pages = getCurrentPages()
+    const prev = pages.length > 1 ? pages[pages.length - 2] : null
+    if (prev && prev.route === 'pages/diary/index') {
+      wx.navigateBack()
+      return
+    }
+    const date = this.data.localDate
+    wx.navigateTo({ url: '/pages/diary/index' + (date ? '?date=' + date : '') })
   }
 })

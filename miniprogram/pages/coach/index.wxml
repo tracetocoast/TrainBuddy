@@ -1,5 +1,6 @@
-<view class="page coach-space">
-  <view class="top"><view class="brand"><brand-logo class="brand-emblem-slot"/>教练</view><text class="space-caption">训练之外，也有回应</text></view>
+<page-meta background-color="{{pageBg}}" />
+<view class="page coach-space {{skinClass}}">
+  <view class="top"><view class="brand"><brand-logo class="brand-emblem-slot"/>训练协作</view><text class="space-caption">与你的教练保持同步</text></view>
   <view class="space-state" wx:if="{{loading}}">正在同步教练动态…</view>
   <view class="card" wx:elif="{{error}}"><view class="sub">{{error}}</view><button class="link" bindtap="reload">重新加载</button></view>
   <view class="binding-empty" wx:elif="{{!binding}}"><view class="empty-title">找到陪你进步的人</view><view class="sub">绑定教练后，在这里接收课后反馈、交流饮食并预约课程。</view><button class="primary" bindtap="goBind">绑定我的教练</button></view>
@@ -9,11 +10,7 @@
     <block wx:if="{{tab === 'training'}}">
       <view class="section-intro">教练确认同步后的训练表与动作建议，都会留在这里。</view>
       <view class="session-card" wx:for="{{sessions}}" wx:key="id">
-        <button class="session-head" data-id="{{item.id}}" bindtap="onExpand"><view class="grow"><view class="session-date">{{item.date}} · 已同步</view><view class="card-title">{{item.title}}</view><view class="sub">{{item.exercises.length}} 个动作 · {{item.doneSets}} 组完成</view></view><text class="expand-mark">{{expandedId === item.id ? '−' : '＋'}}</text></button>
-        <block wx:if="{{expandedId === item.id}}">
-          <view class="coach-note"><view class="note-label">教练点评与注意事项</view><view class="note-text">{{item.note || '本次没有补充动作建议。'}}</view></view>
-          <view class="session-exercise" wx:for="{{item.exercises}}" wx:for-item="exercise" wx:key="id"><view class="exercise-name">{{exercise.name}}</view><view class="session-set" wx:for="{{exercise.sets}}" wx:for-item="set" wx:key="id"><text>第 {{set.number}} 组</text><text>{{set.weight}}</text><text>{{set.reps}}</text><text>{{set.done ? '完成' : '未完成'}}</text></view></view>
-        </block>
+        <button class="session-head" data-id="{{item.id}}" bindtap="goReport"><view class="grow"><view class="session-date">{{item.date}} · 教练已发布</view><view class="card-title">{{item.title}}</view><view class="sub">{{item.exercises.length}} 个动作 · {{item.doneSets}} 组完成</view></view><text>查看报告 ›</text></button>
       </view>
       <view class="space-empty" wx:if="{{!sessions.length}}">还没有课后反馈<view>上课后，教练确认同步的训练表和建议会显示在这里。</view></view>
     </block>
@@ -31,5 +28,5 @@
       <view class="booking-intro"><view class="empty-title">把下一次训练，安排好</view><view class="sub">查看 {{binding.coachName}} 的可约时间，预约课程或管理已有预约。</view><button class="primary" bindtap="goBooking">查看时间与预约</button></view>
     </block>
   </block>
+<bottom-nav active="home"/>
 </view>
-<bottom-nav active="coach"/>

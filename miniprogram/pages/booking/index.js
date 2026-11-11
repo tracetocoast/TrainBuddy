@@ -4,6 +4,39 @@ const bindingApi = require('../../services/bindingApi')
 const bookingApi = require('../../services/bookingApi')
 const time = require('../../utils/time')
 const { SCHEDULE_CONFIG } = require('../../utils/scheduleConfig')
+const interaction = require('../../utils/interaction')
+
+function presentBookingRow(row) {
+  const tone = bookingApi.statusTone(row.status)
+  return Object.assign({}, row, {
+    statusLabel: bookingApi.statusLabel(row.status),
+    statusTone: tone,
+    statusPillClass: 'statuspill-' + tone
+  })
+}
+
+function recentMyBookings(list, limit) {
+  return (list || [])
+    .slice()
+    .sort((a, b) => (Number(b.startAt) || 0) - (Number(a.startAt) || 0))
+    .slice(0, limit)
+}
+
+function presentSlot(slot, selected) {
+  const available = slot.status === 'open' && Number(slot.startAt) > Date.now()
+  let displayStatus = slot.displayStatus || ''
+  if (!displayStatus) {
+    if (available) displayStatus = '可预约'
+    else if (slot.status === 'open') displayStatus = '已过期'
+    else displayStatus = bookingApi.statusLabel(slot.status) || '不可约'
+  }
+  return Object.assign({}, slot, {
+    available,
+    selected: !!(available && selected),
+    displayStatus,
+    stateMark: available && selected ? '已选 ✓' : available ? '可约' : '不可约'
+  })
+}
 
 Page({
   data: {
@@ -13,42 +46,90 @@ Page({
     coachId: '',
     dateList: [],
     selectedDate: '',
+    todayKey: '',
     monthTitle: '',
     openDays: SCHEDULE_CONFIG.openDaysAhead,
     daySlots: [],
+    availableSlotCount: 0,
     myBookings: [],
     submitting: false,
-    coachTab: 'pending',
+    actionState: 'idle', bookingError: '', slotsError: '', slotsLoading: false,
+    timeOptions: [], timeIndex: 0, selectedSlots: [], selectedCount: 0, selectedSummary: '', reduced: false,
+    coachTab: 'day', coachLoading: false, showScheduleTools: false, showOpenSlots: false,
     pendingList: [],
     changeList: [],
     pendingCount: 0,
     coachDayBookings: [],
     openSlotsPreview: [],
-    weekSummary: []
+    weekSummary: [],
+    selectedDateLabel: ''
   },
 
+  onLoad(query) { if (query && ['day','week','pending'].includes(query.tab)) this.setData({ coachTab:query.tab }) },
   onShow() {
     if (!requireLogin(this)) return
     syncRoleBar(this)
+    this.setData({ reduced: interaction.reducedMotion() })
     const app = getApp()
     wx.setNavigationBarTitle({
-      title: app.globalData.role === 'coach' ? '排课' : '约课'
+      title: app.globalData.role === 'coach' ? '日程' : '约课'
     })
     this.initDates()
     this.refresh()
+  },
+  onUnload() { this._refreshGeneration = (this._refreshGeneration || 0) + 1 },
+
+  enrichDates(dateList, selectedDate, today, dayMeta) {
+    const meta = dayMeta || {}
+    return (dateList || []).map((item) => {
+      const m = meta[item.dateKey] || {}
+      const isToday = item.dateKey === today
+      const isSelected = item.dateKey === selectedDate
+      let availClass = ''
+      let availMark = ''
+      if (m.loaded) {
+        if (m.hasOpen) {
+          availClass = 'is-open'
+          availMark = '可约'
+        } else {
+          availClass = 'is-closed'
+          availMark = '满/无'
+        }
+      }
+      return Object.assign({}, item, {
+        isToday,
+        isSelected,
+        availClass,
+        availMark,
+        mark: isToday ? '今天' : availMark
+      })
+    })
   },
 
   initDates() {
     const today = time.todayKey()
     const keys = time.listDateKeys(today, SCHEDULE_CONFIG.openDaysAhead)
-    const dateList = keys.map((k) => time.formatDateLabel(k))
+    const raw = keys.map((k) => time.formatDateLabel(k))
     const selectedDate = this.data.selectedDate || today
     const lab = time.formatDateLabel(selectedDate)
+    this._dayMeta = this._dayMeta || {}
     this.setData({
-      dateList,
+      todayKey: today,
+      dateList: this.enrichDates(raw, selectedDate, today, this._dayMeta),
       selectedDate,
+      selectedDateLabel: lab.month + '/' + Number(lab.day) + ' · ' + lab.weekday,
       monthTitle: lab.year + ' 年 ' + lab.month + ' 月',
       openDays: SCHEDULE_CONFIG.openDaysAhead
+    })
+  },
+
+  markSelectedDayMeta(hasOpen) {
+    const key = this.data.selectedDate
+    if (!key) return
+    this._dayMeta = this._dayMeta || {}
+    this._dayMeta[key] = { loaded: true, hasOpen: !!hasOpen }
+    this.setData({
+      dateList: this.enrichDates(this.data.dateList, key, this.data.todayKey || time.todayKey(), this._dayMeta)
     })
   },
 
@@ -62,9 +143,14 @@ Page({
   },
 
   refreshStudent() {
+    const generation = this._refreshGeneration = (this._refreshGeneration || 0) + 1
+    const selectedDate = this.data.selectedDate
+    const owner = this.studentOwner()
+    this.setData({ slotsLoading: true, slotsError: '' })
     const app = getApp()
     const user = app.globalData.session.user
     bindingApi.refreshMe(app).then((me) => {
+      if (generation !== this._refreshGeneration || getApp().globalData.role !== 'student' || owner !== this.studentOwner()) return
       const primary =
         (me && me.primaryBinding) || bindingApi.getActivePrimaryCoach(app, user.userId)
       if (!primary) {
@@ -74,6 +160,7 @@ Page({
           coachId: '',
           daySlots: [],
           myBookings: []
+          , slotsLoading: false, selectedSlots: [], selectedCount: 0, selectedSummary: '', timeOptions: []
         })
         return
       }
@@ -83,35 +170,57 @@ Page({
         coachId: primary.coachId
       })
 
-      bookingApi
+      return Promise.all([bookingApi
         .getSlots(app, {
           coachId: primary.coachId,
-          fromDate: this.data.selectedDate,
-          toDate: this.data.selectedDate
+          fromDate: selectedDate,
+          toDate: selectedDate
         })
         .then((res) => {
-          this.setData({ daySlots: res.data.slots || [] })
-        })
-
-      bookingApi
+          if (generation !== this._refreshGeneration || owner !== this.studentOwner()) return
+          const previous = this.data.selectedSlots || []
+          const prevKeys = {}
+          previous.forEach((slot) => { prevKeys[this.slotKey(slot)] = true })
+          const daySlots = (res.data.slots || []).map((slot) => {
+            const key = this.slotKey(slot)
+            return presentSlot(slot, !!prevKeys[key])
+          })
+          const timeOptions = daySlots.filter((slot) => slot.available).map((slot) => ({
+            label: slot.startLabel + '–' + slot.endLabel + ' · ' + slot.courseName, slot
+          }))
+          const selectedSlots = daySlots.filter((slot) => slot.selected)
+          const availableSlotCount = daySlots.filter((slot) => slot.available).length
+          this.setData(Object.assign({
+            daySlots,
+            availableSlotCount,
+            timeOptions,
+            timeIndex: 0,
+            slotsLoading: false
+          }, this.selectionState(selectedSlots)))
+          this.markSelectedDayMeta(availableSlotCount > 0)
+        }), bookingApi
         .listBookings(app, { studentId: user.userId })
         .then((res) => {
-          const myBookings = (res.data || []).map((b) =>
-            Object.assign({}, b, { statusLabel: bookingApi.statusLabel(b.status) })
-          )
+          if (generation !== this._refreshGeneration || owner !== this.studentOwner()) return
+          const myBookings = recentMyBookings((res.data || []).map(presentBookingRow), 5)
           this.setData({ myBookings })
-        })
+        })])
+    }).catch(err => {
+      if (generation === this._refreshGeneration) this.setData({ slotsLoading: false, slotsError: err.message || '时段加载失败，请重试' })
     })
   },
 
   refreshCoach() {
+    const generation = this._refreshGeneration = (this._refreshGeneration || 0) + 1
+    const owner = this.studentOwner()
+    this.setData({ slotsError: '', coachLoading: true })
     const app = getApp()
     const coachId =
       (app.globalData.session.user.coachProfile &&
         app.globalData.session.user.coachProfile.coachId) ||
       'coach_001'
 
-    Promise.all([
+    return Promise.all([
       bookingApi.listBookings(app, {
         coachId,
         status: ['pending']
@@ -124,55 +233,182 @@ Page({
         toDate: this.data.selectedDate
       })
     ]).then(([pendingRes, changeRes, dayRes, slotsRes]) => {
-      const pendingList = (pendingRes.data || []).map((b) =>
-        Object.assign({}, b, { statusLabel: bookingApi.statusLabel(b.status) })
-      )
+      if (generation !== this._refreshGeneration || owner !== this.studentOwner()) return
+      const pendingList = (pendingRes.data || []).map(presentBookingRow)
       const changeList = changeRes.data || []
-      const coachDayBookings = (dayRes.data || []).map((b) =>
-        Object.assign({}, b, { statusLabel: bookingApi.statusLabel(b.status) })
-      )
+      const now = Date.now()
+      let upcomingMarked = false
+      const coachDayBookings = (dayRes.data || [])
+        .slice()
+        .sort((a, b) => Number(a.startAt) - Number(b.startAt))
+        .map((b) => {
+          const row = presentBookingRow(b)
+          const start = Number(b.startAt) || 0
+          const end = Number(b.endAt) || start
+          const isLive = b.status === 'in_progress' || (start <= now && end > now && (b.status === 'confirmed' || b.status === 'pending'))
+          const isUpcoming =
+            !upcomingMarked &&
+            !isLive &&
+            start > now &&
+            (b.status === 'confirmed' || b.status === 'pending' || b.status === 'in_progress')
+          if (isUpcoming) upcomingMarked = true
+          return Object.assign(row, {
+            isLive,
+            isUpcoming,
+            timelineMark: isLive ? '进行中' : isUpcoming ? '即将开始' : ''
+          })
+        })
       const openSlotsPreview = (slotsRes.data.slots || [])
         .filter((s) => s.status === 'open')
         .slice(0, 8)
+      const openCount = (slotsRes.data.slots || []).filter((s) => s.status === 'open').length
+      this.markSelectedDayMeta(openCount > 0)
 
       this.setData({
         pendingList,
         changeList,
         pendingCount: pendingList.length + changeList.length,
         coachDayBookings,
-        openSlotsPreview
+        openSlotsPreview,
+        coachLoading: false
       })
-      this.buildWeekSummary(coachId)
+      return this.buildWeekSummary(coachId, generation)
+    }).catch(err => {
+      if (generation === this._refreshGeneration && owner === this.studentOwner()) this.setData({ coachLoading: false, slotsError: err.message || '排课加载失败，请重试' })
     })
   },
 
-  buildWeekSummary(coachId) {
+  buildWeekSummary(coachId, generation) {
     const app = getApp()
     const start = this.data.selectedDate
+    const today = this.data.todayKey || time.todayKey()
     // 以选中日所在周：简化为选中日起 7 天
     const keys = time.listDateKeys(start, 7)
-    Promise.all(
+    return Promise.all(
       keys.map((k) =>
         bookingApi.listBookings(app, { coachId, dateKey: k }).then((res) => {
-          const active = (res.data || []).filter((b) => {
+          const rows = res.data || []
+          const active = rows.filter((b) => {
             const s = b.status
             return s === 'pending' || s === 'confirmed' || s === 'in_progress'
           })
+          const pending = rows.filter((b) => b.status === 'pending').length
           const lab = time.formatDateLabel(k)
-          return { dateKey: k, weekday: lab.weekday, day: lab.day, count: active.length }
+          return {
+            dateKey: k,
+            weekday: lab.weekday,
+            day: lab.day,
+            count: active.length,
+            pendingCount: pending,
+            isToday: k === today,
+            isSelected: k === this.data.selectedDate,
+            hint: pending ? pending + ' 待确认' : active.length ? active.length + ' 节' : '空'
+          }
         })
       )
-    ).then((weekSummary) => this.setData({ weekSummary }))
+    ).then((weekSummary) => {
+      if (generation === this._refreshGeneration) this.setData({ weekSummary })
+    })
+  },
+
+  slotKey(slot) {
+    return String(slot.startAt) + ':' + String(slot.courseTypeId)
+  },
+  onScheduleTools() { this.setData({ showScheduleTools: !this.data.showScheduleTools }) },
+  onOpenSlotsToggle() { this.setData({ showOpenSlots: !this.data.showOpenSlots }) },
+
+  selectionState(selectedSlots) {
+    const list = (selectedSlots || []).slice().sort((a, b) => a.startAt - b.startAt)
+    const summary = list.length
+      ? list.map((s) => s.startLabel + ' ' + s.courseName).join('、')
+      : ''
+    return {
+      selectedSlots: list,
+      selectedCount: list.length,
+      selectedSummary: summary
+    }
+  },
+
+  applySlotSelection(selectedSlots) {
+    const keys = {}
+    ;(selectedSlots || []).forEach((slot) => { keys[this.slotKey(slot)] = true })
+    const daySlots = (this.data.daySlots || []).map((slot) =>
+      presentSlot(slot, !!(slot.available && keys[this.slotKey(slot)]))
+    )
+    this.setData(Object.assign({
+      daySlots,
+      actionState: 'idle',
+      bookingError: ''
+    }, this.selectionState(daySlots.filter((slot) => slot.selected))))
   },
 
   onPickDate(e) {
-    const key = e.currentTarget.dataset.key
+    if (this._bookingBusy || this._bookingModal || this.data.actionState === 'error') return
+    const key = e.detail.value || e.currentTarget.dataset.key
+    if (!this.data.dateList.some(item => item.dateKey === key)) return
     const lab = time.formatDateLabel(key)
+    const today = this.data.todayKey || time.todayKey()
     this.setData({
       selectedDate: key,
-      monthTitle: lab.year + ' 年 ' + lab.month + ' 月'
+      selectedDateLabel: lab.month + '/' + Number(lab.day) + ' · ' + lab.weekday,
+      selectedSlots: [],
+      selectedCount: 0,
+      selectedSummary: '',
+      timeOptions: [],
+      daySlots: [],
+      availableSlotCount: 0,
+      actionState: 'idle',
+      bookingError: '',
+      monthTitle: lab.year + ' 年 ' + lab.month + ' 月',
+      dateList: this.enrichDates(this.data.dateList, key, today, this._dayMeta)
     })
     this.refresh()
+  },
+
+  onPickWeekDay(e) {
+    const key = e.currentTarget.dataset.key
+    if (!key) return
+    this.onPickDate({ currentTarget: { dataset: { key } }, detail: {} })
+    this.setData({ coachTab: 'day' })
+  },
+
+  onTimePick(e) {
+    if (this._bookingBusy || this._bookingModal || this.data.actionState === 'error') return
+    const timeIndex = Number(e.detail.value)
+    const item = this.data.timeOptions[timeIndex]
+    if (!item || !item.slot) return
+    this.setData({ timeIndex })
+    this.toggleSlot(item.slot)
+  },
+  onMotion(e) { interaction.setReducedMotion(e.detail.value); this.setData({ reduced: !!e.detail.value }) },
+  studentOwner() { const app = getApp(); return app.globalData.session.user.userId + ':' + app.globalData.role },
+  onResetBooking() { if (!this._bookingBusy) { this._retryBookingList = null; this.setData({ actionState: 'idle', bookingError: '' }); this.refresh() } },
+
+  toggleSlot(slot) {
+    if (!slot || !slot.available) return
+    const key = this.slotKey(slot)
+    const current = this.data.selectedSlots || []
+    const exists = current.some((item) => this.slotKey(item) === key)
+    const next = exists
+      ? current.filter((item) => this.slotKey(item) !== key)
+      : current.concat([slot])
+    this.applySlotSelection(next)
+  },
+
+  onSelectSlot(e) {
+    if (this._bookingBusy || this._bookingModal || this.data.actionState === 'error') return
+    const startAt = Number(e.currentTarget.dataset.start)
+    const courseTypeId = e.currentTarget.dataset.course
+    const slot = (this.data.daySlots || []).find(
+      (item) => item.startAt === startAt && item.courseTypeId === courseTypeId
+    )
+    if (slot) this.toggleSlot(slot)
+  },
+
+  onBookSelected() {
+    const slots = this.data.selectedSlots || []
+    if (!slots.length || this.data.slotsLoading) return
+    this.onRequestBookMulti(slots)
   },
 
   onCoachTab(e) {
@@ -194,75 +430,161 @@ Page({
   },
 
   /**
-   * 关键：仅打开确认框，确认后才调用 createBooking（修复原型先写 booked）
+   * 交互：仅打开确认框，确认后才调用 createBooking（修复原型先写 booked）
+   * 支持一次提交多个已选时段。
    */
-  onRequestBook(e) {
-    if (this.data.submitting) return
-    const app = getApp()
-    const startAt = Number(e.currentTarget.dataset.start)
-    const courseTypeId = e.currentTarget.dataset.course
-    const name = e.currentTarget.dataset.name
-    const label = e.currentTarget.dataset.label
+  onRequestBookMulti(slots) {
+    if (this._bookingBusy || this._bookingModal || this.data.slotsLoading) return
+    if (this.data.actionState === 'error' && this._retryBookingList && this._retryBookingList.length) {
+      return this.submitBookings(this._retryBookingList)
+    }
+    const valid = (slots || []).filter((slot) =>
+      this.data.daySlots.some(
+        (row) =>
+          row.startAt === slot.startAt &&
+          row.courseTypeId === slot.courseTypeId &&
+          row.available &&
+          Number(row.startAt) > Date.now()
+      )
+    )
+    if (!valid.length) return
     const dateKey = this.data.selectedDate
-
+    const linesText = valid
+      .slice()
+      .sort((a, b) => a.startAt - b.startAt)
+      .map((s) => s.startLabel + '「' + s.courseName + '」')
+      .join('\n')
+    this._bookingModal = true
     wx.showModal({
-      title: '预约确认',
+      title: valid.length > 1 ? '批量预约确认' : '预约确认',
       content:
         '预约 ' +
         dateKey +
-        ' ' +
-        label +
-        '「' +
-        name +
-        '」。提交后为待确认，教练接受前可撤回。取消弹层不会创建预约。',
+        ' 共 ' +
+        valid.length +
+        ' 个时段：\n' +
+        linesText +
+        '\n提交后为待确认，教练接受前可撤回。取消弹层不会创建预约。',
       confirmText: '提交预约',
       success: (res) => {
+        this._bookingModal = false
         if (!res.confirm) return
-        this.submitBooking(startAt, courseTypeId)
+        this.submitBookings(valid)
+      },
+      fail: () => {
+        this._bookingModal = false
       }
     })
   },
 
-  submitBooking(startAt, courseTypeId) {
+  submitBookings(slots) {
+    if (this._bookingBusy) return Promise.resolve()
+    const list = (slots || []).slice().sort((a, b) => a.startAt - b.startAt)
+    if (!list.length) return Promise.resolve()
+    this._bookingBusy = true
     const app = getApp()
     const user = app.globalData.session.user
-    this.setData({ submitting: true })
-    const idem = 'book_' + user.userId + '_' + startAt + '_' + courseTypeId
+    const owner = this.studentOwner()
+    this._retryBookingList = list
+    this.setData({ submitting: true, actionState: 'submitting', bookingError: '' })
 
-    bookingApi
-      .createBooking(
-        app,
-        {
-          coachId: this.data.coachId,
-          studentId: user.userId,
-          studentName: user.displayName,
-          startAt,
-          courseTypeId,
-          acceptedRulesVersion: SCHEDULE_CONFIG.rulesVersion
-        },
-        idem
-      )
-      .then((resp) => {
-        this.setData({ submitting: false })
-        wx.showModal({
-          title: '已提交，等待教练确认',
-          content:
-            '状态：pending\n' +
-            resp.data.start_at +
-            '\n超时未确认将自动失效。',
-          showCancel: false,
-          success: () => {
-            wx.navigateTo({
-              url: '/pages/booking-detail/index?id=' + resp.data.booking_id
-            })
-          }
+    const created = []
+    const failed = []
+
+    const runNext = (index) => {
+      if (owner !== this.studentOwner()) return Promise.resolve()
+      if (index >= list.length) return Promise.resolve()
+      const slot = list[index]
+      const idem =
+        'book_' + user.userId + '_' + this.data.coachId + '_' + slot.startAt + '_' + slot.courseTypeId
+      return bookingApi
+        .createBooking(
+          app,
+          {
+            coachId: this.data.coachId,
+            studentId: user.userId,
+            studentName: user.displayName,
+            startAt: slot.startAt,
+            courseTypeId: slot.courseTypeId,
+            acceptedRulesVersion: SCHEDULE_CONFIG.rulesVersion
+          },
+          idem
+        )
+        .then((resp) => {
+          created.push(resp.data)
+          return runNext(index + 1)
         })
-        this.refresh()
-      })
-      .catch((err) => {
+        .catch((err) => {
+          failed.push({ slot, err })
+          // Independent slots continue after a conflict so later selections are not lost.
+          return runNext(index + 1)
+        })
+    }
+
+    return runNext(0)
+      .then(() => {
+        if (owner !== this.studentOwner()) return
+        this._bookingBusy = false
         this.setData({ submitting: false })
+        if (!failed.length && created.length) {
+          this._retryBookingList = null
+          const actionState = interaction.bookingState(created[0])
+          this.setData(Object.assign({ actionState }, this.selectionState([])))
+          wx.showModal({
+            title:
+              created.length > 1
+                ? '已提交 ' + created.length + ' 个预约'
+                : actionState === 'confirmed'
+                  ? '预约成功'
+                  : '已提交，等待教练确认',
+            content:
+              '成功 ' +
+              created.length +
+              ' 个。状态以待确认为主，超时未确认将自动失效。',
+            showCancel: false,
+            success: () => {
+              if (created[0] && created[0].booking_id) {
+                wx.navigateTo({
+                  url: '/pages/booking-detail/index?id=' + created[0].booking_id
+                })
+              }
+            }
+          })
+          this.refresh()
+          return
+        }
+        if (created.length && failed.length) {
+          const remain = failed.map((row) => row.slot)
+          this._retryBookingList = remain
+          const bookingError =
+            '已成功 ' + created.length + ' 个，失败 ' + failed.length + ' 个。可重试剩余时段。'
+          this.setData(
+            Object.assign(
+              { actionState: 'error', bookingError },
+              this.selectionState(remain)
+            )
+          )
+          wx.showModal({
+            title: '部分预约失败',
+            content: bookingError,
+            showCancel: false,
+            success: () => this.refresh()
+          })
+          return
+        }
+        const err = failed[0] && failed[0].err
         const msg = (err && err.message) || '预约失败'
-        if (err && err.code === 'SLOT_CONFLICT') {
+        if (err && ['SLOT_CONFLICT', 'BOOKING_WINDOW_CLOSED'].includes(err.code)) {
+          this._retryBookingList = null
+          this.setData(
+            Object.assign(
+              {
+                actionState: 'idle',
+                bookingError: msg + '。请重新选择并确认时段。'
+              },
+              this.selectionState([])
+            )
+          )
           wx.showModal({
             title: '时段冲突',
             content: msg + '，已刷新可约时段。',
@@ -271,8 +593,15 @@ Page({
           })
           return
         }
+        this.setData({
+          actionState: 'error',
+          bookingError: msg + '。可重试；网络中断时将沿用同一请求编号。'
+        })
         app.toast(msg)
-        this.refresh()
+      })
+      .catch(() => {
+        this._bookingBusy = false
+        this.setData({ submitting: false, actionState: 'error' })
       })
   },
 

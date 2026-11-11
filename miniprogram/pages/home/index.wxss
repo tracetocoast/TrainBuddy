@@ -1,120 +1,280 @@
-.daily-card {
-  padding: 30rpx;
-  border: 1rpx solid #e0e7dc;
-  background: #ffffff;
-  border-radius: 36rpx;
-  box-shadow: 0 4rpx 18rpx rgba(37, 53, 44, 0.03);
+@import "../../styles/coach.wxss";
+
+.home-page { padding-top: 4rpx; }
+.home-page .top { align-items: flex-start; padding-bottom: 20rpx; }
+.home-greet { min-width: 0; flex: 1; padding-right: 12rpx; }
+.home-greet .title { margin: 0; font-size: 40rpx; }
+.home-date { margin-top: 6rpx; font-size: 22rpx; line-height: 1.4; letter-spacing: 0.4rpx; }
+.home-page .msg-btn { margin-top: 2rpx; flex-shrink: 0; }
+
+.card-press { transition: transform var(--ix-state) var(--ease-spring), opacity var(--ix-fast) ease; }
+.card-press:active { transform: scale(.985); opacity: .92; }
+
+/* 学员：本周目标主卡 */
+.hero-goal {
+  display: block;
+  width: 100% !important;
+  margin-top: 8rpx;
+  padding: 28rpx;
+  text-align: left;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+.hero-goal-top { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.hero-goal-top .eyebrow { margin-top: 0; }
+.hero-goal-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+.hero-metric { min-width: 0; text-align: left; }
+.hero-metric-value {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 750;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.hero-metric-label { display: block; margin-top: 6rpx; font-size: 20rpx; color: var(--muted); line-height: 1.4; }
+.hero-progress { margin-top: 22rpx; height: 12rpx; }
+.hero-goal-hint { margin-top: 16rpx; }
+.hero-goal-empty { padding: 12rpx 0 0; }
+
+.home-quote {
+  margin-top: 18rpx;
+}
+.quote-cn {
+  color: var(--ink-2);
+  font-size: 26rpx;
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: 0.6rpx;
+}
+.quote-mark {
+  color: var(--accent);
+  font-weight: 500;
+}
+.quote-by {
+  margin-top: 8rpx;
+  color: var(--muted-2);
+  font-size: 20rpx;
+  line-height: 1.3;
+  letter-spacing: 1.2rpx;
 }
 
-.daily-intro {
+/* 学员：预约时间优先卡 */
+.booking-card {
   display: flex;
   align-items: center;
   gap: 20rpx;
-  margin-bottom: 26rpx;
+  width: 100% !important;
+  padding: 24rpx;
+  text-align: left;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-card);
+}
+.booking-time-block {
+  flex: none;
+  width: 132rpx;
+  padding: 16rpx 10rpx;
+  border-radius: var(--radius-ctl);
+  background: var(--soft);
+  text-align: center;
+}
+.booking-weekday { display: block; font-size: 20rpx; color: var(--muted); }
+.booking-date { display: block; margin-top: 4rpx; font-size: 28rpx; font-weight: 700; color: var(--ink); }
+.booking-hm {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 34rpx;
+  font-weight: 750;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.booking-body { flex: 1; min-width: 0; }
+.booking-body .card-title { margin-bottom: 4rpx; }
+
+.course-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 10rpx;
 }
 
-.daily-label {
-  display: inline-block;
-  color: #6e7c72;
-  font-size: 23rpx;
-  font-weight: 600;
-  margin-bottom: 12rpx;
+.home-empty {
+  padding: 28rpx 24rpx;
+  background: var(--surface);
+  border: 1rpx dashed var(--line);
+  border-radius: var(--radius-card);
+  color: var(--muted);
 }
+.home-empty-cta { width: 100% !important; margin-top: 20rpx; min-height: 88rpx; }
 
-.daily-title {
-  font-size: 36rpx;
-  font-weight: 500;
-  line-height: 1.4;
-  margin-bottom: 10rpx;
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  width: 100% !important;
+  margin-top: 12rpx;
+  padding: 24rpx;
+  text-align: left;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-card);
 }
-
-.daily-card .primary {
-  width: 100%;
+.summary-compact { padding: 22rpx 24rpx; }
+.summary-progress { margin: 14rpx 0 8rpx; }
+.summary-cta { flex: none; color: var(--accent); font-size: 24rpx; font-weight: 600; }
+.summary-stat { flex: none; text-align: right; }
+.summary-stat-value {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
-
-.blue {
-  background: #ffffff;
-  color: #28744e;
-}
-.orange {
-  background: #fff3e3;
-  color: #6e7c72;
-}
-.violet {
-  background: #ffffff;
-  color: #6e7c72;
-}
-
-.chevron {
-  font-size: 38rpx;
-  color: #6e7c72;
-  flex-shrink: 0;
-}
+.summary-stat-label { display: block; margin-top: 4rpx; font-size: 20rpx; color: var(--muted); }
+.ui-state-inline-error { color: var(--danger); }
 
 .quick-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12rpx;
 }
-
 .quick-card {
   display: flex;
-  width: 100%;
   align-items: center;
-  gap: 20rpx;
-  padding: 24rpx;
-  border: 1rpx solid #e0e7dc;
-  border-radius: 32rpx;
+  gap: 14rpx;
+  width: 100% !important;
+  min-height: 120rpx;
+  padding: 18rpx 16rpx;
   text-align: left;
-  transition: transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1);
-  box-shadow: 0 4rpx 16rpx rgba(37, 53, 44, 0.03);
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  border-radius: 20rpx;
 }
-.quick-card:active {
-  transform: scale(0.97);
-}
+.quick-card .card-title { margin: 0 0 4rpx; font-size: 26rpx; }
+.quick-card .sub { font-size: 20rpx; line-height: 1.4; }
 
-.quick-icon {
+/* 教练：任务概览 */
+.task-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12rpx;
+  margin: 8rpx 0 4rpx;
+}
+.task-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6rpx;
+  width: 100% !important;
+  min-width: 0;
+  padding: 18rpx 16rpx;
+  text-align: left;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  border-radius: 18rpx;
+  transition: opacity var(--ix-fast) ease;
+}
+.task-chip:active { opacity: .88; }
+.task-chip-warn { border-color: var(--warn-line); background: var(--warn-soft); }
+.task-chip-value {
+  font-size: 36rpx;
+  font-weight: 750;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.task-chip-label { font-size: 20rpx; color: var(--muted); line-height: 1.35; }
+
+.workbench-entry { padding: 24rpx 0 12rpx; }
+.record-launch {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  width: 100% !important;
+  min-height: 168rpx;
+  padding: 28rpx;
+  border-radius: 24rpx;
+  background: var(--accent);
+  color: var(--surface);
+  text-align: left;
+  transition: opacity var(--ix-fast) ease;
+}
+.record-launch:active { opacity: .88; }
+.record-launch-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 28rpx;
-  font-size: 36rpx;
-  font-weight: 600;
-  flex-shrink: 0;
+  flex: none;
+  width: 88rpx;
+  height: 88rpx;
+  border: 1rpx solid rgba(255, 255, 255, .25);
+  border-radius: 24rpx;
 }
+.record-launch-copy { flex: 1; min-width: 0; }
+.record-launch-title { display: block; font-size: 36rpx; font-weight: 650; line-height: 1.4; }
+.record-launch-hint { display: block; margin-top: 8rpx; font-size: 23rpx; line-height: 1.6; opacity: .86; }
 
-.coach-counts {
+.course-row {
   display: flex;
-  gap: 70rpx;
-  margin: 24rpx 0;
+  align-items: center;
+  gap: 16rpx;
+  width: 100%;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid var(--line);
 }
+.course-summary {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 20rpx;
+  text-align: left;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.course-time {
+  font-size: 30rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  align-self: flex-start;
+  width: 104rpx;
+  padding: 4rpx 0;
+}
+.course-person { flex: 1; min-width: 0; }
+.workbench .course-row .card-title { margin-bottom: 4rpx; }
+.course-record { flex: none; padding: 14rpx 20rpx; }
 
-.quick-card {
+.aux-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; }
+.aux-tools button {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
   width: 100% !important;
+  min-height: 88rpx;
+  min-width: 0;
+  padding: 16rpx 0;
+  text-align: left;
 }
+.aux-tools text { flex: 1; font-size: 25rpx; }
 
-.home-page .flex > .link {
-  flex: 0 0 auto;
+@media (max-width: 340px) {
+  .hero-goal-metrics { grid-template-columns: 1fr; }
+  .quick-grid { grid-template-columns: 1fr; }
+  .task-overview { grid-template-columns: 1fr; }
+  .record-launch { padding: 24rpx; gap: 16rpx; }
+  .record-launch-hint { font-size: 22rpx; }
+  .aux-tools { grid-template-columns: 1fr; gap: 0; }
 }
-
-.welcome { margin: 4rpx 0 28rpx; }
-.home-quote { font-size: 24rpx; line-height: 1.8; color: #74806d; letter-spacing: 1rpx; }
-.daily-card {
-  padding: 32rpx;
-  background: #edf4e6;
-  border: 1rpx solid #e0ead6;
-  border-radius: 36rpx;
-  box-shadow: 0 8rpx 28rpx rgba(40, 116, 78, 0.08);
+@media (prefers-reduced-motion: reduce) {
+  .card-press, .record-launch, .task-chip { transition: none; transform: none; }
 }
-.daily-intro { margin-bottom: 28rpx; }
-.daily-label { color: #68815c; font-weight: 500; font-size: 22rpx; letter-spacing: 2rpx; }
-.daily-title { color: #2e452f; font-size: 38rpx; font-weight: 500; margin: 12rpx 0; }
-.daily-card .sub { color: #718168; font-size: 24rpx; }
-.blue { background: #edf3e8; color: #5f8054; }
-.orange { background: #fff1df; color: #b67e35; }
-.violet { background: #f0edf6; color: #8b7ba4; }
-.quick-card { background: #ffffff; border: 1rpx solid #e0e7dc; }
-.home-page .head-title { font-size: 29rpx; font-weight: 500; }
-.home-page .stat { padding: 24rpx 10rpx; }
