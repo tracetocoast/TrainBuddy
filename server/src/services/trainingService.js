@@ -437,15 +437,17 @@ function createCoachDraftSession(app, payload) {
   return Promise.resolve({ data: presentSession(session), request_id: makeId('req') })
 }
 
-function createFreeSession(app, studentId) {
+function createFreeSession(app, studentId, creationKey = null) {
   const store=ensureStore(app)
-  const existing=store.sessions.find(row=>row.studentId===studentId && row.sourceType==='manual' && ['draft','in_progress'].includes(row.status))
+  const existing = store.sessions.find(row => row.studentId === studentId && row.sourceType === 'manual' &&
+    (creationKey ? row.creationKey === creationKey : ['draft', 'in_progress'].includes(row.status)))
   if(existing)return Promise.resolve({data:presentSession(existing)})
   const session={id:makeId('sess'),studentId,studentName:'',coachId:null,bookingId:null,planId:null,planRevision:null,sourceType:'manual',status:'in_progress',title:'自主训练',businessDate:todayBusinessDate(),startedAt:time.nowMs(),endedAt:null,sharedAt:null,revision:1,publicNote:'',privateNote:'',exercises:[],completionKey:null,createdAt:time.nowMs(),updatedAt:time.nowMs()}
+  if (creationKey) session.creationKey = creationKey
   store.sessions.push(session);persist(app)
   return Promise.resolve({data:presentSession(session)})
 }
-function changeSessionSet(app, sessionId, exerciseId, setId) {
+function changeSessionSet(app, sessionId, exerciseId, setId, setType) {
   const store=ensureStore(app),session=findSession(store,sessionId)
   if(!session)throw new AppError('NOT_FOUND','训练不存在')
   if(!['draft','in_progress'].includes(session.status))throw new AppError('INVALID_STATE','该训练不能编辑')
@@ -456,9 +458,10 @@ function changeSessionSet(app, sessionId, exerciseId, setId) {
     if(ex.sets.length<=1)throw new AppError('VALIDATION','至少保留一组，或删除整个动作')
     ex.sets=ex.sets.filter(row=>row.id!==setId)
   }else{
+    if (setType != null && !['warmup', 'working'].includes(setType)) throw new AppError('VALIDATION', '训练组类型不合法')
     if(ex.sets.length>=30)throw new AppError('VALIDATION','每个动作最多30组')
     const prev=ex.sets[ex.sets.length-1]||{}
-    ex.sets.push({id:makeId('aset'),setNo:ex.sets.length+1,targetWeight:prev.targetWeight, targetReps:prev.targetReps,actualWeight:prev.actualWeight,actualReps:prev.actualReps,state:'pending',required:true,effort:null})
+    ex.sets.push({id:makeId('aset'),setNo:ex.sets.length+1,targetWeight:prev.targetWeight, targetReps:prev.targetReps,actualWeight:prev.actualWeight,actualReps:prev.actualReps,setType:setType || prev.setType || 'working',state:'pending',required:true,effort:null})
   }
   ex.sets.forEach((row,i)=>{row.setNo=i+1});session.revision++;session.updatedAt=time.nowMs();persist(app)
   return Promise.resolve({data:presentSession(session)})
@@ -487,7 +490,25 @@ function patchSessionMeta(app, sessionId, patch) {
   return Promise.resolve({ data: presentSession(s), request_id: makeId('req') })
 }
 
-function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight }) {
+function lastManualExerciseReference(store, session, exerciseId) {
+  if (!exerciseId) return null
+  const candidates = store.sessions.filter(row => row.studentId === session.studentId &&
+    row.id !== session.id && row.status === 'completed' &&
+    (row.sourceType !== 'coach_post_session' || row.sharedAt))
+    .sort((a, b) => (b.endedAt || b.updatedAt || 0) - (a.endedAt || a.updatedAt || 0))
+  for (const candidate of candidates) {
+    for (const exercise of candidate.exercises || []) {
+      if (exercise.exerciseId !== exerciseId) continue
+      const sets = (exercise.sets || []).filter(set => set.state === 'done' &&
+        Number.isInteger(set.actualReps) && set.actualReps > 0 && set.actualReps <= 1000 &&
+        Number.isFinite(set.actualWeight) && set.actualWeight >= 0 && set.actualWeight <= 2000)
+      if (sets.length) return { exercise, sets: sets.slice(0, 30), date: candidate.businessDate }
+    }
+  }
+  return null
+}
+
+function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight, useHistory }) {
   const store = ensureStore(app)
   const s = findSession(store, sessionId)
   if (!s) return Promise.reject({ code: 'NOT_FOUND', message: '训练不存在' })
@@ -495,20 +516,32 @@ function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight }) {
     return Promise.reject({ code: 'INVALID_STATE', message: '已完成不可直接改组' })
   }
   const lib = libraryItem(exerciseId) || libraryItem(name)
-  const setCount = sets || (lib && lib.defaultSets) || 3
-  const setReps = reps || (lib && lib.defaultReps) || 10
-  const setWeight = weight != null ? weight : lib ? lib.defaultWeight : null
+  const manual = s.sourceType === 'manual'
+  const catalog = manual && require('./exerciseService').publicExerciseById(exerciseId)
+  const catalogId = catalog?.id || lib?.id || null
+  const reference = manual && useHistory === true ? lastManualExerciseReference(store, s, catalogId) : null
+  const setCount = sets || lib?.defaultSets || 3
+  const setReps = reps || lib?.defaultReps || 10
+  const setWeight = manual ? (weight ?? null) : (weight ?? (lib && lib.defaultWeight) ?? null)
   const exName = name || (lib && lib.name) || '自定义动作'
 
-  const planSets = buildSetsFromTarget(setCount, setReps, setWeight, true)
+  const planSets = reference ? reference.sets.map((set, index) => ({
+    setNo: index + 1,
+    // A legacy zero may have been inserted by the old action picker.
+    targetWeight: set.actualWeight === 0 && reference.exercise.loadBasis !== 'bodyweight' ? null : set.actualWeight,
+    targetReps: set.actualReps,
+    setType: set.setType === 'warmup' ? 'warmup' : 'working'
+  })) : buildSetsFromTarget(setCount, setReps, setWeight, true)
   const exercise = {
     id: makeId('sex'),
-    exerciseId: (lib && lib.id) || null,
+    exerciseId: catalogId,
     name: exName,
     nameSnapshot: exName,
     icon: (lib && lib.icon) || '🏋️',
     order: s.exercises.length + 1,
-    loadBasis: setWeight == null ? 'bodyweight' : 'total',
+    loadBasis: manual ? (reference?.exercise.loadBasis || 'unknown') : setWeight == null ? 'bodyweight' : 'total',
+    ...(reference ? { referenceDate: reference.date } : {}),
+    ...(catalog?.bodyPart ? { bodyPart: catalog.bodyPart } : {}),
     sets: planSets.map((ps) => ({
       id: makeId('aset'),
       setNo: ps.setNo,
@@ -517,6 +550,7 @@ function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight }) {
       actualWeight: ps.targetWeight,
       actualReps: ps.targetReps,
       state: 'pending',
+      ...(ps.setType ? { setType: ps.setType } : {}),
       required: true,
       effort: null
     }))
@@ -556,6 +590,14 @@ function updateActualSet(app, sessionId, setId, patch) {
     })
   })
   if (!hit) return Promise.reject({ code: 'NOT_FOUND', message: '组不存在' })
+
+  if (s.sourceType === 'manual' && patch.state === 'done') {
+    const weight = patch.actualWeight ?? hit.actualWeight
+    const reps = patch.actualReps ?? hit.actualReps
+    if (!Number.isFinite(weight) || weight < 0 || !Number.isInteger(reps) || reps < 1) {
+      throw new AppError('VALIDATION', '请填写本组实际重量与次数')
+    }
+  }
 
   if(patch.setType != null){
     if(!['warmup','working'].includes(patch.setType))throw new AppError('VALIDATION','训练组类型不合法')

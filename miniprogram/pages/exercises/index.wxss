@@ -37,3 +37,9 @@
 @media (max-width:340px) { .body-sidebar { width:120rpx; } .body-option { font-size:25rpx; } .exercise-grid { gap:12rpx; padding:0 12rpx 12rpx; } .exercise-tile { padding:10rpx; } .exercise-art { height:140rpx; } .exercise-name { font-size:24rpx; } }
 
 .exercise-tile{position:relative;}.exercise-use-count{position:absolute;top:8rpx;right:8rpx;padding:4rpx 10rpx;border-radius:10rpx;background:var(--surface);color:var(--accent);font-size:22rpx;}
+
+.workout-shortcuts { padding: 12rpx 0; }
+.shortcut-filters { display: flex; gap: 12rpx; margin-bottom: 10rpx; }
+.shortcut-row { display: flex; justify-content: space-between; align-items: center; gap: 12rpx; width: 100%; min-height: 44px; text-align: left; color: var(--ink); border-bottom: 1rpx solid var(--line); }
+.shortcut-row text:last-child { flex-shrink: 0; color: var(--muted); font-size: 23rpx; }
+.shortcut-row.selected { color: var(--accent); }

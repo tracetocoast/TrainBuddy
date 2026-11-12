@@ -21,13 +21,16 @@ Page({
     filterError: '', selectedLabel: '全部动作', resultScrollTop: 0,
     filters: { muscleGroups: ['下肢', '上肢', '核心'], body_parts: [], equipment: [] },
     pickMode: false,
+    workoutPicker: false,
+    shortcuts: [],
+    shortcutSort: 'common',
     pickedIds: {},
     pickedCount: 0
   },
 
   onLoad(q) {
     const pickMode = !!(q && (q.pick === '1' || q.pick === 1))
-    this.setData({ pickMode, pickedIds: {}, pickedCount: 0 })
+    this.setData({ pickMode, workoutPicker: pickMode && q.target === 'workout', pickedIds: {}, pickedCount: 0 })
     if (pickMode && typeof wx.setNavigationBarTitle === 'function') {
       wx.setNavigationBarTitle({ title: '选择动作' })
     }
@@ -40,19 +43,33 @@ Page({
     if (this._owner === owner) return
     this._owner = owner
     this._unloaded = false
-    this._usage = {}
+    this._usage = Object.create(null)
+    this._shortcutItems = []
+    this.setData({ shortcuts: [], pickedIds: {}, pickedCount: 0 })
     trainingApi.listSessions(getApp(), {studentId:owner,status:['completed']}).then(res=>{
-      if(this._unloaded || this._owner!==owner)return
-      const counts={}
-      ;(res.data||[]).forEach(session=>{
-        const seen={}
-        ;(session.exercises||[]).forEach(ex=>{
-          if(!(ex.sets||[]).some(set=>set.state==='done'))return
-          const key=ex.exerciseId||ex.name
-          if(!seen[key]){counts[key]=(counts[key]||0)+1;seen[key]=true}
-        })
-      })
-      this._usage=counts
+      if (this._unloaded || this._owner !== owner || getApp().globalData.session?.user?.userId !== owner) return
+      const counts = Object.create(null)
+      const history = new Map()
+      const sessions = new Set()
+      for (const session of res.data || []) {
+        if (session.status !== 'completed' || session.student_id !== owner || sessions.has(session.session_id) ||
+          (session.source_type === 'coach_post_session' && !session.shared_at)) continue
+        sessions.add(session.session_id)
+        const seen = new Set()
+        for (const exercise of session.exercises || []) {
+          if (!(exercise.sets || []).some(set => set.state === 'done')) continue
+          const key = exercise.exerciseId || exercise.name
+          if (!key || seen.has(key)) continue
+          seen.add(key)
+          counts[key] = (counts[key] || 0) + 1
+          if (!exercise.exerciseId) continue
+          const last = session.ended_at || Date.parse(session.business_date + 'T00:00:00+08:00') || 0
+          if (!history.has(key) || history.get(key).last < last) history.set(key, { id: key, name: exercise.name, last })
+        }
+      }
+      this._usage = counts
+      this._shortcutItems = [...history.values()].map(item => ({ ...item, usageCount: counts[item.id] }))
+      this.onShortcutSort()
       this.setData({list:this.withUsage(this.data.list),sectionHistory:this.data.sectionHistory.map(group=>Object.assign({},group,{list:this.withUsage(group.list)}))})
     }).catch(()=>{})
     this.loadFacets()
@@ -247,6 +264,13 @@ Page({
     else this.goDetail(e)
   },
 
+  onShortcutSort(e) {
+    const shortcutSort = e?.currentTarget.dataset.sort || this.data.shortcutSort
+    const shortcuts = (this._shortcutItems || []).slice().sort((a, b) =>
+      (shortcutSort === 'common' ? b.usageCount - a.usageCount : 0) || b.last - a.last || a.id.localeCompare(b.id))
+    this.setData({ shortcutSort, shortcuts: shortcuts.slice(0, 6) })
+  },
+
   findPickedItem(id) {
     let found = null
     const scan = (list) => {
@@ -254,7 +278,7 @@ Page({
     }
     scan(this.data.list)
     ;(this.data.sectionHistory || []).forEach((group) => scan(group.list))
-    return found
+    return found || (this._shortcutItems || []).find(item => item.id === id)
   },
 
   onTogglePick(e) {
@@ -275,7 +299,8 @@ Page({
 
   onConfirmPick() {
     const items = this.pickedItems()
-    if (!items.length) return
+    if (!items.length || this._confirmingPick) return
+    this._confirmingPick = true
     let channel = null
     try { if (typeof this.getOpenerEventChannel === 'function') channel = this.getOpenerEventChannel() } catch (_) {}
     if (channel && typeof channel.emit === 'function') channel.emit('selectExercises', items)

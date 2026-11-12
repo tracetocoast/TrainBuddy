@@ -21,7 +21,7 @@ function setup(name, api = {}) {
     '../../utils/planSchedule': require('../../miniprogram/utils/planSchedule')
   }
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../miniprogram/pages', name, 'index.js'), 'utf8'), {
-    Page(p) { page = p }, wx, getApp: () => app, require: id => { if (!(id in deps)) throw Error(id); return deps[id] }
+    Page(p) { page = p }, setInterval: () => 1, clearInterval() {}, wx, getApp: () => app, require: id => { if (!(id in deps)) throw Error(id); return deps[id] }
   })
   page.setData = function (data) { Object.assign(this.data, data) }
   return { page, app, modals, wx }
@@ -225,4 +225,48 @@ test('booking action button emits only idle/error, never pending or confirmed', 
   for (const state of ['idle', 'submitting', 'submitted', 'confirmed', 'error']) { c.properties.state = state; definition.methods.activate.call(c) }
   assert.equal(count, 2)
   c.properties.disabled = true; definition.methods.activate.call(c); assert.equal(count, 2)
+})
+
+test('workout autosaves edits in order and a delayed response preserves newer input', async () => {
+  const replies = []
+  const p = setup('workout', { updateActualSet(_app, _id, setId, patch) {
+    return new Promise(resolve => replies.push({ setId, patch, resolve }))
+  } }).page
+  p.applySession(session(), true)
+  p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '52.5'))
+  const draining = p.onSetEditEnd(event({ sid: 'a' }))
+  await tick()
+  p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '55'))
+  p.onSetEditEnd(event({ sid: 'a' }))
+  assert.equal(replies.length, 1)
+  const first = session()
+  first.exercises[0].sets[0].actualWeight = 52.5
+  replies[0].resolve({ data: first })
+  await tick()
+  assert.equal(p.data.session.exercises[0].sets[0].actualWeight, '55')
+  assert.equal(replies.length, 2)
+  assert.equal(replies[1].patch.actualWeight, 55)
+  assert.equal(replies[1].patch.state, undefined)
+  const second = session()
+  second.exercises[0].sets[0].actualWeight = 55
+  replies[1].resolve({ data: second })
+  await draining
+  assert.equal(p.data.session.exercises[0].sets[0].actualWeight, 55)
+  assert.equal(p.data.pending.a, undefined)
+})
+
+test('workout opens another action without losing an unsynced set or interrupting rest', () => {
+  const p = setup('workout').page
+  const initial = session()
+  initial.exercises.push({ id: 'ex2', name: '划船', sets: [{ id: 'c', state: 'pending' }] })
+  p.applySession(initial, true)
+  p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '52.5'))
+  p.openRest()
+  p.onToggleExercise(event({ id: 'ex2' }))
+  assert.equal(p.data.lockedExerciseId, 'ex2')
+  assert.equal(p.data.restVisible, true)
+  assert.equal(p.data.pending.a.actualWeight, '52.5')
+  p._restEndsAt = Date.now() - 1000
+  p.resumeRestUpdates()
+  assert.equal(p.data.restSeconds, 0)
 })

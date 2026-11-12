@@ -123,3 +123,10 @@
 @media (max-width: 340px) { .goal-card-content { padding: 22rpx 20rpx 18rpx; }.goal-ring { width: 136rpx; height: 136rpx; }.goal-ring-hole { width: 108rpx; height: 108rpx; }.goal-main { gap: 16rpx; }.chart-summary { font-size: 16rpx; gap: 6rpx; }.highlight-row { gap: 8rpx; }.highlight-card { padding: 16rpx 10rpx; }.highlight-value { font-size: 21rpx; }.mini-trend { display: none; }.legend { gap: 9rpx 12rpx; } }
 @media (prefers-reduced-motion: reduce) { .goal-ring,.bar,.card-press { transition: none; } }
 .ui-reduced .goal-ring,.ui-reduced .bar,.ix-reduced .goal-ring,.ix-reduced .bar { transition: none; }
+
+.cal-training-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18rpx; color: var(--accent); }
+.cal-cell.selected .cal-training-label { color: var(--on-accent); }
+.history-tabs { display: flex; border-bottom: 1rpx solid var(--line); }
+.history-tab { flex: 1; min-height: 44px; color: var(--muted); font-size: 26rpx; }
+.history-tab.active { color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--accent); }
+.history-session { width: 100%; text-align: left; color: var(--ink); }
