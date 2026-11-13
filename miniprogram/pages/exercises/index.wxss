@@ -41,5 +41,6 @@
 .workout-shortcuts { padding: 12rpx 0; }
 .shortcut-filters { display: flex; gap: 12rpx; margin-bottom: 10rpx; }
 .shortcut-row { display: flex; justify-content: space-between; align-items: center; gap: 12rpx; width: 100%; min-height: 44px; text-align: left; color: var(--ink); border-bottom: 1rpx solid var(--line); }
-.shortcut-row text:last-child { flex-shrink: 0; color: var(--muted); font-size: 23rpx; }
+.shortcut-row > text, .shortcut-date { flex-shrink: 0; color: var(--muted); font-size: 23rpx; }
+.reset-filters { align-self: flex-start; padding: 4rpx 16rpx; }
 .shortcut-row.selected { color: var(--accent); }

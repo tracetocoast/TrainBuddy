@@ -57,7 +57,7 @@ test('refined navigation retains learner icon assets when changing roles on the 
  let c;const file=path.join(root,'components/bottom-nav/index.js'),app={globalData:{role:'coach'}}
  vm.runInNewContext(fs.readFileSync(file,'utf8'),{require:createRequire(file),Component:x=>c=x,getApp:()=>app})
  const p={data:{},setData(v){Object.assign(this.data,v)}};c.methods.refresh.call(p);const coachIcon=p.data.activeIcons.home
- app.globalData.role='student';c.methods.refresh.call(p);assert.equal(p.data.items.map(x=>x.text).join(','),'首页,记录,进展');assert.notEqual(p.data.activeIcons.home,coachIcon)
+ app.globalData.role='student';c.methods.refresh.call(p);assert.equal(p.data.items.map(x=>x.text).join(','),'首页,训练,进展');assert.notEqual(p.data.activeIcons.home,coachIcon)
 })
 test('record reads current session after creation replay, so completed records never masquerade as editable drafts',async()=>{
  let p,reads=0;const file=path.join(root,'pages/record/index.js'),original=createRequire(file)

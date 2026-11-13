@@ -182,15 +182,25 @@ test('coach record composer keeps typed text while voice handlers exist',()=>{
   page.onTextInput({detail:{value:'卧推 50kg 5次 3组 已编辑'}})
   assert.equal(page.data.textInput,'卧推 50kg 5次 3组 已编辑')
 })
-test('coach sync serializes set completion and finalizes the revision actually returned by API',async()=>{
+test('coach sync requires explicit set states and publishes the last saved revision once',async()=>{
   let page, modal, writes=0, finalizations=0
   const initial={session_id:'c-session',revision:1,exercises:[{sets:[{id:'a',state:'pending'},{id:'b',state:'pending'}]}]}
   const api={
-    EXERCISE_LIBRARY:[],async updateActualSet(){writes++;return {data:{...initial,revision:1+writes}}},
+    EXERCISE_LIBRARY:[],async updateActualSet(app,id,setId,patch){
+      writes++
+      initial.exercises[0].sets.find(set=>set.id===setId).state=patch.state
+      return {data:{...initial,revision:1+writes}}
+    },
     async finalizeSession(app,id,opts){finalizations++;assert.equal(opts.baseRevision,3);return {data:{session:{...initial,status:'completed',revision:4}}}}
   }
-  vm.runInNewContext(fs.readFileSync(path.join(root,'pages/record/index.js'),'utf8'),{Page:p=>{page=p},require:id=>id.includes('trainingApi')?api:{},getApp:()=>({toast(){}}),wx:{showModal(options){modal=options}}})
+  vm.runInNewContext(fs.readFileSync(path.join(root,'pages/record/index.js'),'utf8'),{Page:p=>{page=p},require:id=>id.includes('trainingApi')?api:{},getApp:()=>({toast(){}}),wx:{showModal(options){modal=options}},setTimeout:()=>1,clearTimeout(){}})
   page.setData=function(values){Object.assign(this.data,values)};page.setData({session:initial})
+  page.onFinalize()
+  assert.equal(modal,undefined)
+  assert.equal(writes,0)
+  page.onMarkDone({currentTarget:{dataset:{sid:'a'}}})
+  page.onMarkSkipped({currentTarget:{dataset:{sid:'b'}}})
+  await page.flushWrites()
   page.onFinalize();page.onFinalize();modal.success({confirm:true})
   await new Promise(resolve=>setImmediate(resolve))
   assert.equal(writes,2);assert.equal(finalizations,1);assert.equal(page.data.syncing,false)

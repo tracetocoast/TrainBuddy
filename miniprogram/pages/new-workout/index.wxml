@@ -1,18 +1,17 @@
 <page-meta background-color="{{pageBg}}"/>
 <view class="page page-solo new-workout {{skinClass}}">
-  <view class="eyebrow">NEW WORKOUT</view>
   <view class="title">今天，怎么练？</view>
   <view class="sub intro">自由编排，或沿用熟悉的训练模板。</view>
   <button class="start-option option-primary" bindtap="onCustom" disabled="{{creating}}" loading="{{creating}}">
     <view class="option-icon"><ui-icon name="play" tone="green" size="44"/></view>
-    <view class="option-copy"><text class="option-title">自行添加动作</text><text class="option-hint">从空白开始，安排动作、组数与重量</text></view>
+    <view class="option-copy"><text class="option-title">自由力量训练</text><text class="option-hint">从空白开始，添加动作并逐组记录</text></view>
     <text class="option-arrow">›</text>
   </button>
   <button class="start-option" bindtap="onTemplates" disabled="{{creating}}">
     <view class="option-icon"><ui-icon name="home" tone="green" size="44"/></view>
-    <view class="option-copy"><text class="option-title">从模板开始</text><text class="option-hint">选择已有计划，复用训练安排</text></view>
+    <view class="option-copy"><text class="option-title">从训练计划开始</text><text class="option-hint">沿用已有动作与目标组数</text></view>
     <text class="option-arrow">›</text>
   </button>
   <view class="ui-state ui-state-error" wx:if="{{error}}">{{error}}<button class="link" bindtap="onCustom">重新创建</button></view>
-  <view class="creation-note">选择动作后即可逐组记录，未完成的训练会保留。</view>
+  <button class="link" bindtap="onHistory">查看近期训练 ›</button>
 </view>

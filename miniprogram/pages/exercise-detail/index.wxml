@@ -5,6 +5,10 @@
   <view class="title">{{ex.name}}</view>
   <view class="sub" wx:if="{{ex.nameEn && ex.nameEn !== ex.name}}">{{ex.nameEn}}</view>
   <view class="sub">{{ex.bodyPartLabel || ex.muscleGroup}} · {{ex.equipmentLabel || ex.equipment}}{{ex.targetLabel ? ' · ' + ex.targetLabel : ''}}{{ex.difficulty ? ' · ' + ex.difficulty : ''}}</view>
+  <view class="head"><view class="head-title">如何记录重量</view></view>
+  <view class="sub">{{ex.metricType === 'reps' || recent.basis === 'bodyweight' ? '自重动作填写额外负重，无额外负重填 0 kg' : recent.basis === 'per_side' ? '上次按单侧重量记录' : recent.basis === 'total' ? '上次按总重量记录' : '该动作的计重口径尚未标注'}}</view>
+  <view class="head" wx:if="{{recent}}"><view class="head-title">最近一次</view></view>
+  <view class="sub" wx:if="{{recent}}">{{recent.date}} · {{recent.summary || '重量或次数未记录'}}</view>
 
   <view class="head"><view class="head-title">步骤</view></view>
   <view class="card">

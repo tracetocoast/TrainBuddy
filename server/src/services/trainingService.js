@@ -298,17 +298,15 @@ function listPlansForStudent(app, studentId) {
  */
 function startSessionFromPlan(app, planId, { studentId, idempotencyKey }) {
   const store = ensureStore(app)
-  if (idempotencyKey && store.finalizeKeys['start:' + idempotencyKey]) {
-    const sid = store.finalizeKeys['start:' + idempotencyKey]
-    return Promise.resolve({
-      data: presentSession(findSession(store, sid)),
-      request_id: makeId('req')
-    })
-  }
-
   const plan = findPlan(store, planId)
   if (!plan || plan.studentId !== studentId) {
     return Promise.reject({ code: 'FORBIDDEN', message: '无权开始该计划' })
+  }
+  const startKey = idempotencyKey && JSON.stringify(['plan-start', studentId, planId, idempotencyKey])
+  const previousId = startKey && (store.finalizeKeys[startKey] || store.finalizeKeys['start:' + idempotencyKey])
+  const previous = previousId && findSession(store, previousId)
+  if (previous && previous.studentId === studentId && previous.planId === planId) {
+    return Promise.resolve({ data: presentSession(previous), request_id: makeId('req') })
   }
   const pub = publishedRevision(store, plan)
   if (!pub) {
@@ -380,7 +378,7 @@ function startSessionFromPlan(app, planId, { studentId, idempotencyKey }) {
     updatedAt: time.nowMs()
   }
   store.sessions.push(session)
-  if (idempotencyKey) store.finalizeKeys['start:' + idempotencyKey] = session.id
+  if (startKey) store.finalizeKeys[startKey] = session.id
   persist(app)
   return Promise.resolve({ data: presentSession(session), request_id: makeId('req') })
 }
@@ -454,7 +452,11 @@ function changeSessionSet(app, sessionId, exerciseId, setId, setType) {
   const ex=session.exercises.find(row=>row.id===exerciseId)
   if(!ex)throw new AppError('NOT_FOUND','动作不存在')
   if(setId){
-    if(!ex.sets.some(row=>row.id===setId))throw new AppError('NOT_FOUND','训练组不存在')
+    const target = ex.sets.find(row => row.id === setId)
+    if (!target) throw new AppError('NOT_FOUND', '训练组不存在')
+    if (session.sourceType !== 'coach_post_session' && target.state === 'done') {
+      throw new AppError('INVALID_STATE', '请先撤销完成，再删除本组')
+    }
     if(ex.sets.length<=1)throw new AppError('VALIDATION','至少保留一组，或删除整个动作')
     ex.sets=ex.sets.filter(row=>row.id!==setId)
   }else{
@@ -501,18 +503,22 @@ function lastManualExerciseReference(store, session, exerciseId) {
       if (exercise.exerciseId !== exerciseId) continue
       const sets = (exercise.sets || []).filter(set => set.state === 'done' &&
         Number.isInteger(set.actualReps) && set.actualReps > 0 && set.actualReps <= 1000 &&
-        Number.isFinite(set.actualWeight) && set.actualWeight >= 0 && set.actualWeight <= 2000)
+        Number.isFinite(set.actualWeight) && set.actualWeight >= 0 && set.actualWeight <= 2000 &&
+        (set.actualWeight !== 0 || set.weightRecorded === true || exercise.loadBasis === 'bodyweight'))
       if (sets.length) return { exercise, sets: sets.slice(0, 30), date: candidate.businessDate }
     }
   }
   return null
 }
 
-function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight, useHistory }) {
+function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight, useHistory }, requestKey) {
   const store = ensureStore(app)
   const s = findSession(store, sessionId)
   if (!s) return Promise.reject({ code: 'NOT_FOUND', message: '训练不存在' })
-  if (s.status === 'completed') {
+  if (requestKey && s.exerciseAddKeys?.includes(requestKey)) {
+    return Promise.resolve({ data: presentSession(s), request_id: makeId('req') })
+  }
+  if (!['draft', 'in_progress'].includes(s.status)) {
     return Promise.reject({ code: 'INVALID_STATE', message: '已完成不可直接改组' })
   }
   const lib = libraryItem(exerciseId) || libraryItem(name)
@@ -520,15 +526,22 @@ function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight, use
   const catalog = manual && require('./exerciseService').publicExerciseById(exerciseId)
   const catalogId = catalog?.id || lib?.id || null
   const reference = manual && useHistory === true ? lastManualExerciseReference(store, s, catalogId) : null
-  const setCount = sets || lib?.defaultSets || 3
-  const setReps = reps || lib?.defaultReps || 10
-  const setWeight = manual ? (weight ?? null) : (weight ?? (lib && lib.defaultWeight) ?? null)
-  const exName = name || (lib && lib.name) || '自定义动作'
+  const setCount = sets ?? catalog?.defaultSets ?? lib?.defaultSets ?? 3
+  const setReps = reps ?? catalog?.defaultReps ?? lib?.defaultReps ?? 10
+  const defaultWeight = useHistory === true && catalog
+    ? (catalog.metricType === 'reps' ? 0 : catalog.defaultWeight)
+    : null
+  const setWeight = manual ? (weight ?? defaultWeight ?? null) : (weight ?? (lib && lib.defaultWeight) ?? null)
+  if (manual && (!Number.isInteger(setCount) || setCount < 1 || setCount > 30 ||
+    !Number.isInteger(setReps) || setReps < 1 || setReps > 1000 ||
+    (setWeight !== null && (!Number.isFinite(setWeight) || setWeight < 0 || setWeight > 2000)))) {
+    throw new AppError('VALIDATION', '动作的重量、次数或组数超出范围')
+  }
+  const exName = name || catalog?.nameZh || catalog?.name || lib?.name || '自定义动作'
 
   const planSets = reference ? reference.sets.map((set, index) => ({
     setNo: index + 1,
-    // A legacy zero may have been inserted by the old action picker.
-    targetWeight: set.actualWeight === 0 && reference.exercise.loadBasis !== 'bodyweight' ? null : set.actualWeight,
+    targetWeight: set.actualWeight,
     targetReps: set.actualReps,
     setType: set.setType === 'warmup' ? 'warmup' : 'working'
   })) : buildSetsFromTarget(setCount, setReps, setWeight, true)
@@ -539,7 +552,8 @@ function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight, use
     nameSnapshot: exName,
     icon: (lib && lib.icon) || '🏋️',
     order: s.exercises.length + 1,
-    loadBasis: manual ? (reference?.exercise.loadBasis || 'unknown') : setWeight == null ? 'bodyweight' : 'total',
+    loadBasis: manual ? (reference?.exercise.loadBasis || (catalog?.metricType === 'reps' ? 'bodyweight' : 'unknown'))
+      : setWeight == null ? 'bodyweight' : 'total',
     ...(reference ? { referenceDate: reference.date } : {}),
     ...(catalog?.bodyPart ? { bodyPart: catalog.bodyPart } : {}),
     sets: planSets.map((ps) => ({
@@ -556,6 +570,7 @@ function addExercise(app, sessionId, { exerciseId, name, sets, reps, weight, use
     }))
   }
   s.exercises.push(exercise)
+  if (requestKey) (s.exerciseAddKeys ||= []).push(requestKey)
   s.revision += 1
   s.updatedAt = time.nowMs()
   persist(app)
@@ -566,6 +581,13 @@ function removeExercise(app, sessionId, exerciseId) {
   const store = ensureStore(app)
   const s = findSession(store, sessionId)
   if (!s) return Promise.reject({ code: 'NOT_FOUND', message: '训练不存在' })
+  if (!['draft', 'in_progress'].includes(s.status)) {
+    return Promise.reject({ code: 'INVALID_STATE', message: '该训练不能编辑' })
+  }
+  const exercise = s.exercises.find(row => row.id === exerciseId)
+  if (s.sourceType !== 'coach_post_session' && exercise?.sets.some(set => set.state === 'done')) {
+    throw new AppError('INVALID_STATE', '请先撤销该动作已完成的训练组')
+  }
   s.exercises = s.exercises.filter((e) => e.id !== exerciseId)
   s.revision += 1
   s.updatedAt = time.nowMs()
@@ -580,7 +602,7 @@ function updateActualSet(app, sessionId, setId, patch) {
   const store = ensureStore(app)
   const s = findSession(store, sessionId)
   if (!s) return Promise.reject({ code: 'NOT_FOUND', message: '训练不存在' })
-  if (s.status === 'completed') {
+  if (!['draft', 'in_progress'].includes(s.status)) {
     return Promise.reject({ code: 'INVALID_STATE', message: '已完成会话不可改组' })
   }
   let hit = null
@@ -591,26 +613,41 @@ function updateActualSet(app, sessionId, setId, patch) {
   })
   if (!hit) return Promise.reject({ code: 'NOT_FOUND', message: '组不存在' })
 
-  if (s.sourceType === 'manual' && patch.state === 'done') {
-    const weight = patch.actualWeight ?? hit.actualWeight
-    const reps = patch.actualReps ?? hit.actualReps
-    if (!Number.isFinite(weight) || weight < 0 || !Number.isInteger(reps) || reps < 1) {
+  const studentTraining = s.sourceType !== 'coach_post_session'
+  const hasWeight = Object.prototype.hasOwnProperty.call(patch, 'actualWeight')
+  const hasReps = Object.prototype.hasOwnProperty.call(patch, 'actualReps')
+  const validWeight = value => Number.isFinite(value) && value >= 0 && value <= 2000
+  const validReps = value => Number.isInteger(value) && value >= 1 && value <= 1000
+  if (patch.state != null && !['pending', 'done', 'skipped'].includes(patch.state)) {
+    throw new AppError('INVALID_ACTION', '组状态不合法')
+  }
+  if (patch.setType != null && !['warmup', 'working'].includes(patch.setType)) {
+    throw new AppError('VALIDATION', '训练组类型不合法')
+  }
+  if (studentTraining) {
+    const changesSet = (hasWeight && patch.actualWeight !== hit.actualWeight) ||
+      (hasReps && patch.actualReps !== hit.actualReps) ||
+      (patch.setType != null && patch.setType !== hit.setType) ||
+      (patch.effort != null && patch.effort !== hit.effort)
+    if (hit.state === 'done' && (changesSet || patch.state === 'skipped')) {
+      throw new AppError('INVALID_STATE', '请先撤销完成，再修改本组')
+    }
+    if ((hasWeight && patch.actualWeight !== null && !validWeight(patch.actualWeight)) ||
+        (hasReps && patch.actualReps !== null && !validReps(patch.actualReps))) {
+      throw new AppError('VALIDATION', '重量或次数超出范围')
+    }
+    const weight = hasWeight ? patch.actualWeight : hit.actualWeight
+    const reps = hasReps ? patch.actualReps : hit.actualReps
+    if (patch.state === 'done' && (!validWeight(weight) || !validReps(reps))) {
       throw new AppError('VALIDATION', '请填写本组实际重量与次数')
     }
   }
 
-  if(patch.setType != null){
-    if(!['warmup','working'].includes(patch.setType))throw new AppError('VALIDATION','训练组类型不合法')
-    hit.setType=patch.setType
-  }
-  if (patch.actualWeight != null) hit.actualWeight = patch.actualWeight
-  if (patch.actualReps != null) hit.actualReps = patch.actualReps
-  if (patch.state) {
-    if (['pending', 'done', 'skipped'].indexOf(patch.state) === -1) {
-      return Promise.reject({ code: 'INVALID_ACTION', message: '组状态不合法' })
-    }
-    hit.state = patch.state
-  }
+  if (patch.setType != null) hit.setType = patch.setType
+  if (studentTraining ? hasWeight : patch.actualWeight != null) hit.actualWeight = patch.actualWeight
+  if (studentTraining ? hasReps : patch.actualReps != null) hit.actualReps = patch.actualReps
+  if (studentTraining && (hasWeight || patch.state === 'done')) hit.weightRecorded = hit.actualWeight != null
+  if (patch.state) hit.state = patch.state
   if (patch.effort != null) hit.effort = patch.effort
 
   if (s.status === 'draft') s.status = 'in_progress'
@@ -853,23 +890,7 @@ function finalizeSession(app, sessionId, { completionKey, share, actorRole }) {
   if (!s) return Promise.reject({ code: 'NOT_FOUND', message: '训练不存在' })
 
   const key = completionKey || s.id + ':finalize'
-  if (store.finalizeKeys[key]) {
-    const existingId = store.finalizeKeys[key]
-    const existing = findSession(store, existingId)
-    return Promise.resolve({
-      data: {
-        session: presentSession(existing),
-        next_plan: null,
-        next_plan_error: null,
-        idempotent: true,
-        reward: pointsService.lookupTraining(app.globalData, existing.id)
-      },
-      request_id: makeId('req')
-    })
-  }
-
   if (s.status === 'completed') {
-    store.finalizeKeys[key] = s.id
     return Promise.resolve({
       data: {
         session: presentSession(s),
@@ -880,6 +901,9 @@ function finalizeSession(app, sessionId, { completionKey, share, actorRole }) {
       },
       request_id: makeId('req')
     })
+  }
+  if (!['draft', 'in_progress'].includes(s.status)) {
+    throw new AppError('INVALID_STATE', '该训练不能结束')
   }
 
   const done = countDoneSets(s)
@@ -908,7 +932,6 @@ function finalizeSession(app, sessionId, { completionKey, share, actorRole }) {
     })
   })
 
-  store.finalizeKeys[key] = s.id
   const reward = pointsService.rewardTraining(app.globalData, store, s, done)
 
   let nextPlan = null

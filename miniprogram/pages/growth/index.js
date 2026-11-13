@@ -22,6 +22,7 @@ Page({
     bodyError: '',
     summary: null,
     weekBars: [],
+    fourWeekSummary: null,
     weekGoal: {
       rate: null,
       sessions: 0,
@@ -132,6 +133,21 @@ Page({
           return true
         }).sort((a, b) => String(b.business_date).localeCompare(String(a.business_date)) || (b.ended_at || 0) - (a.ended_at || 0))
         const byDate = Object.create(null)
+        const recent = sessions.filter(row => row.business_date >= time.addDays(today, -27) && row.business_date <= today)
+        const uniqueExercises = new Set()
+        const fourWeekBars = [0, 0, 0, 0]
+        for (const row of recent) {
+          for (const exercise of row.exercises || []) {
+            if (exercise.exerciseId && (exercise.sets || []).some(set => set.state === 'done')) uniqueExercises.add(exercise.exerciseId)
+          }
+          for (let week = 0; week < 4; week++) {
+            if (row.business_date <= time.addDays(today, -21 + 7 * week)) {
+              fourWeekBars[week]++
+              break
+            }
+          }
+        }
+        const peak = Math.max(1, ...fourWeekBars)
         for (const row of sessions) {
           const areas = trainingAreas(row)
           const doneSets = (row.exercises || []).reduce((sum, ex) => sum + (ex.sets || []).filter(set => set.state === 'done').length, 0)
@@ -163,6 +179,11 @@ Page({
           summary,
           bodyError: bodyRes.failed ? '身体数据读取失败' : '',
           weekBars,
+          fourWeekSummary: {
+            sessions: recent.length, days: new Set(recent.map(row => row.business_date)).size,
+            exercises: uniqueExercises.size,
+            bars: fourWeekBars.map((count, index) => ({ index, count, height: Math.round(count / peak * 120) }))
+          },
           weekGoal,
           calendarMonth,
           selectedDate,
@@ -236,21 +257,24 @@ Page({
   },
 
   onHistoryTab(e) {
-    this.setData({ historyTab: e.currentTarget.dataset.tab })
-    if (this.data.historyTab === 'meal' && this.data.selectedDate && !this.data.loading) this.loadDayDetail(this.data.selectedDate)
+    const tab = e.currentTarget.dataset.tab
+    if (!['training', 'body', 'meal'].includes(tab) || tab === this.data.historyTab) return
+    this.setData({ historyTab: tab })
+    if (this.data.selectedDate && !this.data.loading) this.loadDayDetail(this.data.selectedDate)
   },
 
   loadDayDetail(date) {
     const app = getApp()
     const studentId = this.studentId()
     const generation = this._dayGeneration = (this._dayGeneration || 0) + 1
-    const current = () => this._dayGeneration === generation && this.studentId() === studentId && this.data.selectedDate === date
+    const current = () => this._dayGeneration === generation && this.studentId() === studentId &&
+      this.data.selectedDate === date && this.data.historyTab === 'meal'
     const history = this._history?.studentId === studentId ? this._history : null
     const measures = (history?.measures || []).filter(row => row.date === date).map(row => ({
       id: row.id || row.date + '_' + (row.time || ''),
       time: row.time || row.timeLabel || '时间未记录',
-      text: bodyApi.METRICS.filter(metric => row.values?.[metric.key] != null)
-        .map(metric => metric.label + ' ' + row.values[metric.key] + metric.unit).join(' · ')
+      text: bodyApi.METRICS.filter(metric => ['weight', 'bodyFat'].includes(metric.key) || row.values?.[metric.key] != null)
+        .map(metric => metric.label + ' ' + (row.values?.[metric.key] == null ? '未记录' : row.values[metric.key] + metric.unit)).join(' · ')
     }))
     this.setData({ dayError: '', dayLoading: this.data.historyTab === 'meal',
       dayDetail: { date, sessions: history?.byDate[date] || [], measures, meals: [] } })
@@ -258,13 +282,20 @@ Page({
     return diaryApi.getDailyView(app, studentId, date).then(({ data }) => {
       if (!current()) return
       const labels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' }
-      const meals = (data.meals || []).map(meal => {
+      const rawMeals = data.meals || []
+      const meals = rawMeals.map(meal => {
         const macros = meal.macrosG || meal.macros_g || {}
         const nutrition = [['carbs', '碳水'], ['protein', '蛋白质'], ['fat', '脂肪']]
           .filter(([key]) => Number.isFinite(macros[key]))
           .map(([key, label]) => label + ' ' + macros[key] + 'g').join(' · ')
         return { id: meal.id, title: labels[meal.mealType] || '饮食', food: meal.foodText || '食物未记录', portion: meal.portionText || '', nutrition }
       })
+      for (const type of ['breakfast', 'lunch', 'dinner']) {
+        if (!rawMeals.some(meal => meal.mealType === type)) meals.push({ id: 'missing-' + type, title: labels[type], food: '未记录' })
+      }
+      const order = Object.values(labels)
+      const rank = title => order.includes(title) ? order.indexOf(title) : order.length
+      meals.sort((a, b) => rank(a.title) - rank(b.title))
       this.setData({ 'dayDetail.meals': meals, dayLoading: false })
     }).catch(err => {
       if (current()) this.setData({ dayError: err.message || '饮食读取失败', dayLoading: false })

@@ -26,6 +26,38 @@ test('new workout custom entry directly opens blank execution route',()=>{
  page.onCustom();assert.equal(url,'/pages/workout/index?new=1')
 })
 const { createTestApp } = require('./helpers')
+test('training saves only the requested fields, keeps null distinct from zero, and requires undo before editing a completed set', async () => {
+  const ctx = createTestApp()
+  try {
+    const { sessionToken: token } = await ctx.login('student_only')
+    const create = await ctx.request('POST', '/api/v1/sessions', { token, body: { source_type: 'manual' } })
+    const path = '/api/v1/sessions/' + create.body.data.session_id
+    const add = { token, body: { exerciseId: 'bench', sets: 3, reps: 8, weight: null }, headers: { 'Idempotency-Key': 'training-action' } }
+    const responses = await Promise.all([ctx.request('POST', path + '/exercises', add), ctx.request('POST', path + '/exercises', add)])
+    for (const res of responses) {
+      assert.equal(res.status, 200)
+      assert.equal(res.body.data.exercises.length, 1)
+    }
+    const session = responses[0].body.data
+    const group = session.exercises[0].sets[0]
+    assert.equal(group.actualWeight, null)
+    const update = body => ctx.request('PATCH', path + '/sets/' + group.id, { token, body })
+    const saved = await update({ base_revision: session.revision, actualWeight: 0 })
+    assert.equal(saved.status, 200)
+    assert.equal(saved.body.data.exercises[0].sets[0].actualReps, 8)
+    assert.equal((await update({ base_revision: session.revision, actualReps: 9 })).status, 409)
+    const complete = await update({ state: 'done' })
+    assert.equal(complete.status, 200)
+    assert.equal(complete.body.data.exercises[0].sets[0].actualWeight, 0)
+    assert.notEqual((await update({ actualWeight: 55 })).status, 200)
+    assert.equal((await update({ state: 'pending' })).status, 200)
+    const cleared = await update({ actualWeight: null })
+    assert.equal(cleared.body.data.exercises[0].sets[0].actualWeight, null)
+    assert.equal((await update({ state: 'done' })).status, 422)
+  } finally {
+    await ctx.cleanup()
+  }
+})
 test('starting a separate workout preserves old work and handles retries without duplicate drafts', async () => {
   const ctx = createTestApp()
   try {

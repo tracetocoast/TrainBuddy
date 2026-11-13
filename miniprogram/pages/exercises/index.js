@@ -64,7 +64,9 @@ Page({
           counts[key] = (counts[key] || 0) + 1
           if (!exercise.exerciseId) continue
           const last = session.ended_at || Date.parse(session.business_date + 'T00:00:00+08:00') || 0
-          if (!history.has(key) || history.get(key).last < last) history.set(key, { id: key, name: exercise.name, last })
+          if (!history.has(key) || history.get(key).last < last) {
+            history.set(key, { id: key, name: exercise.name, last, lastDate: session.business_date || '' })
+          }
         }
       }
       this._usage = counts
@@ -250,6 +252,12 @@ Page({
     })
   },
   onClearSearch() { clearTimeout(this._searchTimer); this.setData({q:''}); return this.reload() },
+  onClearFilters() {
+    clearTimeout(this._searchTimer)
+    this.setData({ q: '', muscle: '', bodyPart: '', equipment: '', selectedLabel: '全部动作' })
+    return this.reload()
+  },
+  onClearPicked() { this.setData({ pickedIds: {}, pickedCount: 0 }) },
   onRetry() { return this._nextPartFailed ? this.loadNextPart() : this.data.list.length ? this.loadMore() : this.reload() },
   onImageError(e) { const id=e.currentTarget.dataset.id; const mark=item=>item.id===id?Object.assign({},item,{imageFailed:true}):item; this.setData({list:this.data.list.map(mark),sectionHistory:this.data.sectionHistory.map(group=>Object.assign({},group,{list:group.list.map(mark)}))}) },
 

@@ -734,6 +734,7 @@ function buildRouter() {
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
         if (req.body.source_type === 'coach_post_session' || req.body.coachDraft) {
+          if (!hasRole(req.actor, 'coach')) throw new AppError('FORBIDDEN', '仅教练可创建课后训练表')
           const out = await unwrap(
             trainingService.createCoachDraftSession(app, {
               studentId: req.body.student_id,
@@ -862,9 +863,9 @@ function buildRouter() {
         const app = asApp(req.app.locals.store)
         const cur = await unwrap(trainingService.getSession(app, req.params.id))
         assertSessionEditor(req, cur.data)
-        const out = await unwrap(
-          trainingService.addExercise(app, req.params.id, req.body)
-        )
+        const key = req.get('Idempotency-Key')
+        if (key && key.length > 128) throw new AppError('VALIDATION', '动作重试标识过长')
+        const out = await unwrap(trainingService.addExercise(app, req.params.id, req.body, key))
         return out.data
       })
       ok(res, data)
@@ -896,8 +897,12 @@ function buildRouter() {
         const app = asApp(req.app.locals.store)
         const cur = await unwrap(trainingService.getSession(app, req.params.id))
         assertSessionEditor(req, cur.data)
-        let out
-        out = await unwrap(
+        if (req.body.base_revision != null && req.body.base_revision !== cur.data.revision) {
+          throw new AppError('REVISION_CONFLICT', '训练已在别处更新，请重新核对后保存', {
+            extra: { latest_revision: cur.data.revision }
+          })
+        }
+        const out = await unwrap(
           trainingService.updateActualSet(app, req.params.id, req.params.setId, req.body)
         )
         return out.data
@@ -915,6 +920,7 @@ function buildRouter() {
         const cur = await unwrap(trainingService.getSession(app, req.params.id))
         assertSessionEditor(req, cur.data)
         if (
+          cur.data.status !== 'completed' &&
           req.body.base_revision != null &&
           Number(req.body.base_revision) !== cur.data.revision
         ) {
@@ -926,7 +932,7 @@ function buildRouter() {
           trainingService.finalizeSession(app, req.params.id, {
             share: req.body.share !== false,
             completionKey: req.body.completion_key || req.body.completionKey,
-            actorRole: hasRole(req.actor, 'coach') ? 'coach' : 'student'
+            actorRole: cur.data.source_type === 'coach_post_session' ? 'coach' : 'student'
           })
         )
         return out.data
@@ -941,6 +947,8 @@ function buildRouter() {
     try {
       const data = await req.app.locals.store.tx(async () => {
         const app = asApp(req.app.locals.store)
+        const cur = await unwrap(trainingService.getSession(app, req.params.id))
+        assertSessionEditor(req, cur.data)
         const out = await unwrap(trainingService.abandonSession(app, req.params.id))
         return out.data
       })
@@ -1963,8 +1971,9 @@ function assertSelfOrCoach(req, studentId) {
 }
 
 function assertSessionEditor(req, session) {
-  if (session.student_id === req.actor.userId) return
-  if (session.coach_id === req.actor.userId) return
+  if (session.source_type === 'coach_post_session') {
+    if (session.coach_id === req.actor.userId && hasRole(req.actor, 'coach')) return
+  } else if (session.student_id === req.actor.userId) return
   throw new AppError('FORBIDDEN', '无权编辑该训练')
 }
 

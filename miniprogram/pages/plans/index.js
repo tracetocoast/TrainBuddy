@@ -1,6 +1,7 @@
 const { requireLogin } = require('../../utils/guard')
 const trainingApi = require('../../services/trainingApi')
 const planSchedule = require('../../utils/planSchedule')
+const { todayKey } = require('../../utils/time')
 
 const ACTION_RPX = 208
 const FILTERS = [
@@ -8,10 +9,18 @@ const FILTERS = [
   { key: 'coach', label: '教练计划' },
   { key: 'mine', label: '我的计划' }
 ]
+const STUDENT_FILTERS = [
+  { key: 'all', label: '全部' },
+  { key: 'available', label: '可执行' },
+  { key: 'draft', label: '草稿' },
+  { key: 'coach', label: '教练计划' }
+]
 
 function matchFilter(item, key) {
   if (key === 'coach') return item.author_role === 'coach'
   if (key === 'mine') return item.author_role !== 'coach'
+  if (key === 'available') return !!item.published && planSchedule.isOpenOnDate(item.published, todayKey())
+  if (key === 'draft') return !!item.can_edit && !!item.latest_draft
   return true
 }
 
@@ -21,7 +30,8 @@ function decoratePlans(list, filterKey) {
     .map((item) => Object.assign({}, item, {
       offset: 0,
       swiping: false,
-      scheduleText: item.published ? planSchedule.scheduleLabel(item.published) : '尚未发布'
+      scheduleText: item.published ? planSchedule.scheduleLabel(item.published) : '尚未发布',
+      canStartToday: !!item.published && planSchedule.isOpenOnDate(item.published, todayKey())
     }))
 }
 
@@ -50,6 +60,7 @@ Page({
     this.setData({
       isCoach: role === 'coach',
       isStudent: role === 'student',
+      filters: role === 'student' ? STUDENT_FILTERS : FILTERS,
       canCreate: role === 'student' || !!studentId,
       studentId, loading: !!studentId, error: '',
       actionWidth: this._actionWidth
@@ -71,6 +82,12 @@ Page({
       filterKey: key,
       plans: decoratePlans(this._allPlans || [], key)
     })
+  },
+
+  goStart(e) {
+    if (this.data.isStudent && e.currentTarget.dataset.id) {
+      wx.navigateTo({ url: '/pages/workout/index?plan=' + encodeURIComponent(e.currentTarget.dataset.id) })
+    }
   },
 
   actionWidth() {

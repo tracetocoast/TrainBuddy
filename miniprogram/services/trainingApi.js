@@ -74,9 +74,9 @@ function patchSessionMeta(app, sessionId, patch) {
     .then((res) => ({ data: res.data, request_id: res.request_id }))
 }
 
-function addExercise(app, sessionId, payload) {
+function addExercise(app, sessionId, payload, idempotencyKey) {
   return http
-    .post('/sessions/' + sessionId + '/exercises', payload)
+    .post('/sessions/' + sessionId + '/exercises', payload, { idempotencyKey })
     .then((res) => ({ data: res.data, request_id: res.request_id }))
 }
 

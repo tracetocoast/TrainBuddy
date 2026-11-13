@@ -110,15 +110,13 @@ it('title chips reuse previous names and custom text input', () => {
   p.onField(event({ field: 'title' }, '晨间力量'))
   assert.equal(p.data.title, '晨间力量')
 })
-it('schedule chips switch among permanent, range and weekly days', () => {
+it('template edits submit the permanent schedule even when a legacy draft carries a date', async () => {
   const ctx = setup(), p = ctx.page
-  p.onScheduleMode(event({ key: 'permanent' }))
-  assert.equal(p.data.scheduleType, 'permanent')
-  p.onScheduleMode(event({ key: 'repeat' }))
-  p.onToggleWeekday(event({ value: 1 }))
-  assert.equal(p.data.scheduleType, 'weekly')
-  assert.equal(JSON.stringify(p.data.weekdays), '[1]')
-  assert.equal(p.snapshot().scheduleType, 'weekly')
+  p.onField(event({ field: 'title' }, '力量训练'))
+  await p.save(false)
+  assert.equal(ctx.writes[0].scheduleType, 'permanent')
+  assert.equal(ctx.writes[0].plannedDate, null)
+  assert.deepEqual(ctx.writes[0].weekdays, [])
 })
 it('cached plan edits are isolated by account, role and subject', async () => {
   const ctx = setup(), p = ctx.page

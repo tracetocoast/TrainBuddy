@@ -135,7 +135,7 @@ test('failed set save retains raw draft and never advances or marks completion',
   p.applySession(session(), true); p.onSetField(event({ sid: 'a', field: 'actualReps' }, '8'))
   await p.onSetState(event({ sid: 'a', state: 'done' }))
   assert.equal(p.data.activeSid, 'a'); assert.equal(p.data.pending.a.actualReps, '8')
-  assert.equal(p.data.session.exercises[0].sets[0].state, 'pending'); assert.match(p.data.saveError, /网络中断/)
+  assert.equal(p.data.session.exercises[0].sets[0].state, 'pending'); assert.match(p.data.setSaveErrors.a || p.data['setSaveErrors.a'], /网络中断/)
   assert.equal(p.data.savingSet, false)
 })
 test('invalid or empty completed set is rejected before HTTP; raw input remains', async () => {

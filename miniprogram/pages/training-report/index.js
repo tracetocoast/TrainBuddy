@@ -1,10 +1,11 @@
 const api=require('../../services/trainingApi');
 const {requireLogin}=require('../../utils/guard');
+const {syncRoleBar}=require('../../utils/role');
 const {report}=require('../../utils/trainingReport');
 Page({
  data:{loading:true,error:'',report:null},
  onLoad(q){this.sessionId=q&&q.id},
- onShow(){if(requireLogin(this))this.reload()},
+ onShow(){if(requireLogin(this)){syncRoleBar(this);this.reload()}},
  onHide(){this.seq=(this.seq||0)+1;this.setData({report:null})},
  onUnload(){this.seq=(this.seq||0)+1},
  async reload(){

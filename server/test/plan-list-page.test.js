@@ -28,7 +28,8 @@ function setupPlansPage() {
     require: (id) => {
       if (id.includes('guard')) return { requireLogin: () => true }
       if (id.includes('trainingApi')) return {}
-      if (id.includes('planSchedule')) return { scheduleLabel: () => '' }
+      if (id.includes('planSchedule')) return require('../../miniprogram/utils/planSchedule')
+      if (id.endsWith('/time')) return { todayKey: () => '2026-11-13' }
       throw new Error(id)
     }
   })
@@ -50,12 +51,12 @@ function touch(x, y, dataset) {
 
 test('plan cards do not catch vertical touchmove in JS, only lock scroll on horizontal axis via wxs', () => {
   const wxml = fs.readFileSync(path.join(root, 'pages/plans/index.wxml'), 'utf8')
-  const wxs = fs.readFileSync(path.join(root, 'utils/swipe-axis.wxs'), 'utf8')
+  const wxs = wxml.match(/<wxs module="swipeAxis">([\s\S]*?)<\/wxs>/)?.[1] || ''
   assert.equal(wxml.includes('catchtouchmove="onSwipeMove"'), false)
   assert.equal(wxml.includes('bindtouchmove="onSwipeMove"'), false)
   assert.equal(wxml.includes('data-move-method="onSwipeMove"'), true)
   assert.equal(wxml.includes('data-snap-method="onSwipeSnap"'), true)
-  assert.equal(wxml.includes('swipe-axis.wxs'), true)
+  assert.ok(wxs)
   assert.equal(wxml.includes('catchtouchmove="{{swipeAxis.move}}"'), false)
   assert.equal(wxml.includes('bindtouchmove="{{swipeAxis.move}}"'), true)
   assert.match(wxs, /callMethod\(method/)

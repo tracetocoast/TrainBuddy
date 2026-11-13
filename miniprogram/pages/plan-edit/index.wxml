@@ -1,3 +1,42 @@
+<template name="plan-group-fields">
+        <training-number-control reduced="{{reduced}}" id="group-count" label="训练组数" unit="组" value="{{exercises[sheetIndex].sets.length}}" min="1" max="30" step="1" integer show-slider data-ei="{{sheetIndex}}" bindchange="onGroupCount" disabled="{{saving || conflict || !plan.can_edit}}"/>
+        <view class="sheet-set" wx:for="{{exercises[sheetIndex].sets}}" wx:for-item="set" wx:for-index="si" wx:key="id">
+          <view class="set-swipe">
+            <view class="set-trash" wx:if="{{exercises[sheetIndex].sets.length > 1}}">
+              <view class="trash-btn" catchtap="onRemoveSet" data-ei="{{sheetIndex}}" data-si="{{si}}" aria-role="button" aria-label="删除第{{si + 1}}组">
+                <view class="trash-cap"></view>
+                <view class="trash-lid"></view>
+                <view class="trash-body">
+                  <view class="trash-line"></view>
+                  <view class="trash-line"></view>
+                </view>
+              </view>
+            </view>
+            <view
+              class="set-front {{set.swiping ? 'swiping' : ''}}"
+              data-ei="{{sheetIndex}}"
+              data-si="{{si}}"
+              data-can-delete="{{exercises[sheetIndex].sets.length > 1 ? 1 : 0}}"
+              data-offset="{{set.offset}}"
+              data-max="{{setActionWidthPx}}"
+              data-move-method="onSetSwipeMove"
+              data-snap-method="onSetSwipeSnap"
+              capture-bind:touchstart="{{swipeAxis.start}}"
+              bindtouchstart="onSetSwipeStart"
+              bindtouchmove="{{swipeAxis.move}}"
+              capture-bind:touchend="{{swipeAxis.end}}"
+              bindtouchend="onSetSwipeEnd"
+              capture-bind:touchcancel="{{swipeAxis.end}}"
+              bindtouchcancel="onSetSwipeEnd"
+              style="transform: translateX({{set.offset}}px);"
+            >
+              <text class="card-title">第 {{si + 1}} 组</text>
+            </view>
+          </view>
+          <view class="compact-plan-values"><input type="digit" value="{{set.targetWeight}}" placeholder="kg" data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetWeight" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/><text>kg ×</text><input type="number" value="{{set.targetReps}}" placeholder="次数" data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetReps" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/><text>次</text></view>
+
+        </view>
+</template>
 <wxs module="swipeAxis">
 function point(event) {
   var list = event.touches
@@ -175,9 +214,12 @@ module.exports.end = end
         >{{opt.label}}</button>
       </view>
       <view class="ex-actions" wx:if="{{draft && plan.can_edit}}">
-        <button class="secondary" data-ei="{{ei}}" bindtap="onOpenExercise" disabled="{{saving || conflict}}">设置组数</button>
+        <button class="secondary" data-ei="{{ei}}" bindtap="onOpenExercise" disabled="{{saving || conflict}}">{{sheetIndex === ei && plan.author_role !== 'coach' ? '收起训练组' : '编辑训练组'}}</button>
         <button class="secondary" data-ei="{{ei}}" bindtap="onDuplicateExercise" disabled="{{saving || conflict}}">复制</button>
         <button class="secondary danger-btn" data-ei="{{ei}}" bindtap="onRemoveExercise" disabled="{{saving || conflict}}">移除</button>
+      </view>
+      <view class="inline-plan-groups" wx:if="{{plan.author_role !== 'coach' && sheetIndex === ei && draft && plan.can_edit}}">
+        <template is="plan-group-fields" data="{{exercises, sheetIndex, reduced, saving, conflict, plan, setActionWidthPx}}"/>
       </view>
     </view>
     <view class="card sub empty-ex" wx:if="{{!exercises.length}}">还没有动作。从常用动作或动作库里添加。</view>
@@ -207,55 +249,18 @@ module.exports.end = end
     <view class="motion-row"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" bindchange="onMotion" color="#28744e" aria-label="减少动态效果与触觉"/></view>
   </block>
 
-  <view class="plan-actions" wx:if="{{plan && !loading && draft && plan.can_edit && sheetIndex < 0}}">
+  <view class="plan-actions" wx:if="{{plan && !loading && draft && plan.can_edit && (plan.author_role !== 'coach' || sheetIndex < 0)}}">
     <button class="secondary" bindtap="onSaveMeta" disabled="{{saving || conflict}}" loading="{{saving}}">保存草稿</button>
     <button class="primary" bindtap="onPublish" disabled="{{saving || conflict}}">发布{{plan.author_role === 'coach' ? '给学员' : '计划'}}</button>
   </view>
 
-  <block wx:if="{{sheetIndex >= 0 && exercises[sheetIndex] && draft && plan.can_edit}}">
+  <block wx:if="{{plan.author_role === 'coach' && sheetIndex >= 0 && exercises[sheetIndex] && draft && plan.can_edit}}">
     <view class="ix-mask" bindtap="onCloseSheet" catchtouchmove="swallow"></view>
     <view class="ix-sheet">
       <view class="head"><view class="head-title">{{exercises[sheetIndex].name}}</view><button class="secondary" bindtap="onCloseSheet">完成</button></view>
       <scroll-view class="ix-sheet-scroll" scroll-y>
-        <training-number-control reduced="{{reduced}}" id="group-count" label="训练组数" unit="组" value="{{exercises[sheetIndex].sets.length}}" min="1" max="30" step="1" integer show-slider data-ei="{{sheetIndex}}" bindchange="onGroupCount" disabled="{{saving || conflict || !plan.can_edit}}"/>
-        <view class="sheet-set" wx:for="{{exercises[sheetIndex].sets}}" wx:for-item="set" wx:for-index="si" wx:key="id">
-          <view class="set-swipe">
-            <view class="set-trash" wx:if="{{exercises[sheetIndex].sets.length > 1}}">
-              <view class="trash-btn" catchtap="onRemoveSet" data-ei="{{sheetIndex}}" data-si="{{si}}" aria-role="button" aria-label="删除第{{si + 1}}组">
-                <view class="trash-cap"></view>
-                <view class="trash-lid"></view>
-                <view class="trash-body">
-                  <view class="trash-line"></view>
-                  <view class="trash-line"></view>
-                </view>
-              </view>
-            </view>
-            <view
-              class="set-front {{set.swiping ? 'swiping' : ''}}"
-              data-ei="{{sheetIndex}}"
-              data-si="{{si}}"
-              data-can-delete="{{exercises[sheetIndex].sets.length > 1 ? 1 : 0}}"
-              data-offset="{{set.offset}}"
-              data-max="{{setActionWidthPx}}"
-              data-move-method="onSetSwipeMove"
-              data-snap-method="onSetSwipeSnap"
-              capture-bind:touchstart="{{swipeAxis.start}}"
-              bindtouchstart="onSetSwipeStart"
-              bindtouchmove="{{swipeAxis.move}}"
-              capture-bind:touchend="{{swipeAxis.end}}"
-              bindtouchend="onSetSwipeEnd"
-              capture-bind:touchcancel="{{swipeAxis.end}}"
-              bindtouchcancel="onSetSwipeEnd"
-              style="transform: translateX({{set.offset}}px);"
-            >
-              <text class="card-title">第 {{si + 1}} 组</text>
-            </view>
-          </view>
-          <view class="compact-plan-values"><input type="digit" value="{{set.targetWeight}}" placeholder="kg" data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetWeight" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/><text>kg ×</text><input type="number" value="{{set.targetReps}}" placeholder="次数" data-ei="{{sheetIndex}}" data-si="{{si}}" data-field="targetReps" bindinput="onSet" disabled="{{saving || conflict || !plan.can_edit}}"/><text>次</text></view>
-
-        </view>
+        <template is="plan-group-fields" data="{{exercises, sheetIndex, reduced, saving, conflict, plan, setActionWidthPx}}"/>
       </scroll-view>
-      <view class="sub">用加减和滑条设置，不用键盘输入。</view>
     </view>
   </block>
 </view>
