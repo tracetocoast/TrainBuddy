@@ -1,0 +1,4 @@
+<view class="tb-tabs" role="tablist" aria-label="{{label}}">
+  <view class="tb-glider {{reduced ? 'no-motion' : ''}}" style="width: {{gliderWidth}}%; transform: translateX({{activeIndex * 100}}%)"></view>
+  <button wx:for="{{options}}" wx:key="value" class="tb-tab {{item.value === value ? 'is-active' : ''}}" data-i="{{index}}" bindtap="onSelect" disabled="{{disabled}}" role="tab" aria-selected="{{item.value === value}}">{{item.label}}</button>
+</view>
