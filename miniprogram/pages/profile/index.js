@@ -4,6 +4,7 @@ const { logout } = require('../../utils/session')
 const { CONSENT_CATEGORIES } = require('../../utils/constants')
 const { canActivateRole } = require('../../utils/permission')
 const theme = require('../../utils/theme')
+const interaction = require('../../utils/interaction')
 const bindingApi = require('../../services/bindingApi')
 const authApi = require('../../services/authApi')
 
@@ -19,13 +20,19 @@ Page({
     boundAtText: '',
     activeScopeLabels: [],
     inviteToken: '',
-    skin: 'light'
+    skin: 'light',
+    reduced: false
   },
 
   onShow() {
     if (!requireLogin(this)) return
-    this.setData({ skin: theme.getSkin() })
+    this.setData({ skin: theme.getSkin(), reduced: interaction.reducedMotion() })
     this.refresh()
+  },
+
+  onMotion(e) {
+    interaction.setReducedMotion(e.detail.value)
+    this.setData({ reduced: !!e.detail.value })
   },
 
   /**
@@ -38,6 +45,12 @@ Page({
     const target = e.currentTarget.dataset.skin === 'dark' ? 'dark' : 'light'
     if (target === theme.getSkin()) {
       this.setData({ skin: target })
+      return
+    }
+    if (this.data.reduced || interaction.reducedMotion()) {
+      const skin = theme.setSkin(target)
+      theme.applyToPage(this)
+      this.setData({ skin })
       return
     }
     const touch = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0])

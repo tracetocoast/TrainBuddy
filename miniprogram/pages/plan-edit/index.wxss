@@ -230,16 +230,6 @@
   margin-top: 18rpx;
 }
 
-.motion-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12rpx;
-  margin-top: 28rpx;
-  color: var(--muted);
-  font-size: 24rpx;
-}
-
 .plan-actions {
   position: fixed;
   left: 0;

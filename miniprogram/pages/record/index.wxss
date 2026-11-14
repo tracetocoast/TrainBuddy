@@ -81,7 +81,6 @@
 .candidate-field { flex:1 1 180rpx; min-width:0; }
 .candidate-field:first-child { flex-basis:100%; }
 .candidate-field > text { display:block; margin-bottom:8rpx; color:var(--muted); font-size:24rpx; }
-.record-motion { display:flex; align-items:center; justify-content:flex-end; gap:12rpx; margin-top:24rpx; color:var(--muted); font-size:22rpx; }
 @media (max-width:340px) { .aset { padding:10rpx; } .aset-line { gap:8rpx; } .aset-no { min-width:28rpx; } .aset-line .primary { padding:12rpx 8rpx; } }
 /* V1.23 two-view report layout */
 .student-picker { margin:20rpx 0; padding:20rpx; background:var(--surface-raised); border-radius:20rpx; }

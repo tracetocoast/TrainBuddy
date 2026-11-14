@@ -89,11 +89,6 @@ Page({
     this.setData({ toolSwiperCurrent: idx })
   },
 
-  onMotion(e) {
-    interaction.setReducedMotion(e.detail.value)
-    this.setData({ reduced: !!e.detail.value })
-  },
-
   postureFailText(task) {
     if (!task) return ''
     if (task.error && task.error.message) return task.error.message

@@ -334,21 +334,6 @@
   line-height: 1.7;
   margin-top: 12rpx;
 }
-.ai-motion {
-  margin-top: 16rpx;
-  padding-top: 14rpx;
-  border-top: 1rpx solid var(--tint-2);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 23rpx;
-  color: var(--muted);
-}
-.ai-motion switch {
-  transform: scale(0.78);
-  transform-origin: right center;
-}
-
 /* 鈥斺€?鐘舵€?/ 缁撴灉 鈥斺€?*/
 .status-box.tone-warn {
   border-color: var(--warn-line);

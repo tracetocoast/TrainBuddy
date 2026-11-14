@@ -44,7 +44,8 @@ Component({
     refresh() {
       const app = getApp()
       const role = (app && app.globalData && app.globalData.role) || 'student'
-      this.setData({ role, items: NAV[role] || NAV.student, activeIcons: role === 'coach' ? Object.assign({}, icons.active, coachIcons.green) : icons.active })
+      const activeIcons = role === 'coach' ? coachIcons.bronze : icons.active
+      this.setData({ role, items: NAV[role] || NAV.student, activeIcons })
     },
 
     onSwitch(e) {

@@ -380,7 +380,6 @@ Page({
     this.setData({ timeIndex })
     this.toggleSlot(item.slot)
   },
-  onMotion(e) { interaction.setReducedMotion(e.detail.value); this.setData({ reduced: !!e.detail.value }) },
   studentOwner() { const app = getApp(); return app.globalData.session.user.userId + ':' + app.globalData.role },
   onResetBooking() { if (!this._bookingBusy) { this._retryBookingList = null; this.setData({ actionState: 'idle', bookingError: '' }); this.refresh() } },
 

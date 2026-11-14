@@ -156,6 +156,5 @@
     </view>
     </view>
   </block>
-  <view class="record-motion"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" color="#28744e" bindchange="onMotion"/></view>
 <bottom-nav active="home" />
 </view>

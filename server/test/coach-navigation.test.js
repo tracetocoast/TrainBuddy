@@ -30,15 +30,15 @@ test('each role exposes exactly its three task-oriented primary tabs and profile
  assert.ok(home.includes('bindtap="goRecord"'))
  assert.ok(home.includes('bindtap="goProfile"'))
 })
-test('student selected nav uses the same green as coach',()=>{
+test('student selected nav uses brand gold and coach uses bronze',()=>{
  const decode=uri=>Buffer.from(uri.split(',')[1],'base64').toString('utf8')
  const student=require(path.join(root,'assets/navigation-icons.js'))
  const coach=require(path.join(root,'assets/coach-icons.js'))
  for(const key of ['home','workout','growth']){
-  assert.match(decode(student.active[key]),/#28744e/i)
+  assert.match(decode(student.active[key]),/#c7a45a/i)
   assert.doesNotMatch(decode(student.active[key]),/#214beb/i)
  }
- assert.match(decode(coach.green.home),/#28744e/i)
+ assert.match(decode(coach.bronze.home),/#9a7142/i)
  const css=fs.readFileSync(path.join(root,'components/bottom-nav/index.wxss'),'utf8')
  const active=css.split('.nav-coach')[0]
  assert.match(active,/\.nav-item\.active\s*\{[^}]*color:\s*var\(--accent\)/)
@@ -67,8 +67,8 @@ test('growth training records do not show a trailing chevron',()=>{
 })
 test('native window colors follow the current skin',()=>{
   const theme=require('../../miniprogram/utils/theme')
-  assert.equal(theme.colors('light').winBg,'#fafbf7')
-  assert.equal(theme.colors('dark').winBg,'#0f1512')
+  assert.equal(theme.colors('light').winBg,'#ffffff')
+  assert.equal(theme.colors('dark').winBg,'#090909')
   const prev=global.wx
   const calls=[]
   global.wx={
@@ -78,8 +78,8 @@ test('native window colors follow the current skin',()=>{
   }
   try{
     theme.applyNativeWindow()
-    assert.deepEqual(calls[0],['nav','#0f1512'])
-    assert.deepEqual(calls[1],['win','#0f1512','#0f1512','#0f1512'])
+    assert.deepEqual(calls[0],['nav','#090909'])
+    assert.deepEqual(calls[1],['win','#090909','#090909','#090909'])
   }finally{
     if(prev===undefined) delete global.wx
     else global.wx=prev
@@ -96,6 +96,32 @@ test('growth calendar month switch keeps week summary independent of viewed mont
  assert.equal(reloads,1)
  const next=growth.clampSelected({from:'2026-10-01',to:'2026-10-31'},'2026-11-07')
  assert.equal(next,'2026-10-01')
+})
+test('reduced motion switch lives only on profile settings',()=>{
+ const profile=fs.readFileSync(path.join(root,'pages/profile/index.wxml'),'utf8')
+ assert.match(profile,/减少动态效果与触觉/)
+ assert.match(profile,/bindchange="onMotion"/)
+ for(const page of ['workout','booking','diary','ai','record','plan-edit']){
+  const xml=fs.readFileSync(path.join(root,'pages',page,'index.wxml'),'utf8')
+  assert.equal(xml.includes('减少动态效果'),false,page)
+ }
+})
+test('profile reduced-motion preference persists for other pages',()=>{
+ const prev=global.wx
+ const store={}
+ global.wx={getStorageSync:k=>store[k],setStorageSync:(k,v)=>{store[k]=v}}
+ try{
+  const profile=loadPage('profile')
+  profile.onMotion({detail:{value:true}})
+  assert.equal(profile.data.reduced,true)
+  assert.equal(require('../../miniprogram/utils/interaction').reducedMotion(),true)
+  profile.onMotion({detail:{value:false}})
+  assert.equal(profile.data.reduced,false)
+  assert.equal(require('../../miniprogram/utils/interaction').reducedMotion(),false)
+ }finally{
+  if(prev===undefined) delete global.wx
+  else global.wx=prev
+ }
 })
 test('profile switches both directions only for server-granted roles and restores student subject',()=>{
  const oldGetApp=global.getApp,oldWx=global.wx

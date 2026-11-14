@@ -39,6 +39,18 @@
 .skin-option { position:relative; z-index:1; min-height:0; margin:0; padding:10rpx 18rpx; border-radius:999rpx; font-size:24rpx; font-weight:600; color:var(--muted); line-height:1.4; background:transparent; transition:color 220ms ease; }
 .skin-option-on { color:var(--on-accent); }
 
+.motion-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid var(--line);
+}
+.motion-copy { flex: 1; min-width: 0; }
+.motion-row switch { flex-shrink: 0; }
+
 /* V1.5 皮肤切换 circle-blur 遮罩（模拟 View Transitions 的 circle-blur-reveal） */
 .skin-reveal {
   position: fixed;

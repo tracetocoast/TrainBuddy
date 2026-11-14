@@ -138,27 +138,27 @@
     <view class="head"><view class="head-title">快捷入口</view></view>
     <view class="quick-grid">
       <button class="quick-card card-press" bindtap="goWorkout">
-        <ui-icon name="play" tone="green" size="36"/>
+        <ui-icon name="play" tone="bronze" size="36"/>
         <view class="grow"><view class="card-title">开始训练</view><view class="sub">{{trainingAction}}</view></view>
       </button>
       <button class="quick-card card-press" bindtap="goPlans">
-        <ui-icon name="home" tone="green" size="36"/>
+        <ui-icon name="home" tone="bronze" size="36"/>
         <view class="grow"><view class="card-title">训练计划</view><view class="sub">编排与发布</view></view>
       </button>
       <button class="quick-card card-press" bindtap="goBookingEntry">
-        <ui-icon name="booking" tone="green" size="36"/>
+        <ui-icon name="booking" tone="bronze" size="36"/>
         <view class="grow"><view class="card-title">约课</view><view class="sub">{{hasBinding ? '可约时间与预约' : '先绑定教练'}}</view></view>
       </button>
       <button class="quick-card card-press" bindtap="goDiary">
-        <ui-icon name="check" tone="green" size="36"/>
+        <ui-icon name="check" tone="bronze" size="36"/>
         <view class="grow"><view class="card-title">日记</view><view class="sub">饮食与状态记录</view></view>
       </button>
       <button class="quick-card card-press" bindtap="goCoach">
-        <ui-icon name="students" tone="green" size="36"/>
+        <ui-icon name="students" tone="bronze" size="36"/>
         <view class="grow"><view class="card-title">教练反馈</view><view class="sub">课后表与建议</view></view>
       </button>
       <button class="quick-card card-press" bindtap="goGrowth">
-        <ui-icon name="body" tone="green" size="36"/>
+        <ui-icon name="body" tone="bronze" size="36"/>
         <view class="grow"><view class="card-title">查看进展</view><view class="sub">周数据与趋势</view></view>
       </button>
     </view>

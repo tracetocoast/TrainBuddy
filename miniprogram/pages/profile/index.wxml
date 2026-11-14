@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo {{skinClass}}">
+<view class="page page-solo {{reduced ? 'ix-reduced' : ''}} {{skinClass}}">
   <view class="eyebrow">ACCOUNT · PROFILE</view>
   <view class="title">{{displayName}}</view>
   <view class="sub">账号信息、服务关系与隐私设置</view>
@@ -63,6 +63,13 @@
       <view class="skin-thumb"></view>
       <button class="skin-option {{skin === 'light' ? 'skin-option-on' : ''}}" bindtap="onSkinChange" data-skin="light">白色</button>
       <button class="skin-option {{skin === 'dark' ? 'skin-option-on' : ''}}" bindtap="onSkinChange" data-skin="dark">黑色</button>
+    </view>
+    <view class="motion-row">
+      <view class="motion-copy">
+        <view class="card-title">减少动态效果与触觉</view>
+        <view class="sub">关闭页面动画和按键触感</view>
+      </view>
+      <switch checked="{{reduced}}" bindchange="onMotion" color="#28744e" aria-label="减少动态效果与触觉"/>
     </view>
   </view>
 

@@ -7,15 +7,15 @@ const STORAGE_KEY = 'lianzida_skin'
 const SKINS = {
   light: {
     skinClass: '',
-    navBg: '#fafbf7',
+    navBg: '#ffffff',
     navFront: '#000000',
-    winBg: '#fafbf7'
+    winBg: '#ffffff'
   },
   dark: {
     skinClass: 'skin-dark',
-    navBg: '#0f1512',
+    navBg: '#090909',
     navFront: '#ffffff',
-    winBg: '#0f1512'
+    winBg: '#090909'
   }
 }
 

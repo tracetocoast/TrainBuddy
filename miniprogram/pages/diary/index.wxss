@@ -957,21 +957,6 @@
   opacity: 0.92;
 }
 
-.diary-motion {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 8rpx 0 24rpx;
-  padding: 18rpx 4rpx;
-  font-size: 23rpx;
-  color: var(--muted);
-}
-
-.diary-motion switch {
-  transform: scale(0.78);
-  transform-origin: right center;
-}
-
 .ui-reduced .acc-item,
 .ui-reduced .acc-chevron,
 .ui-reduced .acc-panel,

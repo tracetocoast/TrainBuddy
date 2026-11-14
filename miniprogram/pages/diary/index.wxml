@@ -295,8 +295,4 @@
     </view>
   </view>
 
-  <view class="ix-preference diary-motion">
-    <text>减少动态效果</text>
-    <switch checked="{{reduced}}" bindchange="onMotion" color="#28744e" aria-label="减少动态效果" />
-  </view>
 </view>

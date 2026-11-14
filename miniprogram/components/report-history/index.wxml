@@ -1,25 +1,35 @@
 <view class="history">
-  <view class="heading">教练训练报告</view>
-  <view wx:if="{{loading}}" class="hint">正在读取…</view>
-  <view wx:elif="{{error}}" class="hint">{{error}}<button class="retry" bindtap="reload">重试</button></view>
-  <block wx:else>
-    <button wx:if="{{latest}}" class="history-entry history-latest" data-id="{{latest.id}}" bindtap="open">
-      <view class="entry-content">
-        <view class="hint">{{latest.date}} · 教练指导</view>
-        <view class="entry-title">{{latest.title}}</view>
-        <view class="hint">{{latest.exerciseCount}} 个动作 · {{latest.completedSets}} 组完成</view>
-        <view class="entry-link">查看报告 ›</view>
-      </view>
-    </button>
-    <view wx:else class="hint">还没有收到教练训练报告</view>
+  <block wx:if="{{section !== 'history'}}">
+    <view class="heading">教练训练报告</view>
+    <view wx:if="{{loading}}" class="hint">正在读取…</view>
+    <view wx:elif="{{error}}" class="hint">{{error}}<button class="retry" bindtap="reload">重试</button></view>
+    <block wx:else>
+      <button wx:if="{{latest}}" class="history-entry history-latest" data-id="{{latest.id}}" bindtap="open">
+        <view class="entry-content">
+          <view class="hint">{{latest.date}} · 教练指导</view>
+          <view class="entry-title">{{latest.title}}</view>
+          <view class="hint">{{latest.exerciseCount}} 个动作 · {{latest.completedSets}} 组完成</view>
+          <view class="entry-link">查看报告 ›</view>
+        </view>
+      </button>
+      <view wx:else class="hint">还没有收到教练训练报告</view>
+    </block>
+  </block>
+
+  <block wx:if="{{section !== 'latest'}}">
     <view class="heading">训练历史</view>
-    <button wx:for="{{items}}" wx:key="id" class="history-entry history-row" data-id="{{item.id}}" bindtap="open">
-      <view class="entry-content">
-        <view class="hint">{{item.date}} · {{item.source}}</view>
-        <view class="entry-title">{{item.title}}</view>
-        <view class="hint">{{item.exerciseCount}} 个动作 · {{item.completedSets}} 组完成</view>
-      </view>
-    </button>
-    <view class="hint" wx:if="{{!items.length}}">完成的训练将保留在这里</view>
+    <view wx:if="{{loading && section === 'history'}}" class="hint">正在读取…</view>
+    <view wx:elif="{{error && section === 'history'}}" class="hint">{{error}}<button class="retry" bindtap="reload">重试</button></view>
+    <block wx:else>
+      <button wx:for="{{visible}}" wx:key="id" class="history-entry history-row" data-id="{{item.id}}" bindtap="open">
+        <view class="entry-content">
+          <view class="hint">{{item.date}} · {{item.source}}</view>
+          <view class="entry-title">{{item.title}}</view>
+          <view class="hint">{{item.exerciseCount}} 个动作 · {{item.completedSets}} 组完成</view>
+        </view>
+      </button>
+      <button class="history-entry history-more" wx:if="{{canToggle}}" bindtap="onToggle">{{expanded ? '收起历史' : '查看全部 ' + items.length + ' 条历史'}}</button>
+      <view class="hint" wx:if="{{!visible.length}}">完成的训练将保留在这里</view>
+    </block>
   </block>
 </view>

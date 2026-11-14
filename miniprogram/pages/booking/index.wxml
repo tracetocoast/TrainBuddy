@@ -1,6 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
 <view class="page interaction-scope booking-page {{role === 'coach' ? 'coach-scope' : ''}} {{reduced ? 'ix-reduced' : ''}} {{skinClass}}">
-  <view class="ix-preference" wx:if="{{role === 'student'}}"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" bindchange="onMotion" color="#28744e"/></view>
   <view class="top" wx:if="{{role === 'student'}}">
     <view class="brand">
       <brand-logo class="brand-emblem-slot" />练搭子
@@ -121,7 +120,7 @@
   <block wx:elif="{{role === 'coach'}}">
     <view class="ix-error" wx:if="{{slotsError}}">{{slotsError}}<button class="secondary" bindtap="refresh">重试加载</button></view>
     <view class="schedule-header"><view><view class="title">日程</view><view class="sub">课程安排与预约确认</view></view><button class="link" bindtap="onScheduleTools">设置</button></view>
-    <view class="schedule-tools" wx:if="{{showScheduleTools}}"><button class="secondary" bindtap="goRules">周规则与日期例外</button><view class="ix-preference"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" bindchange="onMotion" color="#28744e"/></view></view>
+    <view class="schedule-tools" wx:if="{{showScheduleTools}}"><button class="secondary" bindtap="goRules">周规则与日期例外</button></view>
     <view class="bk-load" wx:if="{{coachLoading}}">
       <view class="bk-load-bar" wx:if="{{!reduced}}"></view>
       <text>正在同步日程…</text>

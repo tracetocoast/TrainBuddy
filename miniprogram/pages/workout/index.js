@@ -250,11 +250,6 @@ Page({
     })
   },
 
-  onMotion(e) {
-    interaction.setReducedMotion(e.detail.value)
-    this.setData({ reduced: !!e.detail.value })
-  },
-
   onToggleExercise(e) {
     if ((this._writeBusy && !this._autoSaving) || this.data.finishing) return
     const id = e.currentTarget.dataset.id

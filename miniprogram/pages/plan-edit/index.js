@@ -341,7 +341,6 @@ Page({
     this.setData(Object.assign({ changed: true, saveError: '' }, next)); this.cache()
     if (typeof wx.enableAlertBeforeUnload === 'function') wx.enableAlertBeforeUnload({ message: '训练计划有未保存修改，已暂存在本机。', fail() {} })
   },
-  onMotion(e) { interaction.setReducedMotion(e.detail.value); this.setData({ reduced: !!e.detail.value }) },
   onPickTitle(e) {
     const label = e.currentTarget.dataset.label
     if (!label) return

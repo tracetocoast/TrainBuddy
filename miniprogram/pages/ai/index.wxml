@@ -122,10 +122,6 @@
       </radio-group>
     </view>
     <view class="hint">{{statusHint}}</view>
-    <view class="ix-preference ai-motion">
-      <text>减少动态效果</text>
-      <switch checked="{{reduced}}" bindchange="onMotion" color="#28744e" aria-label="减少动态效果" />
-    </view>
   </view>
 
   <!-- 体态任务状态（真实 status，无伪造进度百分比） -->

@@ -22,4 +22,11 @@
 .entry-link, .retry { color: var(--ok-ink, #28744e); }
 .entry-link { margin-top: 8rpx; font-size: 24rpx; }
 .retry { min-height: 44px; margin: 8rpx auto 0; padding: 0 16rpx; background: transparent; font-size: 26rpx; }
-.history-entry::after, .retry::after { border: 0; }
+.history-more {
+  padding: 20rpx 12rpx;
+  color: var(--ok-ink, #28744e);
+  font-size: 26rpx;
+  font-weight: 650;
+  border-bottom: 0;
+}
+.history-entry::after, .retry::after, .history-more::after { border: 0; }

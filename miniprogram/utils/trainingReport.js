@@ -23,4 +23,13 @@ function report(s,owner) {
  return {id:s.session_id,title:s.title||'本次训练',date:s.business_date||'日期未记录',source:s.source_type==='coach_post_session'?'教练指导':'自主训练',coachReport:s.source_type==='coach_post_session',exerciseCount:exercises.length,completedSets:exercises.reduce((n,e)=>n+e.sets.filter(v=>v.done).length,0),exercises,publicNote:s.public_note||''};
 }
 function history(rows,owner) { const ids=new Set();return (rows||[]).filter(s=>visible(s,owner)&&s.session_id&&!ids.has(s.session_id)&&ids.add(s.session_id)).sort((a,b)=>String(b.business_date||'').localeCompare(String(a.business_date||'')) || (Number(b.ended_at)||0)-(Number(a.ended_at)||0) || String(a.session_id).localeCompare(String(b.session_id))).map(s=>report(s,owner)); }
-module.exports={report,history,visible,trainingAreas,displayTrainingTitle};
+const HISTORY_PREVIEW=5
+function splitHistory(items,expanded,preview) {
+ const list=Array.isArray(items)?items:[]
+ const latest=list.find((row)=>row.coachReport)||null
+ const rest=latest?list.filter((row)=>row.id!==latest.id):list.slice()
+ const limit=preview==null?HISTORY_PREVIEW:preview
+ const visible=expanded?rest:rest.slice(0,limit)
+ return {all:list,items:rest,latest,visible,hiddenCount:Math.max(0,rest.length-visible.length),canToggle:rest.length>limit}
+}
+module.exports={report,history,visible,trainingAreas,displayTrainingTitle,splitHistory,HISTORY_PREVIEW};

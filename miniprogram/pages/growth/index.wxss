@@ -8,9 +8,9 @@
 .growth-title-row .title { margin: 0; font-size: 44rpx; letter-spacing: -1rpx; }
 .growth-title-row .sub { margin-top: 6rpx; }
 .month-pill { flex: none; padding: 12rpx 18rpx; border: 1rpx solid var(--line); border-radius: 999rpx; color: var(--ink); background: var(--surface); font-size: 24rpx; }
-.goal-card { position: relative; overflow: hidden; margin: 18rpx 0 34rpx; border-radius: 30rpx; color: #f5f8f2; background: #173b2b; box-shadow: 0 14rpx 34rpx rgba(28,61,46,.18); }
+.goal-card { position: relative; overflow: hidden; margin: 18rpx 0 34rpx; border-radius: 30rpx; color: #fffaf1; background: linear-gradient(130deg,#9a7142 0%,#704a25 100%); box-shadow: 0 14rpx 34rpx rgba(93,64,31,.2); }
 .goal-gym-art { position: absolute; right: 0; bottom: 0; width: 72%; height: 100%; opacity: .25; }
-.goal-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, rgba(23,59,43,.98) 0%, rgba(23,59,43,.86) 56%, rgba(23,59,43,.36) 100%); pointer-events: none; }
+.goal-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg,rgba(87,57,27,.76) 0%,rgba(87,57,27,.5) 58%,rgba(23,23,23,.18) 100%); pointer-events: none; }
 .goal-card-content { position: relative; z-index: 1; padding: 26rpx 28rpx 22rpx; }
 .goal-heading { display: flex; align-items: center; justify-content: space-between; }
 .goal-kicker { color: rgba(242,248,242,.66); font-size: 18rpx; letter-spacing: 3rpx; }
@@ -18,7 +18,7 @@
 .goal-main { display: flex; align-items: center; gap: 24rpx; padding: 22rpx 0 18rpx; }
 .goal-ring-wrap { flex: none; }
 .goal-ring { width: 160rpx; height: 160rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background var(--ix-panel) ease; }
-.goal-ring-hole { width: 126rpx; height: 126rpx; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: #1c4432; }
+.goal-ring-hole { width: 126rpx; height: 126rpx; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: #704a25; }
 .goal-ring-value { color: #f7fbf4; font-size: 36rpx; font-weight: 750; line-height: 1; font-variant-numeric: tabular-nums; }
 .goal-ring-unit { margin-top: 8rpx; color: rgba(245,248,242,.72); font-size: 20rpx; }
 .goal-copy { min-width: 0; }
@@ -123,6 +123,9 @@
 @media (max-width: 340px) { .goal-card-content { padding: 22rpx 20rpx 18rpx; }.goal-ring { width: 136rpx; height: 136rpx; }.goal-ring-hole { width: 108rpx; height: 108rpx; }.goal-main { gap: 16rpx; }.chart-summary { font-size: 16rpx; gap: 6rpx; }.highlight-row { gap: 8rpx; }.highlight-card { padding: 16rpx 10rpx; }.highlight-value { font-size: 21rpx; }.mini-trend { display: none; }.legend { gap: 9rpx 12rpx; } }
 @media (prefers-reduced-motion: reduce) { .goal-ring,.bar,.card-press { transition: none; } }
 .ui-reduced .goal-ring,.ui-reduced .bar,.ix-reduced .goal-ring,.ix-reduced .bar { transition: none; }
+.skin-dark .goal-card { color: #fffaf1; background: linear-gradient(130deg,#34291b 0%,#171513 100%); box-shadow: 0 14rpx 34rpx rgba(0,0,0,.4); }
+.skin-dark .goal-card::after { background: linear-gradient(100deg,rgba(23,21,18,.78) 0%,rgba(23,21,18,.54) 58%,rgba(23,23,23,.22) 100%); }
+.skin-dark .goal-ring-hole { background: #211b13; }
 
 .cal-training-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18rpx; color: var(--accent); }
 .cal-cell.selected .cal-training-label { color: var(--on-accent); }

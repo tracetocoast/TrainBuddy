@@ -127,11 +127,6 @@ Page({
     this._loadedOnce = true
   },
 
-  onMotion(e) {
-    interaction.setReducedMotion(e.detail.value)
-    this.setData({ reduced: !!e.detail.value })
-  },
-
   studentId() {
     return getApp().globalData.session.user.userId
   },

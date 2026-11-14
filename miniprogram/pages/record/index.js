@@ -179,7 +179,6 @@ Page({
   onAdvancedMerge() { this.setData({ advancedMerge: !this.data.advancedMerge }) },
   onLibraryToggle() { this.setData({ showLibrary: !this.data.showLibrary }) },
   onPrivateToggle() { this.setData({ showPrivate: !this.data.showPrivate }) },
-  onMotion(e) { interaction.setReducedMotion(e.detail.value); this.setData({ reduced: !!e.detail.value }) },
   onTranscriptToggle() { this.setData({ showTranscript: !this.data.showTranscript }) },
   onRecordStage(e) { this.changeRecordStage(e.currentTarget.dataset.stage) },
   goRecordEdit() { this.changeRecordStage('edit') },

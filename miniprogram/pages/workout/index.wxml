@@ -1,6 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
 <view class="page interaction-scope workout-exec {{session ? 'is-session' : ''}} {{reduced ? 'ix-reduced' : ''}} {{skinClass}}">
-  <view class="ix-preference" wx:if="{{!session}}"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" bindchange="onMotion" color="#28744e"/></view>
   <view class="card sub" wx:if="{{loading}}">正在读取训练…</view>
   <view class="ix-error" wx:if="{{loadError}}">{{loadError}}<button class="secondary" bindtap="onRetryLoad">重试</button></view>
   <view class="ix-error" wx:if="{{saveError}}">{{saveError}}</view>
@@ -27,7 +26,7 @@
       </button>
     </view>
     <button class="link" wx:if="{{!resumableSession}}" bindtap="goPlans">从模板开始</button>
-    <report-history/>
+    <report-history section="latest"/>
     <view class="head">
       <view class="head-title">我的待练计划</view>
       <button class="link" bindtap="goExercises">动作库 ↗</button>
@@ -41,6 +40,7 @@
     <view class="card sub" wx:if="{{!plans.length && hasPublishedPlans}}">今日没有待练计划。非今日安排或已完成的可到「全部计划」查看与调整日期。</view>
     <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="onEnsureDefault" wx:if="{{!plans.length && !hasPublishedPlans}}">体验下肢训练模板</button>
     <button class="secondary" style="width:100%;margin-top:16rpx" bindtap="goPlans" wx:if="{{!plans.length && hasPublishedPlans}}">查看全部计划</button>
+    <report-history section="history"/>
   </block>
 
   <block wx:else>
