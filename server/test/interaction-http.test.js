@@ -23,7 +23,7 @@ test('real HTTP: booking controller keeps a server-pending request pending and d
       return response.body
     } }
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../miniprogram/pages/booking/index.js'), 'utf8'), {
-      Page(p) { page = p }, getApp: () => app, wx: { showModal() {} },
+      Page(p) { page = p }, setInterval: () => 1, clearInterval() {}, getApp: () => app, wx: { showModal() {} },
       require: id => id.includes('interaction') ? interaction : id.includes('scheduleConfig') ? require('../../miniprogram/utils/scheduleConfig') : id.includes('bookingApi') ? api : {}
     })
     page.setData = function (values) { Object.assign(this.data, values) }; page.refresh = () => {}
@@ -62,7 +62,7 @@ test('real HTTP: native workout controller saves decimal sets, advances and fina
       }
     }
     vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../miniprogram/pages/workout/index.js'), 'utf8'), {
-      Page(p) { page = p }, getApp: () => app,
+      Page(p) { page = p }, setInterval: () => 1, clearInterval() {}, getApp: () => app,
       wx: { pageScrollTo() {}, showModal(options) { if (options.title === '结束训练') options.success({ confirm: true }) } },
       require: id => id.includes('interaction') ? interaction : id.includes('trainingApi') ? api : id.includes('planSchedule') ? require('../../miniprogram/utils/planSchedule') : {}
     })

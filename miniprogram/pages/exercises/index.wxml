@@ -24,6 +24,10 @@
         <view class="library-state" wx:if="{{filterError}}">{{filterError}}</view>
         <view class="library-state error-state" wx:if="{{error}}">{{error}}<button class="retry-button" bindtap="onRetry">重试</button></view>
         <view class="library-state" wx:if="{{loading}}">正在查找动作…</view>
+        <view class="workout-shortcuts" wx:if="{{workoutPicker && shortcuts.length && !q && !muscle && !bodyPart && !equipment}}">
+          <view class="shortcut-filters"><button class="equipment-option {{shortcutSort === 'common' ? 'selected' : ''}}" data-sort="common" bindtap="onShortcutSort">常用动作</button><button class="equipment-option {{shortcutSort === 'recent' ? 'selected' : ''}}" data-sort="recent" bindtap="onShortcutSort">最近练过</button></view>
+          <button class="shortcut-row {{pickedIds[item.id] ? 'selected' : ''}}" wx:for="{{shortcuts}}" wx:key="id" data-id="{{item.id}}" bindtap="onTogglePick"><text>{{item.name}}</text><text>{{pickedIds[item.id] ? '已选' : item.usageCount + ' 次'}}</text></button>
+        </view>
         <view class="body-section" id="section-{{index}}" wx:for="{{sectionHistory}}" wx:key="key"><view class="results-heading"><text class="results-title">{{item.label}}</text><text class="results-count">{{item.total}} 个动作</text></view><template is="exercise-cards" data="{{items:item.list, pickMode, pickedIds}}"/></view>
         <view class="body-section" id="section-current"><view class="results-heading"><text class="results-title">{{selectedLabel}}</text><text class="results-count">{{loading ? '查找中' : total + ' 个动作'}}</text></view><template is="exercise-cards" data="{{items:list, pickMode, pickedIds}}"/></view>
         <view class="library-state" wx:if="{{!loading && !error && !list.length}}">没有找到匹配动作，试试其他部位、器械或关键词。</view>
@@ -33,6 +37,6 @@
   </view>
   <view class="pick-bar" wx:if="{{pickMode}}">
     <text class="pick-count">已选 {{pickedCount}} 个</text>
-    <button class="primary" bindtap="onConfirmPick" disabled="{{!pickedCount}}">加入计划</button>
+    <button class="primary" bindtap="onConfirmPick" disabled="{{!pickedCount}}">{{workoutPicker ? '添加动作' : '加入计划'}}</button>
   </view>
 </view>

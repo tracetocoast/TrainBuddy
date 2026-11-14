@@ -43,24 +43,37 @@
       <button class="month-arrow" data-step="1" bindtap="onMoveMonth" aria-label="下个月">›</button>
     </view>
   </view>
-  <view class="calendar-card"><view class="cal-weekdays"><text wx:for="{{['一','二','三','四','五','六','日']}}" wx:key="*this">{{item}}</text></view><view class="cal-grid"><view class="cal-cell {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}" wx:for="{{calendarCells}}" wx:key="key" data-date="{{item.date}}" bindtap="onPickDay"><text class="cal-day" wx:if="{{!item.empty}}">{{item.day}}</text><view class="cal-dots" wx:if="{{item.hasAny}}"><view class="dot dot-{{d}}" wx:for="{{item.dots}}" wx:for-item="d" wx:key="*this"></view></view></view></view>
+  <view class="calendar-card"><view class="cal-weekdays"><text wx:for="{{['一','二','三','四','五','六','日']}}" wx:key="*this">{{item}}</text></view><view class="cal-grid"><view class="cal-cell {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}} {{item.isSelected ? 'selected' : ''}}" wx:for="{{calendarCells}}" wx:key="key" data-date="{{item.date}}" bindtap="onPickDay"><text class="cal-day" wx:if="{{!item.empty}}">{{item.day}}</text><text class="cal-training-label" wx:if="{{item.trainingLabel}}">{{item.trainingLabel}}</text><view class="cal-dots" wx:if="{{item.hasAny}}"><view class="dot dot-{{d}}" wx:for="{{item.dots}}" wx:for-item="d" wx:key="*this"></view></view></view></view>
     <view class="legend"><view class="leg" wx:for="{{legend}}" wx:key="key"><view class="dot {{item.cls}}"></view><text>{{item.label}}</text></view></view>
   </view>
 
   <view class="day-panel" wx:if="{{dayDetail}}">
-    <view class="day-panel-head"><view><view class="section-title">{{dayDetail.date}}</view><view class="section-sub">当日记录摘要</view></view><view class="day-count" wx:if="{{!dayDetail.empty}}">{{dayDetail.markers.length}} 项记录</view></view>
-    <view class="day-empty" wx:if="{{dayDetail.empty}}">当天暂无训练、饮食、测量或休息标记。</view>
-    <view class="tag-row" wx:else><text class="tag" wx:for="{{dayDetail.markers}}" wx:key="*this">{{item}}</text></view>
-    <view class="day-detail-row" wx:for="{{dayDetail.sessions}}" wx:key="id">
-      <view class="row-icon workout-icon">↗</view>
-      <view class="row-title">{{item.title}}</view>
-      <text class="row-sets">{{item.doneSets}} 组完成</text>
+    <view class="day-panel-head"><view class="section-title">{{dayDetail.date}}</view></view>
+    <view class="history-tabs">
+      <button class="history-tab {{historyTab === 'training' ? 'active' : ''}}" data-tab="training" bindtap="onHistoryTab">训练</button>
+      <button class="history-tab {{historyTab === 'body' ? 'active' : ''}}" data-tab="body" bindtap="onHistoryTab">身体</button>
+      <button class="history-tab {{historyTab === 'meal' ? 'active' : ''}}" data-tab="meal" bindtap="onHistoryTab">饮食</button>
     </view>
-    <view class="day-detail-row day-measure-row" wx:for="{{dayDetail.measures}}" wx:key="id">
-      <view class="row-icon measure-icon">⌁</view>
-      <view class="grow"><view class="row-title">身体测量</view><view class="row-sub">{{item.time}} · {{item.text}}</view></view>
-    </view>
-    <button class="diary-button" bindtap="goDiary">打开当日日记 <text>›</text></button>
+    <block wx:if="{{historyTab === 'training'}}">
+      <button class="day-detail-row history-session" wx:for="{{dayDetail.sessions}}" wx:key="id" data-id="{{item.id}}" bindtap="goHistoryReport">
+        <view class="grow"><view class="row-title">{{item.title}}</view><view class="row-sub">{{item.exerciseCount}} 个动作 · {{item.doneSets}} 组完成{{item.areas ? ' · ' + item.areas : ''}}</view></view><text class="row-sets">查看</text>
+      </button>
+      <view class="day-empty" wx:if="{{!dayDetail.sessions.length}}">当天没有训练记录</view>
+    </block>
+    <block wx:elif="{{historyTab === 'body'}}">
+      <view class="day-empty" wx:if="{{bodyError}}">{{bodyError}} <button class="link" bindtap="reload">重试</button></view>
+      <view class="day-detail-row" wx:for="{{dayDetail.measures}}" wx:key="id"><view><view class="row-title">{{item.time}}</view><view class="row-sub">{{item.text}}</view></view></view>
+      <view class="day-empty" wx:if="{{!bodyError && !dayDetail.measures.length}}">当天未记录身体数据</view>
+    </block>
+    <block wx:else>
+      <view class="day-empty" wx:if="{{dayLoading}}">正在读取饮食</view>
+      <view class="day-empty" wx:elif="{{dayError}}">{{dayError}} <button class="link" bindtap="onRetryDay">重试</button></view>
+      <block wx:else>
+        <view class="day-detail-row" wx:for="{{dayDetail.meals}}" wx:key="id"><view><view class="row-title">{{item.title}}</view><view class="row-sub">{{item.food}}{{item.portion ? ' · ' + item.portion : ''}}</view><view class="row-sub" wx:if="{{item.nutrition}}">{{item.nutrition}}</view></view></view>
+        <view class="day-empty" wx:if="{{!dayDetail.meals.length}}">当天未记录饮食</view>
+      </block>
+      <button class="diary-button" bindtap="goDiary">打开当日日记 <text>›</text></button>
+    </block>
   </view>
 
   <button class="body-entry" bindtap="goBodyData"><view class="body-entry-icon"><view></view><view></view><view></view></view><view class="grow"><view class="body-entry-title">身体数据</view><view class="body-entry-sub">体重、围度与变化趋势</view></view><view class="mini-trend"><view></view><view></view><view></view><view></view><view></view></view><text class="entry-arrow">›</text></button>

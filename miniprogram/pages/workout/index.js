@@ -58,6 +58,10 @@ Page({
     plans: [],
     hasPublishedPlans: false,
     session: null,
+    resumableSession: null,
+    resumableSessions: [],
+    showDrafts: false,
+    setSaveErrors: {},
     phase: 'picker',
     finishing: false,
     savingSet: false,
@@ -65,10 +69,6 @@ Page({
     activeGroup: null,
     focusView: null,
     nextHint: null,
-    wheelItems: [],
-    selectedIndex: 0,
-    selectedCard: null,
-    planDots: [],
     pending: {},
     lockedExerciseId: '',
     saveError: '',
@@ -77,6 +77,7 @@ Page({
     reduced: false,
     justCompleted: false,
     restVisible: false,
+    restPreference: REST_SECONDS,
     restSeconds: REST_SECONDS,
     restText: restClock(REST_SECONDS),
     imageFailed: {}
@@ -86,18 +87,47 @@ Page({
   onShow() {
     if (!requireLogin(this)) return
     syncRoleBar(this)
-    this.setData({ reduced: interaction.reducedMotion() })
-    if(this._newFree){this._newFree=false;this.startFreeSession();return}
+    if (this._sessionOwner && this._sessionOwner !== this.studentId() + ':' + getApp().globalData.role) {
+      this.closeRest(true)
+      this.setData({ session: null, resumableSession: null, resumableSessions: [], showDrafts: false, pending: {}, setSaveErrors: {}, setEditor: null })
+    }
+    let restPreference = REST_SECONDS
+    try {
+      const saved = wx.getStorageSync('workout-rest:' + this.studentId())
+      if (Number.isInteger(saved) && saved >= 0 && saved <= 900) restPreference = saved
+    } catch (_) { /* Keep the default when storage is unavailable. */ }
+    this.setData({ reduced: interaction.reducedMotion(), restPreference })
+    if (this._newFree) return this.startFreeSession()
+    this.resumeRestUpdates()
     this.reload()
   },
-  startFreeSession() {
-    this.setData({loading:true,loadError:''})
-    const owner=this.studentId()
-    return trainingApi.createFreeSession(getApp(),'free:'+owner+':'+Date.now()).then(res=>{
-      if(!this._unloaded && owner===this.studentId())this.applySession(res.data,true)
-    }).catch(err=>this.setData({loadError:err.message||'创建训练失败'})).then(()=>this.setData({loading:false}))
+  async startFreeSession() {
+    if (this._creatingFree || !this.studentId()) return
+    this._creatingFree = true
+    const app = getApp()
+    const owner = this.studentId() + ':' + app.globalData.role
+    const current = () => !this._unloaded && owner === this.studentId() + ':' + app.globalData.role
+    if (this._freeOwner !== owner) this._freeKey = null
+    this._freeOwner = owner
+    this._freeKey = this._freeKey || 'free:' + owner + ':' + Date.now() + ':' + Math.random().toString(36).slice(2)
+    this.setData({ loading: true, loadError: '' })
+    try {
+      const res = await trainingApi.createFreeSession(app, this._freeKey, true)
+      if (!current()) return
+      this._newFree = false
+      this._freeKey = null
+      this._browsePlans = false
+      this.applySession(res.data, true)
+      this.setData({ showDrafts: false })
+    } catch (err) {
+      if (current()) this.setData({ loadError: err.message || '创建训练失败' })
+    } finally {
+      this._creatingFree = false
+      if (current()) this.setData({ loading: false })
+    }
   },
-  onHide() { this.cacheDraft(); this.closeRest(true) },
+  onRetryLoad() { return this._newFree ? this.startFreeSession() : this.reload() },
+  onHide() { this.cacheDraft(); this.pauseRestUpdates() },
   onUnload() {
     this.cacheDraft()
     this.closeRest(true)
@@ -119,7 +149,7 @@ Page({
       payload: this.data.pending,
       lockedExerciseId: this.data.lockedExerciseId || '',
       phase: this.data.phase,
-      selectedIndex: this.data.selectedIndex,
+      lastSetType: this._lastSetType || null,
       updatedAt: Date.now()
     }
     app.globalData.drafts = drafts
@@ -134,101 +164,16 @@ Page({
       if (pending[set.id]) Object.assign(set, pending[set.id])
     }))
 
-    let lockedExerciseId = restore ? ((cached && cached.lockedExerciseId) || '') : this.data.lockedExerciseId
-    let phase = restore ? ((cached && cached.phase) || '') : this.data.phase
-    let selectedIndex = restore && cached && Number.isInteger(cached.selectedIndex) ? cached.selectedIndex : this.data.selectedIndex
-
-    if (lockedExerciseId) {
-      const locked = session.exercises.find((ex) => ex.id === lockedExerciseId)
-      if (!locked || exerciseProgress(locked).complete) {
-        lockedExerciseId = ''
-        phase = 'picker'
-      } else {
-        phase = 'locked'
-      }
+    const previous = restore ? cached?.lockedExerciseId : this.data.lockedExerciseId
+    const expanded = session.exercises.find(ex => ex.id === previous) ||
+      session.exercises.find(ex => !exerciseProgress(ex).complete) || session.exercises[0]
+    const lockedExerciseId = expanded?.id || ''
+    if (restore) {
+      this._lastSetType = cached?.lastSetType || ''
+      if (this.data.session?.session_id !== session.session_id) this.setData({ setSaveErrors: {}, setEditor: null, showHistory: false, exerciseHistory: [] })
     }
-
-    if (!lockedExerciseId) {
-      const partial = session.exercises.find((ex) => {
-        const p = exerciseProgress(ex)
-        return p.done > 0 && !p.complete
-      })
-      if (partial) {
-        lockedExerciseId = partial.id
-        phase = 'locked'
-      } else {
-        phase = 'picker'
-      }
-    }
-
-    if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= session.exercises.length) {
-      selectedIndex = Math.max(0, session.exercises.findIndex((ex) => !exerciseProgress(ex).complete))
-      if (selectedIndex < 0) selectedIndex = 0
-    }
-
-    this.setData({ session, pending, lockedExerciseId, phase: phase === 'exerciseDone' ? 'picker' : phase, selectedIndex })
-    this.refreshWheel(selectedIndex)
-
-    if (phase === 'locked' && lockedExerciseId) {
-      const locked = session.exercises.find((ex) => ex.id === lockedExerciseId)
-      const pendingSet = firstPendingSet(locked) || (locked.sets && locked.sets[locked.sets.length - 1])
-      this.selectActive(pendingSet ? pendingSet.id : '', lockedExerciseId)
-    } else {
-      this.selectActive('', '')
-    }
-  },
-
-  refreshWheel(selectedIndex) {
-    const session = this.data.session
-    if (!session) {
-      this.setData({ wheelItems: [], selectedCard: null, planDots: [] })
-      return
-    }
-    const exercises = session.exercises || []
-    const n = exercises.length
-    const selected = Math.max(0, Math.min(selectedIndex, Math.max(0, n - 1)))
-    const wheelItems = exercises.map((ex, i) => {
-      let d = i - selected
-      if (n > 0) {
-        if (d > n / 2) d -= n
-        if (d < -n / 2) d += n
-      }
-      const progress = exerciseProgress(ex)
-      const baseline = baselineOf(ex)
-      const abs = Math.abs(d)
-      return {
-        id: ex.id,
-        name: ex.name,
-        icon: ex.icon || '🏋️',
-        exerciseId: ex.exerciseId || '',
-        imageUrl: ex.imageUrl || '',
-        imageFailed: !!(this.data.imageFailed && this.data.imageFailed[ex.id]),
-        meta: loadBasisLabel(ex.loadBasis) + ' · ' + progress.total + '组',
-        muscle: loadBasisLabel(ex.loadBasis),
-        complete: progress.complete,
-        done: progress.done,
-        total: progress.total,
-        baselineLabel: baseline.label,
-        selected: d === 0,
-        style:
-          'transform:translate3d(' +
-          d * 94 +
-          'px,' +
-          (abs * 16 + (d === 0 ? 0 : 10)) +
-          'px,0) scale(' +
-          (d === 0 ? 1.22 : abs === 1 ? 0.88 : 0.64) +
-          ') rotate(' +
-          d * 8 +
-          'deg);opacity:' +
-          (d === 0 ? 1 : abs === 1 ? 0.78 : 0.38) +
-          ';z-index:' +
-          (20 - abs) +
-          ';'
-      }
-    })
-    const selectedCard = wheelItems[selected] || null
-    const planDots = exercises.map((_, i) => ({ active: i === selected }))
-    this.setData({ selectedIndex: selected, wheelItems, selectedCard, planDots })
+    this.setData({ session, pending, lockedExerciseId, phase: expanded ? 'locked' : 'picker' })
+    this.selectActive('', lockedExerciseId)
   },
 
   buildFocusView(session, activeSid, lockedExerciseId) {
@@ -310,85 +255,21 @@ Page({
     this.setData({ reduced: !!e.detail.value })
   },
 
-  onWheelTouchStart(e) {
-    if (this.data.phase !== 'picker' || this.data.reduced) return
-    const t = e.changedTouches[0] || e.touches[0]
-    this._wheelStartX = t ? t.clientX : null
-  },
-  onWheelTouchEnd(e) {
-    if (this.data.phase !== 'picker' || this._wheelStartX == null) return
-    const t = e.changedTouches[0] || e.touches[0]
-    const dx = t ? t.clientX - this._wheelStartX : 0
-    this._wheelStartX = null
-    if (Math.abs(dx) < 28) return
-    this.cycleWheel(dx < 0 ? 1 : -1)
-  },
-  cycleWheel(dir) {
-    const n = (this.data.session && this.data.session.exercises.length) || 0
-    if (!n) return
-    const next = (this.data.selectedIndex + dir + n) % n
-    this.refreshWheel(next)
-    interaction.feedback()
-  },
-  onPickWheelCard(e) {
-    if (this.data.phase !== 'picker') return
-    const index = Number(e.currentTarget.dataset.index)
-    if (!Number.isInteger(index)) return
-    this.refreshWheel(index)
-    interaction.feedback()
-  },
-
-  onStartSelectedExercise() {
-    if (!this.data.session || this.data.phase !== 'picker') return
-    const card = this.data.selectedCard
-    if (!card) return
-    if (card.complete) {
-      getApp().toast('该动作已完成，可选择其他动作')
-      return
-    }
-    const exercise = this.data.session.exercises.find((ex) => ex.id === card.id)
-    const pendingSet = firstPendingSet(exercise)
-    if (!pendingSet) {
-      getApp().toast('该动作没有待完成组')
-      return
-    }
-    this.setData({
-      phase: 'locked',
-      lockedExerciseId: card.id,
-      justCompleted: false
-    })
-    this.selectActive(pendingSet.id, card.id)
-    this.cacheDraft()
-    getApp().toast('动作已锁定 · 专注这一项')
-    interaction.feedback()
-  },
-
-  onBackToPicker() {
-    if (this._writeBusy || this.data.finishing) return
-    this.closeRest(true)
-    this.setData({
-      phase: 'picker',
-      lockedExerciseId: '',
-      justCompleted: false,
-      focusView: null,
-      activeSid: '',
-      activeGroup: null,
-      nextHint: null
-    })
-    const incomplete = (this.data.session.exercises || []).findIndex((ex) => !exerciseProgress(ex).complete)
-    this.refreshWheel(incomplete >= 0 ? incomplete : this.data.selectedIndex)
+  onToggleExercise(e) {
+    if ((this._writeBusy && !this._autoSaving) || this.data.finishing) return
+    const id = e.currentTarget.dataset.id
+    if (!this.data.session.exercises.some(ex => ex.id === id)) return
+    const lockedExerciseId = id === this.data.lockedExerciseId ? '' : id
+    this.setData({ lockedExerciseId, phase: lockedExerciseId ? 'locked' : 'picker', setEditor: null, showHistory: false })
+    this.selectActive('', lockedExerciseId)
     this.cacheDraft()
   },
 
   onSessionBack() {
-    if (this.data.phase === 'locked') {
-      this.onBackToPicker()
-      return
-    }
     if (this._writeBusy || this.data.finishing) return
     wx.showModal({
-      title: '返回计划列表？',
-      content: '当前训练会保留，之后可再次点击开始训练继续。',
+      title: '返回训练首页？',
+      content: '本次训练会保留，之后可在未完成训练中继续。',
       confirmText: '返回',
       success: (res) => {
         if (!res.confirm || this._writeBusy || this.data.finishing) return
@@ -400,9 +281,6 @@ Page({
           phase: 'picker',
           focusView: null,
           nextHint: null,
-          wheelItems: [],
-          selectedCard: null,
-          planDots: [],
           activeSid: '',
           activeGroup: null,
           lockedExerciseId: '',
@@ -413,42 +291,14 @@ Page({
     })
   },
 
-  onWheelImageError(e) {
+  onExerciseImageError(e) {
     const id = e.currentTarget.dataset.id
-    if (!id) return
-    const imageFailed = Object.assign({}, this.data.imageFailed, { [id]: true })
-    this.setData({ imageFailed })
-    this.refreshWheel(this.data.selectedIndex)
-  },
-  onFocusImageError() {
-    const id = this.data.lockedExerciseId
-    if (!id) return
-    const imageFailed = Object.assign({}, this.data.imageFailed, { [id]: true })
-    this.setData({ imageFailed })
-    this.selectActive(this.data.activeSid, id)
+    this.setData({ ['imageFailed.' + id]: true })
   },
 
-  onChooseNextExercise() {
-    if (this._writeBusy || this.data.finishing) return
-    this.closeRest(true)
-    this.setData({ phase: 'picker', lockedExerciseId: '', focusView: null, activeSid: '', activeGroup: null, nextHint: null })
-    const exercises = this.data.session.exercises || []
-    let next = (this.data.selectedIndex + 1) % Math.max(exercises.length, 1)
-    for (let i = 0; i < exercises.length; i++) {
-      const idx = (this.data.selectedIndex + 1 + i) % exercises.length
-      if (!exerciseProgress(exercises[idx]).complete) {
-        next = idx
-        break
-      }
-    }
-    this.refreshWheel(next)
-    this.cacheDraft()
-    getApp().toast('可以选择下一个动作了')
-  },
-
-  onCopyPrevious() {
+  onCopyPrevious(e) {
     if (this._writeBusy || this.data.finishing || !this.data.focusView) return
-    const sid = this.data.focusView.setId
+    const sid = e?.currentTarget.dataset.sid || this.data.focusView.setId
     const locked = this.data.session.exercises.find((ex) => ex.id === this.data.lockedExerciseId)
     if (!locked) return
     const index = locked.sets.findIndex((set) => set.id === sid)
@@ -460,6 +310,7 @@ Page({
         detail: { value: previous[field] == null ? '' : previous[field] }
       })
     }
+    this.onCloseSetEditor()
     interaction.feedback()
   },
 
@@ -482,42 +333,63 @@ Page({
   },
 
   studentId() {
-    return getApp().globalData.session.user.userId
+    const session = getApp().globalData.session
+    return session && session.user ? session.user.userId : ''
+  },
+
+  onRestPreference() {
+    const options = [0, 60, 90, 120]
+    const owner = this.studentId()
+    const save = seconds => {
+      if (owner !== this.studentId()) return
+      try { wx.setStorageSync('workout-rest:' + owner, seconds) } catch (_) { /* Session preference still applies. */ }
+      this.setData({ restPreference: seconds })
+      if (!seconds) this.closeRest()
+    }
+    wx.showActionSheet({ itemList: ['关闭计时', '60 秒', '90 秒', '120 秒', '自定义'], success: result => {
+      if (result.tapIndex < options.length) { save(options[result.tapIndex]); return }
+      wx.showModal({ title: '自定义休息', editable: true, placeholderText: '输入 1–900 秒', success: input => {
+        if (!input.confirm) return
+        const seconds = Number(input.content)
+        if (Number.isInteger(seconds) && seconds >= 1 && seconds <= 900) save(seconds)
+        else getApp().toast('请输入 1–900 的整数')
+      } })
+    } })
   },
 
   openRest() {
-    if (this.data.reduced) return
-    clearInterval(this._restTimer)
-    let seconds = REST_SECONDS
-    this.setData({ restVisible: true, restSeconds: seconds, restText: restClock(seconds) })
-    this._restTimer = setInterval(() => {
-      if (this._unloaded) {
-        clearInterval(this._restTimer)
-        return
-      }
-      seconds -= 1
-      if (seconds <= 0) {
-        this.closeRest()
-        return
-      }
-      this.setData({ restSeconds: seconds, restText: restClock(seconds) })
-    }, 1000)
+    const seconds = this.data.restPreference ?? REST_SECONDS
+    if (!seconds) return
+    this._restEndsAt = Date.now() + seconds * 1000
+    this.resumeRestUpdates()
   },
-  closeRest(silent) {
-    clearInterval(this._restTimer)
+
+  pauseRestUpdates() {
+    if (this._restTimer != null) clearInterval(this._restTimer)
     this._restTimer = null
+  },
+
+  resumeRestUpdates() {
+    this.pauseRestUpdates()
+    if (!this._restEndsAt) return
+    const update = () => {
+      const seconds = Math.max(0, Math.ceil((this._restEndsAt - Date.now()) / 1000))
+      this.setData({ restVisible: true, restSeconds: seconds, restText: restClock(seconds) })
+      if (!seconds) this.pauseRestUpdates()
+    }
+    update()
+    if (this.data.restSeconds > 0) this._restTimer = setInterval(update, 1000)
+  },
+
+  closeRest(silent) {
+    this.pauseRestUpdates()
+    this._restEndsAt = null
     if (!this.data.restVisible && silent === true) return
-    this.setData({
-      restVisible: false,
-      justCompleted: false,
-      restSeconds: REST_SECONDS,
-      restText: restClock(REST_SECONDS)
-    })
+    this.setData({ restVisible: false, justCompleted: false, restSeconds: REST_SECONDS, restText: restClock(REST_SECONDS) })
   },
 
   reload() {
     if (this._writeBusy || this.data.finishing) return Promise.resolve()
-    this.closeRest(true)
     this.setData({ loading: true, loadError: '', justCompleted: false })
     const app = getApp()
     const studentId = this.studentId()
@@ -530,8 +402,10 @@ Page({
       status: ['in_progress', 'draft']
     }).then((res) => {
       if (!current()) return
-      const active = (res.data || []).find((s) => s.source_type === 'from_plan') || (res.data || [])[0]
-      if (active && !this._browsePlans) {
+      const sessions = (res.data || []).filter(s => s.source_type !== 'coach_post_session')
+      const active = sessions.find(s => s.session_id === this.data.session?.session_id) || sessions[0]
+      this.setData({ resumableSession: sessions[0] || null, resumableSessions: sessions })
+      if (active && this.data.session && active.session_id === this.data.session.session_id && !this._browsePlans) {
         this.applySession(active, true)
         this.setData({ plans: [] })
         return
@@ -562,9 +436,6 @@ Page({
           phase: 'picker',
           focusView: null,
           nextHint: null,
-          wheelItems: [],
-          selectedCard: null,
-          planDots: [],
           activeSid: '',
           activeGroup: null,
           lockedExerciseId: '',
@@ -579,51 +450,112 @@ Page({
     })
   },
 
-  onNewTraining() { wx.navigateTo({url:'/pages/new-workout/index'}) },
+  onNewTraining() {
+    if (this.data.loading || this.data.loadError) return
+    this._newFree = true
+    return this.startFreeSession()
+  },
+  onResumeTraining(e) {
+    if (this.data.loading || this.data.loadError) return
+    const id = e?.currentTarget?.dataset?.id
+    const active = id ? this.data.resumableSessions.find(row => row.session_id === id) : this.data.resumableSession
+    if (!active) return
+    this._browsePlans = false
+    this.setData({ showDrafts: false })
+    this.applySession(active, true)
+  },
+  onToggleDrafts() {
+    if (!this.data.loading && !this.data.loadError) this.setData({ showDrafts: !this.data.showDrafts })
+  },
   onOpenSetEditor(e) {
     const sid = e.currentTarget.dataset.sid
-    const ex = this.data.session.exercises.find(row => row.id === this.data.lockedExerciseId)
-    const set = ex && ex.sets.find(row => row.id === sid)
+    const exercise = this.data.session.exercises.find(row => row.id === this.data.lockedExerciseId)
+    const set = exercise && exercise.sets.find(row => row.id === sid)
     if (this._writeBusy || this.data.finishing || !set) return
-    this.setData({ setEditor: { sid, no: set.setNo, kind: set.setType || 'working' } })
+    this.setData({ setEditor: this.data.setEditor?.sid === sid ? null : { sid, kind: set.setType || 'working' } })
   },
   onCloseSetEditor() { this.setData({ setEditor: null }) },
-  async onSetType(e) {
-    if(this._writeBusy || this.data.finishing)return
-    this._writeBusy=true;this.setData({savingSet:true,saveError:''})
-    const editor=this.data.setEditor
-    const id=editor ? editor.sid : e.currentTarget.dataset.sid
-    const kind=e.currentTarget.dataset.kind
-    try{
-      const res=await trainingApi.updateActualSet(getApp(),this.data.session.session_id,id,{setType:kind})
-      this.applySession(res.data,false)
-      this.onCloseSetEditor()
-    }catch(err){this.setData({saveError:err.message||'切换失败'})}
-    finally{this._writeBusy=false;this.setData({savingSet:false})}
+
+  workoutScope() {
+    return this.studentId() + ':' + getApp().globalData.role + ':' + (this.data.session?.session_id || '')
   },
-  onAddActions() {
-    if(this._writeBusy || this.data.finishing)return
-    wx.navigateTo({url:'/pages/exercises/index?pick=1',events:{selectExercises:items=>this.addLibraryExercises(items)}})
+
+  async onSetType(e) {
+    const scope = this.workoutScope()
+    const { sid, kind } = e.currentTarget.dataset
+    if (this._autoSaving) await this._autoSaving
+    if (!sid || this._writeBusy || this.data.finishing || this._unloaded || scope !== this.workoutScope()) return
+    this._writeBusy = true
+    this.setData({ savingSet: true, saveError: '' })
+    try {
+      const res = await trainingApi.updateActualSet(getApp(), this.data.session.session_id, sid, { setType: kind })
+      if (this._unloaded || scope !== this.workoutScope()) return
+      this._lastSetType = kind
+      this.applySession(res.data, false)
+      this.cacheDraft()
+      this.onCloseSetEditor()
+    } catch (err) {
+      if (scope === this.workoutScope()) this.setData({ saveError: err.message || '切换失败' })
+    } finally {
+      this._writeBusy = false
+      if (!this._unloaded) this.setData({ savingSet: false })
+    }
+  },
+  async onAddActions() {
+    if (this._autoSaving) await this._autoSaving
+    if (this._writeBusy || this.data.finishing || !this.data.session || this._unloaded) return
+    const scope = this.workoutScope()
+    wx.navigateTo({ url: '/pages/exercises/index?pick=1&target=workout', events: {
+      selectExercises: items => {
+        if (scope === this.workoutScope()) this.addLibraryExercises(items)
+      }
+    } })
   },
   async addLibraryExercises(items) {
-    if(this._writeBusy || !this.data.session)return
-    this._writeBusy=true
-    try{
-      for(const item of items){
-        const res=await trainingApi.addExercise(getApp(),this.data.session.session_id,{exerciseId:item.id,name:item.name,sets:3,reps:10,weight:item.defaultWeight==null?0:item.defaultWeight})
-        this.applySession(res.data,false)
+    if (this._writeBusy || !this.data.session || this._unloaded) return
+    const scope = this.workoutScope()
+    const sessionId = this.data.session.session_id
+    this._writeBusy = true
+    let added = 0
+    try {
+      for (const item of items) {
+        const res = await trainingApi.addExercise(getApp(), sessionId, {
+          exerciseId: item.id, name: item.name, weight: item.defaultWeight ?? null, useHistory: true
+        })
+        if (this._unloaded || scope !== this.workoutScope()) return
+        this.applySession(res.data, false)
+        added++
       }
-    }catch(err){this.setData({saveError:err.message||'添加失败，请核对已添加动作'})}
-    finally{this._writeBusy=false}
+    } catch (err) {
+      if (!this._unloaded && scope === this.workoutScope()) {
+        this.setData({ saveError: '已确认添加 ' + added + ' / ' + items.length + ' 个动作。' + (err.message || '请先核对已添加动作，再继续添加。') })
+      }
+    } finally {
+      this._writeBusy = false
+    }
   },
-  async onChangeGroup(e) {
-    if(this._writeBusy || this.data.finishing)return
-    const exId=this.data.lockedExerciseId,setId=e.currentTarget.dataset.sid
+  onChangeGroup(e) {
+    const setId = e.currentTarget.dataset.sid
+    const exerciseId = this.data.lockedExerciseId
+    if (!setId) return this.changeGroup(exerciseId)
+    wx.showModal({ title: '删除这组训练？', content: '本次训练中的这组记录会被移除。',
+      success: result => { if (result.confirm) this.changeGroup(exerciseId, setId) } })
+  },
+  async changeGroup(exerciseId, setId) {
+    const scope = this.workoutScope()
+    if (this._autoSaving) await this._autoSaving
+    if (!exerciseId || this._writeBusy || this.data.finishing || !this.data.session || this._unloaded || scope !== this.workoutScope()) return
     this._writeBusy=true;this.setData({savingSet:true,saveError:''})
     try{
-      const pending=Object.keys(this.data.pending)
-      for(const id of pending)await this.saveSet(id)
-      const res=await trainingApi.changeSessionSet(getApp(),this.data.session.session_id,exId,setId,'group:'+Date.now()+':'+Math.random())
+      const pending = Object.keys(this.data.pending).filter(id => id !== setId)
+      for (const id of pending) await this.saveSet(id)
+      const res=await trainingApi.changeSessionSet(getApp(),this.data.session.session_id,exerciseId,setId, 'group:' + Date.now() + ':' + Math.random(), this._lastSetType)
+      if (this._unloaded || scope !== this.workoutScope()) return
+      if (setId) {
+        const nextPending = { ...this.data.pending }
+        delete nextPending[setId]
+        this.setData({ pending: nextPending, setEditor: null })
+      }
       this.applySession(res.data,false)
     }catch(err){this.setData({saveError:err.message||'修改失败，输入已保留'})}
     finally{this._writeBusy=false;this.setData({savingSet:false})}
@@ -646,11 +578,12 @@ Page({
     }})
   },
   onExerciseHistory() {
+    if (this.data.showHistory) { this.setData({ showHistory: false }); return }
     const current=this.data.session.exercises.find(ex=>ex.id===this.data.lockedExerciseId)
     if(!current)return
-    const owner=this.studentId()
+    const owner=this.studentId(), sessionId=this.data.session.session_id
     return trainingApi.listSessions(getApp(),{studentId:owner,status:['completed']}).then(res=>{
-      if(owner!==this.studentId())return
+      if (this._unloaded || owner !== this.studentId() || this.data.session?.session_id !== sessionId || this.data.lockedExerciseId !== current.id) return
       const rows=(res.data||[]).filter(row=>row.session_id!==this.data.session.session_id).map(row=>{
         const ex=(row.exercises||[]).find(ex=>current.exerciseId ? ex.exerciseId===current.exerciseId : ex.name===current.name)
         if(!ex)return null
@@ -693,7 +626,8 @@ Page({
   },
 
   onStart(e) {
-    if (this._starting) return
+    if (this._starting || this.data.loading || this.data.loadError) return
+    if (this.data.resumableSession) { getApp().toast('请先继续或结束上次训练'); return }
     const planId = e.currentTarget.dataset.id
     this._browsePlans = false
     this._starting = true
@@ -719,7 +653,7 @@ Page({
   },
 
   onSetField(e) {
-    if (this._writeBusy || this.data.finishing || !this.data.session || this.data.phase !== 'locked') return
+    if ((this._writeBusy && !this._autoSaving) || this.data.finishing || !this.data.session || this.data.phase !== 'locked') return
     const setId = e.currentTarget.dataset.sid
     const field = e.currentTarget.dataset.field
     if (!['actualWeight', 'actualReps'].includes(field)) return
@@ -734,11 +668,47 @@ Page({
     this.cacheDraft()
   },
 
+  onSetEditEnd(e) {
+    const setId = e.currentTarget.dataset.sid
+    if (!this.data.pending[setId] || this.data.finishing) return
+    if (!this._saveQueue) this._saveQueue = new Set()
+    this._saveQueue.add(setId)
+    return this.drainSetEdits()
+  },
+
+  drainSetEdits() {
+    if (this._autoSaving || this._writeBusy || this._unloaded || !this._saveQueue?.size) return this._autoSaving
+    const sessionId = this.data.session?.session_id
+    const owner = this._sessionOwner
+    const current = () => !this._unloaded && this.data.session?.session_id === sessionId &&
+      owner === this._sessionOwner && (!owner || owner === this.studentId() + ':' + getApp().globalData.role)
+    this._writeBusy = true
+    this._autoSaving = Promise.resolve().then(async () => {
+      while (current() && this._saveQueue.size) {
+        const [setId] = this._saveQueue
+        this._saveQueue.delete(setId)
+        if (!this.data.pending[setId]) continue
+        try {
+          await this.saveSet(setId)
+          if (current()) this.setData({ ['setSaveErrors.' + setId]: '' })
+        } catch (err) {
+          if (current()) this.setData({ ['setSaveErrors.' + setId]: err.message || '保存失败' })
+        }
+      }
+    }).finally(() => {
+      this._writeBusy = false
+      this._autoSaving = null
+      if (!current()) this._saveQueue.clear()
+    })
+    return this._autoSaving
+  },
+
   async saveSet(setId, state) {
     const session = this.data.session
     const owner = this.studentId() + ':' + getApp().globalData.role
     const hit = session.exercises.reduce((all, ex) => all.concat(ex.sets), []).find((set) => set.id === setId)
     if (!hit) throw Error('训练组不存在，请重新载入')
+    const sentDraft = { ...this.data.pending[setId] }
     const patch = {}
     for (const field of ['actualWeight', 'actualReps']) {
       const value = interaction.numberValue(hit[field], field === 'actualReps' ? 1 : 0, field === 'actualReps' ? 1000 : 2000, field === 'actualReps')
@@ -748,25 +718,32 @@ Page({
     }
     if (state) patch.state = state
     const res = await trainingApi.updateActualSet(getApp(), session.session_id, setId, patch)
-    if (owner !== this.studentId() + ':' + getApp().globalData.role) throw Error('身份已切换，请返回对应账号核对训练')
+    if (this._unloaded || this.data.session?.session_id !== session.session_id || owner !== this.studentId() + ':' + getApp().globalData.role) {
+      throw Error('训练已切换，请返回原训练查看')
+    }
     const pending = Object.assign({}, this.data.pending)
-    delete pending[setId]
+    const latest = pending[setId]
+    if (latest && Object.keys(latest).every(field => latest[field] === sentDraft[field])) delete pending[setId]
     const nextSession = JSON.parse(JSON.stringify(res.data))
     nextSession.exercises.forEach((ex) => ex.sets.forEach((set) => {
       if (pending[set.id]) Object.assign(set, pending[set.id])
     }))
-    this.setData({ session: nextSession, pending })
+    this.setData({ session: nextSession, pending, ['setSaveErrors.' + setId]: '' })
+    this.selectActive(this.data.activeSid, this.data.lockedExerciseId)
     this.cacheDraft()
     return nextSession
   },
 
   onSetState(e) {
+    if (this._autoSaving) return this._autoSaving.then(() => this.onSetState(e))
     if (this._writeBusy || this.data.finishing || this._finishModal || this._abandonModal) return Promise.resolve()
     if (this.data.phase !== 'locked') return Promise.resolve()
+    const setId = e.currentTarget.dataset.sid
+    const exercise = this.data.session.exercises.find(ex => ex.id === this.data.lockedExerciseId)
+    if (!exercise?.sets.some(set => set.id === setId && set.state !== e.currentTarget.dataset.state)) return Promise.resolve()
     this.closeRest(true)
     this._writeBusy = true
     this.setData({ savingSet: true, saveError: '' })
-    const setId = e.currentTarget.dataset.sid
     const state = e.currentTarget.dataset.state
     const lockedId = this.data.lockedExerciseId
     return this.saveSet(setId, state)
@@ -779,6 +756,7 @@ Page({
             this.setData({ lockedExerciseId: lockedId, phase: 'locked' })
             this.selectActive(setId, lockedId)
             getApp().toast('本组已记录')
+            if (state === 'done' && !this._unloaded) this.openRest()
             return
           }
           const next = firstPendingSet(exercise)
@@ -797,10 +775,12 @@ Page({
       .then(() => {
         this._writeBusy = false
         this.setData({ savingSet: false })
+        this.drainSetEdits()
       })
   },
 
   onFinish() {
+    if (this._autoSaving) return this._autoSaving.then(() => this.onFinish())
     if (this.data.finishing || this._writeBusy || this._finishModal) return
     this.closeRest(true)
     const app = getApp()
@@ -835,8 +815,6 @@ Page({
               pending: {},
               focusView: null,
               nextHint: null,
-              wheelItems: [],
-              selectedCard: null,
               activeSid: '',
               activeGroup: null,
               lockedExerciseId: '',
@@ -901,8 +879,6 @@ Page({
               savingSet: false,
               focusView: null,
               nextHint: null,
-              wheelItems: [],
-              selectedCard: null,
               activeSid: '',
               activeGroup: null,
               lockedExerciseId: '',

@@ -6,6 +6,7 @@ const trainingApi = require('../../services/trainingApi')
 const bodyApi = require('../../services/bodyMeasurementApi')
 const insights = require('../../utils/bodyInsights')
 const time = require('../../utils/time')
+const { visible, trainingAreas, displayTrainingTitle } = require('../../utils/trainingReport')
 
 Page({
   data: {
@@ -15,6 +16,10 @@ Page({
     calendarCells: [],
     selectedDate: '',
     dayDetail: null,
+    historyTab: 'training',
+    dayLoading: false,
+    dayError: '',
+    bodyError: '',
     summary: null,
     weekBars: [],
     weekGoal: {
@@ -87,16 +92,19 @@ Page({
   },
 
   studentId() {
-    return getApp().globalData.session.user.userId
+    return getApp().globalData.session?.user?.userId || ''
   },
 
   reload() {
-    this.setData({ loading: true, error: '' })
+    this.setData({ loading: true, error: '', dayDetail: null, dayError: '' })
+    this._dayGeneration = (this._dayGeneration || 0) + 1
     const app = getApp()
     const studentId = this.studentId()
     const today = time.todayKey()
     const calendarMonth = this.data.calendarMonth || today.slice(0, 7)
     const range = this.calendarRange()
+    const generation = this._monthGeneration = (this._monthGeneration || 0) + 1
+    const isCurrent = () => this.studentId() === studentId && this.data.calendarMonth === calendarMonth && this._monthGeneration === generation
 
     return Promise.all([
       growthApi.getSummary(app, studentId),
@@ -105,18 +113,37 @@ Page({
         studentId,
         status: ['completed']
       }),
-      bodyApi.list().catch(() => ({ data: [] }))
+      bodyApi.list().catch(() => ({ data: [], failed: true }))
     ])
       .then(([sumRes, markRes, sessRes, bodyRes]) => {
+        if (!isCurrent()) return
         const markerMap = {}
         ;(markRes.data || []).forEach((m) => {
-          markerMap[m.date] = m
+          markerMap[m.date] = { ...m, hasWorkout: false }
         })
         const measureDates = {}
         ;(bodyRes.data || []).forEach((row) => {
           if (row.date && row.values && Object.keys(row.values).length) measureDates[row.date] = true
         })
-        const sessions = sessRes.data || []
+        const seen = new Set()
+        const sessions = (sessRes.data || []).filter(row => {
+          if (!visible(row, studentId) || !row.session_id || seen.has(row.session_id)) return false
+          seen.add(row.session_id)
+          return true
+        }).sort((a, b) => String(b.business_date).localeCompare(String(a.business_date)) || (b.ended_at || 0) - (a.ended_at || 0))
+        const byDate = Object.create(null)
+        for (const row of sessions) {
+          const areas = trainingAreas(row)
+          const doneSets = (row.exercises || []).reduce((sum, ex) => sum + (ex.sets || []).filter(set => set.state === 'done').length, 0)
+          const dateRows = byDate[row.business_date] ||= []
+          dateRows.push({ id: row.session_id, title: displayTrainingTitle(row, areas), areas: areas.join(' · '),
+            exerciseCount: (row.exercises || []).length, doneSets })
+        }
+        for (const [date, rows] of Object.entries(byDate)) {
+          markerMap[date] = { ...markerMap[date], hasWorkout: true,
+            trainingLabel: rows.length > 1 ? rows.length + '次' : rows[0].areas.split(' · ')[0] || '训练' }
+        }
+        this._history = { studentId, byDate, measures: bodyRes.data || [] }
         const summary = sumRes.data
         const weekBars = insights.presentWeekBars(summary && summary.bars)
         const rate = summary && summary.planCompletionRate != null ? summary.planCompletionRate : null
@@ -134,6 +161,7 @@ Page({
         const p = time.parseDateKey(calendarMonth + '-01')
         this.setData({
           summary,
+          bodyError: bodyRes.failed ? '身体数据读取失败' : '',
           weekBars,
           weekGoal,
           calendarMonth,
@@ -146,7 +174,7 @@ Page({
             text:
               s.business_date +
               ' · ' +
-              s.title +
+              displayTrainingTitle(s) +
               ' · ' +
               s.done_sets +
               '/' +
@@ -157,8 +185,8 @@ Page({
         })
         return this.loadDayDetail(selectedDate)
       })
-      .catch((err) => this.setData({ error: err.message || '训练统计加载失败，请重试' }))
-      .then(() => this.setData({ loading: false }))
+      .catch((err) => { if (isCurrent()) this.setData({ error: err.message || '训练统计加载失败，请重试' }) })
+      .then(() => { if (isCurrent()) this.setData({ loading: false }) })
   },
 
   buildCalendar(from, to, markerMap, measureDates, today, selectedDate) {
@@ -186,6 +214,7 @@ Page({
         key: cursor,
         date: cursor,
         day: d.day,
+        trainingLabel: m.trainingLabel || '',
         isToday: cursor === today,
         isSelected: cursor === selectedDate,
         dots,
@@ -198,7 +227,7 @@ Page({
 
   onPickDay(e) {
     const date = e.currentTarget.dataset.date
-    if (!date) return
+    if (!date || date.slice(0, 7) !== this.data.calendarMonth || this.data.loading) return
     const cells = this.data.calendarCells.map((c) =>
       Object.assign({}, c, { isSelected: !c.empty && c.date === date })
     )
@@ -206,50 +235,47 @@ Page({
     this.loadDayDetail(date)
   },
 
+  onHistoryTab(e) {
+    this.setData({ historyTab: e.currentTarget.dataset.tab })
+    if (this.data.historyTab === 'meal' && this.data.selectedDate && !this.data.loading) this.loadDayDetail(this.data.selectedDate)
+  },
+
   loadDayDetail(date) {
     const app = getApp()
     const studentId = this.studentId()
-    return Promise.all([
-      diaryApi.getDailyView(app, studentId, date),
-      bodyApi.list().catch(() => ({ data: [] }))
-    ]).then(([res, bodyRes]) => {
-      const v = res.data
-      const markers = []
-      if (v.sessions && v.sessions.length) markers.push('有训练 ' + v.sessions.length + ' 次')
-      if (v.restDay) markers.push('休息日（主动标记）')
-      if (v.meals && v.meals.length) markers.push('饮食 ' + v.meals.length + ' 条')
-      if (v.waterTotalMl) markers.push('饮水 ' + v.waterTotalMl + 'ml')
-      if (v.bodyState) markers.push('已记日记身体状态')
-      const measures = (bodyRes.data || []).filter((row) => row.date === date)
-      if (measures.length) markers.push('身体测量 ' + measures.length + ' 条')
-      this.setData({
-        dayDetail: {
-          date,
-          markers,
-          sessions: (v.sessions || []).map((s) =>
-            Object.assign({}, s, {
-              id: s.id || s.session_id,
-              doneSets: s.doneSets != null ? s.doneSets : s.done_sets || 0
-            })
-          ),
-          measures: measures.map((row) => ({
-            id: row.id || row.date + '_' + (row.time || ''),
-            time: row.time || row.timeLabel || '时间未记录',
-            text: Object.keys(row.values || [])
-              .map((key) => {
-                const metric = bodyApi.METRICS.find((item) => item.key === key)
-                return (metric ? metric.label : key) + ' ' + row.values[key] + (metric ? metric.unit : '')
-              })
-              .join(' · ')
-          })),
-          empty: !markers.length
-        }
+    const generation = this._dayGeneration = (this._dayGeneration || 0) + 1
+    const current = () => this._dayGeneration === generation && this.studentId() === studentId && this.data.selectedDate === date
+    const history = this._history?.studentId === studentId ? this._history : null
+    const measures = (history?.measures || []).filter(row => row.date === date).map(row => ({
+      id: row.id || row.date + '_' + (row.time || ''),
+      time: row.time || row.timeLabel || '时间未记录',
+      text: bodyApi.METRICS.filter(metric => row.values?.[metric.key] != null)
+        .map(metric => metric.label + ' ' + row.values[metric.key] + metric.unit).join(' · ')
+    }))
+    this.setData({ dayError: '', dayLoading: this.data.historyTab === 'meal',
+      dayDetail: { date, sessions: history?.byDate[date] || [], measures, meals: [] } })
+    if (this.data.historyTab !== 'meal') return Promise.resolve()
+    return diaryApi.getDailyView(app, studentId, date).then(({ data }) => {
+      if (!current()) return
+      const labels = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' }
+      const meals = (data.meals || []).map(meal => {
+        const macros = meal.macrosG || meal.macros_g || {}
+        const nutrition = [['carbs', '碳水'], ['protein', '蛋白质'], ['fat', '脂肪']]
+          .filter(([key]) => Number.isFinite(macros[key]))
+          .map(([key, label]) => label + ' ' + macros[key] + 'g').join(' · ')
+        return { id: meal.id, title: labels[meal.mealType] || '饮食', food: meal.foodText || '食物未记录', portion: meal.portionText || '', nutrition }
       })
-    }).catch((err) => this.setData({ error: err.message || '当日记录读取失败，请重试' }))
+      this.setData({ 'dayDetail.meals': meals, dayLoading: false })
+    }).catch(err => {
+      if (current()) this.setData({ dayError: err.message || '饮食读取失败', dayLoading: false })
+    })
   },
 
+  onRetryDay() { return this.loadDayDetail(this.data.selectedDate) },
+  goHistoryReport(e) { wx.navigateTo({ url: '/pages/training-report/index?id=' + encodeURIComponent(e.currentTarget.dataset.id) }) },
   goDiary() {
-    wx.navigateTo({ url: '/pages/diary/index' })
+    const date = this.data.selectedDate || time.todayKey()
+    wx.navigateTo({ url: '/pages/diary/index?date=' + encodeURIComponent(date) })
   },
 
   goPoints() {

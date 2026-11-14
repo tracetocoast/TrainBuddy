@@ -746,7 +746,9 @@ function buildRouter() {
           return out.data
         }
         if(req.body.source_type === 'manual'){
-          const out=await unwrap(trainingService.createFreeSession(app,req.actor.userId))
+          const startNew = req.body.start_new === true
+          if (startNew && !req.idempotencyKey) throw new AppError('VALIDATION', '新建训练需要 Idempotency-Key')
+          const out = await unwrap(trainingService.createFreeSession(app, req.actor.userId, startNew ? req.idempotencyKey : null))
           return out.data
         }
         throw new AppError('VALIDATION', '请使用 /plans/{id}/start-session 开练')
@@ -846,7 +848,7 @@ function buildRouter() {
         const data=await req.app.locals.store.tx(async()=>{
           const app=asApp(req.app.locals.store),cur=await unwrap(trainingService.getSession(app,req.params.id))
           assertSessionEditor(req,cur.data)
-          const out=await unwrap(trainingService.changeSessionSet(app,req.params.id,req.params.exerciseId,req.params.setId))
+          const out=await unwrap(trainingService.changeSessionSet(app,req.params.id,req.params.exerciseId,req.params.setId,req.body?.setType))
           return out.data
         })
         ok(res,data)
