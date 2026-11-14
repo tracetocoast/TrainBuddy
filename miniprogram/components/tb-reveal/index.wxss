@@ -1,0 +1,2 @@
+.tb-reveal{max-height:0;opacity:0;overflow:hidden;transition:max-height 230ms cubic-bezier(.2,.8,.3,1),opacity 160ms ease}
+.tb-reveal.is-open{max-height:1800rpx;opacity:1}.tb-reveal.no-motion{transition:none}.tb-reveal-inner{padding:0 1rpx}

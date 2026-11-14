@@ -1,0 +1,1 @@
+Component({properties:{open:{type:Boolean,value:false},reduced:{type:Boolean,value:false}}})

@@ -1,0 +1,5 @@
+.tb-tabs{position:relative;min-height:80rpx;display:flex;align-items:stretch;border-bottom:1rpx solid #e9e8e9}
+.tb-glider{position:absolute;bottom:0;left:0;height:5rpx;background:#5859d9;transform-origin:left;transition:transform 220ms cubic-bezier(.24,.92,.35,1);z-index:1;border-radius:6rpx}
+.tb-glider.no-motion{transition:none}
+.tb-tab{position:relative;z-index:2;flex:1;min-width:0;padding:10rpx 0;border:0!important;border-radius:0;background:transparent!important;font-size:25rpx;font-weight:600;color:#92919d;line-height:55rpx;text-align:center}
+.tb-tab:after{border:0!important}.tb-tab.is-active{color:#5859d9;font-weight:750}.tb-tab[disabled]{opacity:.48}

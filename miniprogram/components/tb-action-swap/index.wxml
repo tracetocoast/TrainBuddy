@@ -1,0 +1,5 @@
+<button class="tb-action {{phase === 'success' ? 'is-success' : ''}} {{reduced ? 'no-motion' : ''}}" bindtap="onTap" disabled="{{disabled || phase === 'loading'}}" loading="{{phase === 'loading'}}" aria-label="{{phase === 'success' ? successText : text}}">
+  <text class="tb-action-label" wx:if="{{phase === 'success'}}">✓ {{successText}}</text>
+  <text class="tb-action-label" wx:elif="{{phase === 'loading'}}">{{loadingText}}</text>
+  <text class="tb-action-label" wx:else>{{text}}</text>
+</button>

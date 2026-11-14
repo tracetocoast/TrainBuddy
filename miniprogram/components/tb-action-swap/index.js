@@ -1,0 +1,1 @@
+Component({properties:{text:{type:String,value:'继续'},loadingText:{type:String,value:'正在保存…'},successText:{type:String,value:'已保存'},phase:{type:String,value:'idle'},disabled:{type:Boolean,value:false},reduced:{type:Boolean,value:false}},methods:{onTap(){if(this.properties.phase!=='idle'||this.properties.disabled)return;this.triggerEvent('action')}}})
