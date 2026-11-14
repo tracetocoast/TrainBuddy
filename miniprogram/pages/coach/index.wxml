@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page coach-space {{skinClass}}">
+<view class="page coach-space field-notes">
   <view class="top"><view class="brand"><brand-logo class="brand-emblem-slot"/>训练协作</view><text class="space-caption">与你的教练保持同步</text></view>
   <view class="space-state" wx:if="{{loading}}">正在同步教练动态…</view>
   <view class="card" wx:elif="{{error}}"><view class="sub">{{error}}</view><button class="link" bindtap="reload">重新加载</button></view>

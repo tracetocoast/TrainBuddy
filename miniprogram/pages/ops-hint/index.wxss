@@ -7,7 +7,7 @@
 .url {
   margin-top: 20rpx;
   padding: 20rpx;
-  border-radius: 16rpx;
+  border-radius: 6rpx;
   background: var(--soft);
   color: var(--ink);
   font-size: 26rpx;

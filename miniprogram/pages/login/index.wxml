@@ -1,9 +1,10 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="login-page {{skinClass}}">
+<view class="login-page field-notes">
   <view class="brand-block">
-    <view class="login-emblem"><brand-logo size="104" /></view>
-    <view class="brand-title">练搭子</view>
-    <view class="brand-en">TRAIN BUDDY</view>
+    <view class="fn-kicker">TRAINBUDDY / FIELD NOTES</view>
+    <view class="brand-title">把训练，
+认真记下来。</view>
+    <image class="login-editorial" src="/assets/field-notes/editorial-barbell.jpg" mode="aspectFill"/>
     <view class="sub">专业训练，让每一次进步有迹可循。</view>
   </view>
 

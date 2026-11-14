@@ -29,7 +29,7 @@
 }
 
 .coach-scope .seg {
-  border-radius: 16rpx;
+  border-radius: 6rpx;
   gap: 4rpx;
   padding: 6rpx;
 }
@@ -47,7 +47,7 @@
   min-height: 118rpx;
   margin-right: 10rpx;
   padding: 12rpx 8rpx;
-  border-radius: 18rpx;
+  border-radius: 6rpx;
 }
 
 .dates {
@@ -87,7 +87,7 @@
   border-color: var(--green-strong);
   background: var(--mint-1);
   color: var(--deep-green);
-  box-shadow: inset 0 0 0 2rpx rgba(40, 116, 78, 0.12);
+  box-shadow: none;
 }
 .date-btn.is-today:not(.chosen) .date-day {
   color: var(--deep-green);
@@ -121,14 +121,14 @@
   margin: 20rpx 0;
   padding: 8rpx;
   background: var(--surface-raised);
-  border-radius: 20rpx;
+  border-radius: 6rpx;
 }
 .seg-btn {
   flex: 1;
   border: 0;
   background: transparent;
   padding: 16rpx 8rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   font-size: 22rpx;
   font-weight: 600;
   color: var(--muted);
@@ -143,7 +143,7 @@
 .bk-load {
   margin: 12rpx 0 18rpx;
   padding: 18rpx 20rpx;
-  border-radius: 20rpx;
+  border-radius: 6rpx;
   background: var(--tint-1);
   border: 1rpx solid var(--line);
   color: var(--muted);
@@ -151,9 +151,9 @@
 }
 .bk-load-bar {
   height: 6rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   margin-bottom: 12rpx;
-  background: linear-gradient(90deg, var(--ix-soft), var(--accent), var(--ix-soft));
+  background: var(--surface-raised);
   background-size: 200% 100%;
   animation: bkBarSlide 1.5s linear infinite;
 }
@@ -167,12 +167,12 @@
   background: var(--surface);
   padding: 24rpx;
   border: 1rpx solid var(--blue-line);
-  border-radius: 24rpx;
+  border-radius: 6rpx;
   margin: 20rpx 0;
 }
 .bk-summary-on {
   border-color: var(--green-strong);
-  box-shadow: 0 8rpx 24rpx rgba(40, 116, 78, 0.08);
+  box-shadow: none;
 }
 .bk-summary-title {
   font-size: 28rpx;
@@ -207,7 +207,7 @@
 /* 时段按钮网格 */
 .slot-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12rpx;
   margin-bottom: 8rpx;
 }
@@ -215,7 +215,7 @@
   width: 100% !important;
   margin: 0 !important;
   padding: 20rpx 18rpx;
-  border-radius: 24rpx;
+  border-radius: 6rpx;
   background: var(--surface);
   border: 1rpx solid var(--line);
   text-align: left;
@@ -238,7 +238,7 @@
 .slot-btn-on {
   border-color: var(--accent);
   background: var(--mint-1);
-  box-shadow: inset 0 0 0 2rpx rgba(40, 116, 78, 0.18);
+  box-shadow: none;
 }
 .slot-btn-press {
   transform: scale(0.98);
@@ -263,7 +263,7 @@
   flex-shrink: 0;
   font-size: 18rpx;
   padding: 4rpx 10rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   background: var(--tint-2);
   color: var(--muted);
 }
@@ -300,14 +300,14 @@
   margin-bottom: 12rpx;
   background: var(--surface);
   border: 1rpx solid var(--line);
-  border-radius: 24rpx;
+  border-radius: 6rpx;
 }
 .bk-card-press {
   opacity: 0.92;
 }
 .pending-card {
   border-color: var(--warn-line);
-  background: linear-gradient(180deg, var(--linen-1) 0%, var(--surface) 55%);
+  background: var(--surface-raised);
 }
 
 /* 教练时间轴 */
@@ -366,14 +366,14 @@
 .timeline-flag {
   font-size: 18rpx;
   padding: 4rpx 10rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   background: var(--ix-soft);
   color: var(--deep-green);
   flex-shrink: 0;
 }
 .timeline-item.is-upcoming .timeline-dot {
   background: var(--accent);
-  box-shadow: 0 0 0 6rpx rgba(40, 116, 78, 0.15);
+  box-shadow: none;
 }
 .timeline-item.is-upcoming .timeline-flag {
   background: var(--accent);
@@ -381,16 +381,17 @@
 }
 .timeline-item.is-live .timeline-dot {
   background: var(--warm-ink);
-  box-shadow: 0 0 0 6rpx rgba(174, 112, 67, 0.16);
+  box-shadow: none;
 }
 .timeline-item.is-live .timeline-flag {
   background: var(--warm-tint);
   color: var(--warm-ink);
 }
 .schedule-course {
-  padding: 18rpx 18rpx;
-  border: 1rpx solid var(--line);
-  border-radius: 20rpx;
+  padding: 18rpx 0;
+  border: 0;
+  border-bottom: 1rpx solid var(--line);
+  border-radius: 0;
   background: var(--surface);
   min-height: 96rpx;
   box-sizing: border-box;
@@ -426,7 +427,7 @@
   display: inline-block;
   margin: 8rpx 8rpx 0 0;
   padding: 10rpx 16rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   background: var(--ix-soft);
   border: 1rpx solid var(--green-strong);
   color: var(--deep-green);
@@ -445,7 +446,7 @@
   width: auto !important;
   background: var(--surface);
   border: 2rpx solid var(--line);
-  border-radius: 20rpx;
+  border-radius: 6rpx;
   padding: 16rpx 2rpx;
   text-align: center;
   box-sizing: border-box;
@@ -459,7 +460,7 @@
 }
 .week-col.is-selected {
   border-color: var(--accent);
-  box-shadow: inset 0 0 0 2rpx rgba(40, 116, 78, 0.16);
+  box-shadow: none;
 }
 .week-hd {
   font-size: 18rpx;

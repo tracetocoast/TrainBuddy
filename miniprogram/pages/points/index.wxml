@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page points-page {{skinClass}}">
+<view class="page points-page field-notes">
   <view class="card" wx:if="{{error}}">
     <view class="sub">{{error}}</view>
     <button class="secondary" bindtap="load">重试</button>

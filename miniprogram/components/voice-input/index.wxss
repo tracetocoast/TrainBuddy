@@ -41,3 +41,29 @@
 .capture-input .voice-running .voice-copy { flex-basis:100%; text-align:center; }
 .capture-input .clock { font-size:64rpx; font-variant-numeric:tabular-nums; margin:20rpx; }
 .capture-input .text-action { width:100%; min-height:44px; margin-top:36rpx; border-top:1rpx solid var(--line); padding-top:24rpx; }
+.journal-voice { color: #282522; }
+.journal-tabs { display: flex; gap: 68rpx; }
+.journal-tabs button { min-height: 44px; font-size: 25rpx; color: #827A73; border-bottom: 2px solid transparent; background: transparent; }
+.journal-tabs .journal-selected { color: #AB584A; border-color: #AB584A; font-weight: 700; }
+.journal-controls { padding: 42rpx 0 24rpx; text-align: center; }
+.journal-wave { height: 114rpx; display: flex; align-items: center; justify-content: center; gap: 7rpx; }
+.journal-bar { width: 5rpx; background: #AB584A; opacity: .30; border-radius: 4rpx; }
+.journal-live .journal-bar { opacity: .55; animation: journal-pulse 900ms ease-in-out alternate infinite; }
+.journal-live .journal-bar:nth-child(2n) { animation-delay: 160ms; }
+.journal-live .journal-bar:nth-child(3n) { animation-delay: 350ms; }
+.journal-reduced .journal-bar { animation: none; }
+@keyframes journal-pulse { from { transform: scaleY(.76); } to { transform: scaleY(1); } }
+.journal-controls .journal-record { display: flex; align-items: center; justify-content: center; width: 280rpx !important; height: 280rpx; margin: 40rpx auto 0 !important; padding: 0; border: 1rpx solid #D5AEA2; border-radius: 50%; background: #F6EEE8; }
+.journal-record::after { border: 0; }
+.journal-stop, .journal-start, .journal-wait { width: 50rpx; height: 50rpx; background: #AB584A; border-radius: 10rpx; }
+.journal-start { border-radius: 50%; }
+.journal-wait { width: 24rpx; height: 24rpx; opacity: .45; }
+.journal-status { margin: 16rpx 0 0; color: #AB584A; font-size: 27rpx; font-weight: 700; font-variant-numeric: tabular-nums; }
+.journal-transcript { border-top: 1rpx solid #E1D8CE; padding: 24rpx 0 12rpx; }
+.journal-caption { display: flex; justify-content: space-between; color: #827A73; font-size: 22rpx; }
+.journal-copy, .journal-text { box-sizing: border-box; width: 100%; margin-top: 16rpx; color: #282522; font-size: 28rpx; line-height: 1.8; overflow-wrap: anywhere; }
+.journal-text { min-height: 140rpx; }
+.journal-hint { margin-top: 10rpx; color: #827A73; font-size: 22rpx; }
+.journal-voice .journal-link { min-height: 44px; padding: 0 8rpx; color: #AB584A; font-size: 24rpx; font-weight: 650; background: transparent; }
+
+@media (prefers-reduced-motion:reduce) { .journal-live .journal-bar { animation:none; } }

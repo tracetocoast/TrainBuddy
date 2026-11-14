@@ -43,7 +43,7 @@
   margin: 0 !important;
   padding: 12rpx 22rpx;
   min-height: 64rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   background: var(--surface);
   border: 1rpx solid var(--line);
   color: var(--muted);
@@ -62,12 +62,13 @@
   align-items: flex-start;
   gap: 18rpx;
   width: 100% !important;
-  margin: 0 0 14rpx !important;
-  padding: 24rpx 20rpx;
+  margin: 0 !important;
+  padding: 24rpx 0;
   text-align: left;
   background: var(--surface);
-  border: 1rpx solid var(--line);
-  border-radius: 24rpx;
+  border: 0;
+  border-bottom: 1rpx solid var(--line);
+  border-radius: 0;
   box-sizing: border-box;
 }
 
@@ -77,7 +78,7 @@
 
 .student-card.needs-attention {
   border-color: var(--warn-line);
-  background: linear-gradient(180deg, var(--linen-1) 0%, var(--surface) 58%);
+  background: var(--warn-soft);
 }
 
 .student-card-press {

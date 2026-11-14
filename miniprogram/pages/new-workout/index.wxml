@@ -1,14 +1,14 @@
 <page-meta background-color="{{pageBg}}"/>
-<view class="page page-solo new-workout {{skinClass}}">
+<view class="page page-solo new-workout field-notes">
   <view class="title">今天，怎么练？</view>
   <view class="sub intro">自由编排，或沿用熟悉的训练模板。</view>
   <button class="start-option option-primary" bindtap="onCustom" disabled="{{creating}}" loading="{{creating}}">
-    <view class="option-icon"><ui-icon name="play" tone="green" size="44"/></view>
+    <view class="option-icon">01</view>
     <view class="option-copy"><text class="option-title">自由力量训练</text><text class="option-hint">从空白开始，添加动作并逐组记录</text></view>
     <text class="option-arrow">›</text>
   </button>
   <button class="start-option" bindtap="onTemplates" disabled="{{creating}}">
-    <view class="option-icon"><ui-icon name="home" tone="green" size="44"/></view>
+    <view class="option-icon">02</view>
     <view class="option-copy"><text class="option-title">从训练计划开始</text><text class="option-hint">沿用已有动作与目标组数</text></view>
     <text class="option-arrow">›</text>
   </button>

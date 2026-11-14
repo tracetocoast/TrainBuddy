@@ -1,0 +1,696 @@
+{
+  "date": "2026-11-14",
+  "main": "0a1a941c40dede9a2817d98fded00ffbc9bef876",
+  "head": "1eff38392fd730019993ec7d4c3c03521353c495",
+  "branch": "feat/field-notes-v3",
+  "zip_sha256": "bc3cc84fb855aa61d053ffce1df6b939977d456a5bb3a2960c3af0596e2bf694",
+  "routes": 33,
+  "manifest_routes": 33,
+  "route_match": true,
+  "scenes": [
+    {
+      "id": "01",
+      "route": "home",
+      "name": "今日首页",
+      "file": "01_home.png",
+      "sha256": "3ec3e76be138dfa4e70b0edd9c703b88f242ccace0e21b8ec11002ae7ab6d9c0",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "02",
+      "route": "home",
+      "name": "工作台",
+      "file": "02_home.png",
+      "sha256": "68ba80016d29d554d11683cc18a837fc01e254664c64b5ee0083cdf42428d627",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "03",
+      "route": "home",
+      "name": "未绑定教练",
+      "file": "03_home.png",
+      "sha256": "d7590703cf4d28e8aee148b32f4c52cc23c1f7da2b13bacd91b0fe5fa9735c6b",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "04",
+      "route": "workout",
+      "name": "训练入口",
+      "file": "04_workout.png",
+      "sha256": "76f244a679de0ad9a4fdf87b93fba80befda62a1afcf08da70ee45909a89adeb",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "05",
+      "route": "workout",
+      "name": "多份草稿",
+      "file": "05_workout.png",
+      "sha256": "e03a8b9000ff56a852f009880916052dde246a4dfb41c35b2b548e2c1f1c2bf3",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "06",
+      "route": "new-workout",
+      "name": "新建训练",
+      "file": "06_new-workout.png",
+      "sha256": "0c2d8d7bf93e4184f9837d9d4a0cd9963a5062adea67f734b7b50a921efbcd2e",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "07",
+      "route": "workout",
+      "name": "逐组训练",
+      "file": "07_workout.png",
+      "sha256": "fbfa9c29e436585cc0d665237f3f1f8e946c6aa4e661e6c61218a3343104a8ba",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "08",
+      "route": "workout",
+      "name": "休息倒计时",
+      "file": "08_workout.png",
+      "sha256": "63ce9566ac74d0e050b606a2dcc59252ab60bf2b4b49a39ced9bb3a3b6ff61df",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "09",
+      "route": "workout",
+      "name": "保存失败",
+      "file": "09_workout.png",
+      "sha256": "38049295c8fadc6efae9be41dfb60a5052edc60539c484a8a1bad4a956af1c02",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "10",
+      "route": "workout",
+      "name": "结束训练核对",
+      "file": "10_workout.png",
+      "sha256": "c7703e8008a9f27cdb7f896f4cfe6a58b26750022c034096dff1d2d28039b30f",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "11",
+      "route": "exercises",
+      "name": "动作库 · 常用",
+      "file": "11_exercises.png",
+      "sha256": "484c46d4de039f1e474ced21d1f0933f3794b6f42c26302dcd2b30dba78bc0c6",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "12",
+      "route": "exercises",
+      "name": "搜索与器械筛选",
+      "file": "12_exercises.png",
+      "sha256": "ff70254d922c081e109c2c4d69589b651f3cf82e96718cd2abe8e8937c6cfbf9",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "13",
+      "route": "exercises",
+      "name": "批量选取",
+      "file": "13_exercises.png",
+      "sha256": "49afc363774f0184f22e87b60401df49d541aae3d30f8f2af7b1a2bc4c327186",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "14",
+      "route": "exercise-detail",
+      "name": "动作详情",
+      "file": "14_exercise-detail.png",
+      "sha256": "5abccc462bfb92b01482e74357db3bada729a7e8f61dc903a09ff95bae552449",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "15",
+      "route": "plans",
+      "name": "计划列表",
+      "file": "15_plans.png",
+      "sha256": "133fe68d9a4a6fd8fc709d0b2cc0b5eba117df12009c334b705362b8337ca497",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "16",
+      "route": "plans",
+      "name": "学员训练计划",
+      "file": "16_plans.png",
+      "sha256": "3d32376ba5814776eb334cb98cb66070a96d36ecff7049b519e5beb3f2f7a14a",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "17",
+      "route": "plan-edit",
+      "name": "训练计划编辑",
+      "file": "17_plan-edit.png",
+      "sha256": "64b2793d70d9185129be1d5cc8b33fc5d776c4b2e04f6c0b65cd258de311aedb",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "18",
+      "route": "plan-edit",
+      "name": "编辑单动作训练组",
+      "file": "18_plan-edit.png",
+      "sha256": "6844f3cbf7860fe07be718880dc1c1843da3caefdde8c1d9bb0dc4ba09735927",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "19",
+      "route": "training-report",
+      "name": "教练报告",
+      "file": "19_training-report.png",
+      "sha256": "0c72a42f3c2c135a71ef0f256df52f92943d4712de2324e042615d61783dd1d0",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "20",
+      "route": "training-report",
+      "name": "自主训练报告",
+      "file": "20_training-report.png",
+      "sha256": "58a271418a6b1a93b0cc45d9fb89b4c4f871885823f3e8862915a82386e190b1",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "21",
+      "route": "growth",
+      "name": "训练进展月历",
+      "file": "21_growth.png",
+      "sha256": "6cec66585dffbacd95c44d0289681bb46bde43de9d7180bd48d7bb7e1fb7ccf8",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "22",
+      "route": "growth",
+      "name": "身体日历",
+      "file": "22_growth.png",
+      "sha256": "fa0196ec29ec2d76838b663d86d95d0c5d92d2d98ba83238d762163196eb16ec",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "23",
+      "route": "growth",
+      "name": "饮食日历",
+      "file": "23_growth.png",
+      "sha256": "7207237be0a644616f0a8a6e9292e72415117f158503450ea9671f84e985e544",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "24",
+      "route": "body-data",
+      "name": "身体数据总览",
+      "file": "24_body-data.png",
+      "sha256": "71357339332c98f206f189bc639391edd372e50f82ed4dfb6b2acc065efee794",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "25",
+      "route": "body-data",
+      "name": "身体数据趋势",
+      "file": "25_body-data.png",
+      "sha256": "34c286017a1a83b2c1f59364b206dde1ced242fc54e1446d5aca5f341f3bf236",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "26",
+      "route": "body-data",
+      "name": "体重月历",
+      "file": "26_body-data.png",
+      "sha256": "736b4c715795687e487cbc041686b204f3c48d3681ce76f3a11c618e96d1fd16",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "27",
+      "route": "body-metric",
+      "name": "单指标详情",
+      "file": "27_body-metric.png",
+      "sha256": "b76a1b38f37503a4a002602fd38b2fc21b8370c4bc2d5e5fa4ecdedd8dc4044c",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "28",
+      "route": "body-record",
+      "name": "新增身体测量",
+      "file": "28_body-record.png",
+      "sha256": "e7c229450eb7d7de91f3d266bc0aafa393731b4397b082f58a5618b80f722f38",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "29",
+      "route": "body-history",
+      "name": "历史测量明细",
+      "file": "29_body-history.png",
+      "sha256": "39462b726287116485ec040a200d41c2aed1d189b2d576f07d4f92e0298abc6c",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "30",
+      "route": "diary",
+      "name": "每日记录总览",
+      "file": "30_diary.png",
+      "sha256": "a9b63d9420a65febc8e2091797a3e42f842233aeff6a8b3acfa93e0d82371149",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "31",
+      "route": "diary",
+      "name": "饮食编辑",
+      "file": "31_diary.png",
+      "sha256": "a6943116fb534114ff27d092c73c1f1df1824481505ef0d7e8694d051ecf8209",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "32",
+      "route": "diary",
+      "name": "饮水与恢复",
+      "file": "32_diary.png",
+      "sha256": "c4788b9183078aaca615c7c55e8a2d4b2faf10e11f598ec486a711f393ce135e",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "33",
+      "route": "diary",
+      "name": "休息日/特殊情况",
+      "file": "33_diary.png",
+      "sha256": "93926dc2dba54b58e3fe849d34dda49ef92e7aa4e2159d079c663aa25f90f9cd",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "34",
+      "route": "food-photo",
+      "name": "拍照识别饮食",
+      "file": "34_food-photo.png",
+      "sha256": "8c522ce204c830856ca0ecb43a662480e65a3f771077dde72195a26e494d7d24",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "35",
+      "route": "food-photo",
+      "name": "识别结果确认",
+      "file": "35_food-photo.png",
+      "sha256": "70f3aa51f6706cf98be2f86154f92bd532d8dd37ae49ba0f833c8e1b69f8962c",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "36",
+      "route": "coach",
+      "name": "教练协作首页",
+      "file": "36_coach.png",
+      "sha256": "6abaefd4f0e8f26d20bc007ddbbad09e8649b40e12a085d0fd31d983625234f0",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "37",
+      "route": "coach",
+      "name": "教练留言与授权",
+      "file": "37_coach.png",
+      "sha256": "e77297c9926b23b31453e09ae89d0eb1115b4aa368c4689fd4adbff8f0fde7aa",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "38",
+      "route": "booking",
+      "name": "可约课日期",
+      "file": "38_booking.png",
+      "sha256": "cd16ca821cb1d4245d4d12abb5745022fe6b9a64347ac459b1113c3340cebc94",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "39",
+      "route": "booking",
+      "name": "选择时段确认",
+      "file": "39_booking.png",
+      "sha256": "9c2231e6fcd6daa086e21ef847f85a2cc2fc809ea7f7d52fc88a03868a94c45e",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "40",
+      "route": "booking",
+      "name": "今日日程",
+      "file": "40_booking.png",
+      "sha256": "adc2fe705868c72611c5f2404bc7db843816e419f913ca0e35852dad839d91da",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "41",
+      "route": "booking",
+      "name": "待处理申请",
+      "file": "41_booking.png",
+      "sha256": "0a7f06445a87795f99fd27c67f2ac322b4af40ff21203316f256fa7cef41e0cd",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "42",
+      "route": "booking",
+      "name": "周视图",
+      "file": "42_booking.png",
+      "sha256": "2ae57deb0ed8b36287eb46f85ed10bcb0dda10f31bda290e7d7026cdf1ecd66f",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "43",
+      "route": "booking-detail",
+      "name": "预约详情",
+      "file": "43_booking-detail.png",
+      "sha256": "136a3dcddb998687fc6c2d2bb0d69d96004e9b09d3810a919a71b0b4ba857e4a",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "44",
+      "route": "booking-detail",
+      "name": "课堂状态",
+      "file": "44_booking-detail.png",
+      "sha256": "f34aa95f46399a71cd625bc63417d486d5c63b6b72f55a9983569aaedc10c993",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "45",
+      "route": "booking-detail",
+      "name": "改期选择",
+      "file": "45_booking-detail.png",
+      "sha256": "99714b1b4eb0d416d0b666bff126ab0c3988eae558fd3fd7f29a7d3e9d4dc833",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "46",
+      "route": "schedule-rules",
+      "name": "周规则及例外",
+      "file": "46_schedule-rules.png",
+      "sha256": "b608b9c9e4a2f6075a6158361eafbe2ff7c83d67e7f2d48a687481c2ee862c7d",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "47",
+      "route": "record",
+      "name": "准备录音",
+      "file": "47_record.png",
+      "sha256": "7f20f7598d19a69cc2aed046aa47bdbd6aeb47b45810efd8b9c7b914ab6e79a3",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "48",
+      "route": "record",
+      "name": "录音中",
+      "file": "48_record.png",
+      "sha256": "2264285a96363c7c341bac321b6c789c813a875e97179d7fe5d1ef9473e32e13",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "49",
+      "route": "record",
+      "name": "AI 整理进行中",
+      "file": "49_record.png",
+      "sha256": "0e9e50619592075497045d74a6185584b8256ba310d05e7ab3ea7f0241f6dd37",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "50",
+      "route": "record",
+      "name": "AI 整理草稿",
+      "file": "50_record.png",
+      "sha256": "704e742339cf1ad2eb2d41f15953b4440fa166dfe675fec06daa4e45ed140828",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "51",
+      "route": "record",
+      "name": "AI 识别冲突",
+      "file": "51_record.png",
+      "sha256": "217438ef20617755c71b1c8ad40ab20703b0848e286a55f6005af74516016a68",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "52",
+      "route": "record",
+      "name": "训练草稿编辑",
+      "file": "52_record.png",
+      "sha256": "23f3d94f7bf560381b1989c99a56ed08a73068302577dc4db99b07f0e480249a",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "53",
+      "route": "record",
+      "name": "发布前确认",
+      "file": "53_record.png",
+      "sha256": "4eca4ed89f27dfd75759c5ecf90f75f65981be7560777856736ef799b06d60ab",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "54",
+      "route": "record",
+      "name": "报告已发布",
+      "file": "54_record.png",
+      "sha256": "3d9ac45c28d85a091d28093c1727798676b132a6a88cbcf01063fd9eb4dcf970",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "55",
+      "route": "students",
+      "name": "学员列表",
+      "file": "55_students.png",
+      "sha256": "83e45dcea30a8b32972343b46ff3d6ca75d0c197fd062f3a5230a17ef1b509da",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "56",
+      "route": "students",
+      "name": "待处理学员",
+      "file": "56_students.png",
+      "sha256": "68385e8d26523c7e40aa41edb4cb4dcf8165b092c62dc25f5c0336dd19ddeca5",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "57",
+      "route": "student-profile",
+      "name": "学员训练档案",
+      "file": "57_student-profile.png",
+      "sha256": "2beffb2d58724c188f14766a15615de32e5043c08cb838eacb3fa436b622f1ca",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "58",
+      "route": "student-profile",
+      "name": "授权生活资料",
+      "file": "58_student-profile.png",
+      "sha256": "5751d3419f259c1df3e7a6307c1b66e8cdbe4d0aeebe3add60680fa7763bcf2b",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "59",
+      "route": "ai",
+      "name": "AI 工具总览",
+      "file": "59_ai.png",
+      "sha256": "a92c8b61fa667a43c90d8b680ace833cc568606486a5540b3f985d00ee1129db",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "60",
+      "route": "ai",
+      "name": "体态观察照片",
+      "file": "60_ai.png",
+      "sha256": "e8a87e3a633a45ad50d2a0d836666ab49bf2dc84de93889974d586e16d263bd3",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "61",
+      "route": "ai",
+      "name": "体态结果",
+      "file": "61_ai.png",
+      "sha256": "be87cc49b105647e35c4d575ebbaf35ff21f0f48f71542e92f3828c301622635",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "62",
+      "route": "ai",
+      "name": "目标预览配置",
+      "file": "62_ai.png",
+      "sha256": "d247dff29a72a572cf51472c80a2d06f6ff2193181a12e1462949298fd26fc9c",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "63",
+      "route": "ai",
+      "name": "目标预览结果",
+      "file": "63_ai.png",
+      "sha256": "6b90c0819250e50ccba570ed563e5ae001e2b4d5a155ba0dc29770d397d30837",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "64",
+      "route": "friends",
+      "name": "训练伙伴",
+      "file": "64_friends.png",
+      "sha256": "70a49215fed4a654672aa2e8d40f7190d195c50740683a6885a452711152be35",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "65",
+      "route": "friends",
+      "name": "邀请与互相授权",
+      "file": "65_friends.png",
+      "sha256": "acb412dcb3c5a4a6a48783c57e64cc074f8a1c7f005821964006ab64ecc35ac2",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "66",
+      "route": "points",
+      "name": "积分流水",
+      "file": "66_points.png",
+      "sha256": "3034fd4a1f13c53bad731c634d1096353dafc98433e1cdb76b25e4788a5cdda2",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "67",
+      "route": "achievements",
+      "name": "成就墙",
+      "file": "67_achievements.png",
+      "sha256": "4aeef861135d8885a1f7fee48b326dd1e864f21e0260296d37afb1ecabf214b8",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "68",
+      "route": "rewards",
+      "name": "积分兑换",
+      "file": "68_rewards.png",
+      "sha256": "eb848067f9bd843dd8b40fece06240a6def8342fbee1c016cf1e7dc63219c50d",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "69",
+      "route": "redemption-detail",
+      "name": "兑换订单详情",
+      "file": "69_redemption-detail.png",
+      "sha256": "512d28d6e1a4541c421a2160fecb2f0bb825083667fcd9857d7b79dff76782d0",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "70",
+      "route": "profile",
+      "name": "个人中心",
+      "file": "70_profile.png",
+      "sha256": "a088ebb5b04e1d771af80fea58f5e150bac9fb184778a7596ba9ae1489565c65",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "71",
+      "route": "profile",
+      "name": "教练账户",
+      "file": "71_profile.png",
+      "sha256": "a864291c34648fc98bb0585d29cd58e58cd36e834cc8ce48ae3730befb5ebad7",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "72",
+      "route": "bind",
+      "name": "绑定教练",
+      "file": "72_bind.png",
+      "sha256": "3c9704836bd98adcb77b60be941d8a2af8a6536605f22b1ec0eaf96306b50286",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "73",
+      "route": "privacy",
+      "name": "隐私与授权",
+      "file": "73_privacy.png",
+      "sha256": "526f7c7a33cd813735864b0391473f4ce98269a80b399dffaf66b0ea113016db",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "74",
+      "route": "login",
+      "name": "微信登录",
+      "file": "74_login.png",
+      "sha256": "a1989fcb404dfd87424172a209e7b871f3af57dc131f37494501ba209195dacd",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "75",
+      "route": "login",
+      "name": "隐私确认",
+      "file": "75_login.png",
+      "sha256": "987f6c124fcdc29765fc37e80bb28108ec31332ae9c4fe02e763bed148440ee4",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    },
+    {
+      "id": "76",
+      "route": "ops-hint",
+      "name": "后台入口说明",
+      "file": "76_ops-hint.png",
+      "sha256": "6a2f947200c374712a142c5dcd250f4bb434070152e49c4076b02710a972cb98",
+      "visually_reviewed": true,
+      "actual_wechat_verified": false
+    }
+  ]
+}

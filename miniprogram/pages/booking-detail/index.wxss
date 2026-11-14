@@ -19,7 +19,7 @@
   display: flex;
   justify-content: space-between;
   gap: 16rpx;
-  padding: 14rpx 0;
+  padding: 24rpx 0;
   border-bottom: 1rpx solid var(--line);
   font-size: 26rpx;
 }
@@ -95,7 +95,7 @@
 .change-load {
   margin: 8rpx 0 16rpx;
   padding: 16rpx 18rpx;
-  border-radius: 16rpx;
+  border-radius: 6rpx;
   background: var(--tint-1);
   color: var(--muted);
   font-size: 24rpx;
@@ -111,7 +111,7 @@
   width: 100% !important;
   margin: 0 !important;
   padding: 18rpx 16rpx;
-  border-radius: 20rpx;
+  border-radius: 6rpx;
   background: var(--surface);
   border: 1rpx solid var(--green-strong);
   text-align: left;
@@ -147,7 +147,7 @@
 .change-mark {
   font-size: 18rpx;
   padding: 4rpx 10rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   background: var(--ix-soft);
   color: var(--deep-green);
   flex-shrink: 0;
@@ -165,7 +165,7 @@
 .ix-error {
   margin: 8rpx 0 16rpx;
   padding: 16rpx 18rpx;
-  border-radius: 16rpx;
+  border-radius: 6rpx;
   background: var(--rose-tint);
   border: 1rpx solid var(--rose-line);
   color: var(--danger);

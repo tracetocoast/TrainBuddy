@@ -54,6 +54,7 @@ function baselineOf(ex) {
 
 Page({
   data: {
+    visualTheme: 'fieldNotes',
     role: 'student', setEditor:null, showHistory:false, exerciseHistory:[],
     plans: [],
     hasPublishedPlans: false,

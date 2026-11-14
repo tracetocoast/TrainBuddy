@@ -1,5 +1,10 @@
 # TrainBuddy 开发接手指南
 
+## 当前版本：V3.0（2026-11-15）
+
+先读 [V3.0实施与验证](design-archive/V3.0/full-site-implementation.md) 和 [更新说明](releases/V3.0.md)。当前统一 Field Notes 主题，动作库为小图列表；下文 V1.6 界面描述属于历史背景。248项测试通过，全部原型状态与真机仍待验收；不要据此直接生产发布。
+
+
 更新：2026-11-05，适用 main 的 V1.6。先读本文，再读 [V1.6 连续浏览](design-archive/V1.6/README.md)、 [V1.5 动作库设计](design-archive/V1.5/README.md)、[V1.4 数据目录](design-archive/V1.4/README.md) 与 [V1.3 设计与审计](design-archive/V1.3/README.md)。动作库现为固定搜索、左侧分类、顶部器械和双列卡片，结果分页由内部 scroll-view 触底驱动，不能只依赖页面 onReachBottom。分页查询使用末尾 bodyPart，视口分类 activeBodyPart 仅用于导航高亮；sectionHistory 保存已完成分类，不要将两者混用。关键词搜索不自动跨分类。本文件记录实现决策与接手步骤；不代表生产发布验收。
 
 ## 新电脑第一次启动（Windows PowerShell）

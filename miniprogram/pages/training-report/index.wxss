@@ -1,13 +1,14 @@
+@import "../../styles/field-notes.wxss";
 .report-page {
   min-height: 100vh;
-  padding: 40rpx 32rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 40rpx 50rpx calc(48rpx + env(safe-area-inset-bottom));
   background: var(--paper);
   color: var(--ink);
   overflow-wrap: anywhere;
 }
 .date, .caption, .muted { color: var(--muted); font-size: 25rpx; }
-.title { margin: 16rpx 0; font-size: 46rpx; font-weight: 650; line-height: 1.35; }
-.overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24rpx; padding: 24rpx; background: var(--surface); border-radius: 16rpx; }
+.title { margin: 16rpx 0; font-size: 60rpx; font-weight: 650; line-height: 1.35; }
+.overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24rpx; padding: 28rpx 0; background: transparent; border-top: 1rpx solid var(--line); border-bottom: 1rpx solid var(--line); }
 .overview view { display: flex; flex-direction: column; font-size: 25rpx; }
 .number { font-size: 52rpx; font-weight: 650; font-variant-numeric: tabular-nums; }
 .section-title { margin: 32rpx 0 16rpx; font-size: 32rpx; font-weight: 650; }
@@ -19,8 +20,13 @@
 .heading, .kind { color: var(--muted); font-size: 23rpx; }
 .heading { border: 0; }
 .kind { display: block; }
-.done, .back { color: var(--ok-ink); }
+.done { color: var(--fn-done); }
 .feedback { white-space: pre-wrap; line-height: 1.7; font-size: 28rpx; }
-.back { margin: 32rpx 0 0; min-height: 44px; background: var(--ok-bg); font-size: 28rpx; }
+.back { margin: 32rpx 0 0; min-height: 44px; background: transparent; color:var(--fn-clay); font-size: 28rpx; }
 .state { padding: 40rpx 0; line-height: 1.7; color: var(--muted); }
 .state button { margin-top: 24rpx; }
+
+.report-section-head, .exercise-summary { display:flex; justify-content:space-between; align-items:center; gap:20rpx; }
+.exercise-summary .exercise-name { margin:0; flex:1; min-width:0; }
+.feedback > text { display:block; padding-left:28rpx; border-left:3rpx solid var(--fn-clay); }
+.report-footer { border-top:1rpx solid var(--line); padding-top:28rpx; margin-top:48rpx; }

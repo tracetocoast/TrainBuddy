@@ -1,4 +1,4 @@
-<view class="history">
+<view class="history {{compact ? 'history-compact' : ''}}">
   <view class="heading">教练训练报告</view>
   <view wx:if="{{loading}}" class="hint">正在读取…</view>
   <view wx:elif="{{error}}" class="hint">{{error}}<button class="retry" bindtap="reload">重试</button></view>
@@ -12,7 +12,7 @@
       </view>
     </button>
     <view wx:else class="hint">还没有收到教练训练报告</view>
-    <view class="heading">训练历史</view>
+    <block wx:if="{{!compact}}"><view class="heading">训练历史</view>
     <button wx:for="{{items}}" wx:key="id" class="history-entry history-row" data-id="{{item.id}}" bindtap="open">
       <view class="entry-content">
         <view class="hint">{{item.date}} · {{item.source}}</view>
@@ -21,5 +21,5 @@
       </view>
     </button>
     <view class="hint" wx:if="{{!items.length}}">完成的训练将保留在这里</view>
-  </block>
+  </block></block>
 </view>

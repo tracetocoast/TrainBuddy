@@ -1,15 +1,19 @@
-<page-meta background-color="{{pageBg}}" />
-<view class="page coach-scope {{reduced ? 'ui-reduced' : ''}} {{skinClass}}">
-  <view class="record-header">
-    <view class="title">记录训练</view>
-    <view class="sub">说出今天的训练，检查后发给学员。</view>
+<page-meta background-color="#F8F5EF" />
+<view class="page coach-scope field-notes journal-page {{reduced ? 'ui-reduced' : ''}} field-notes">
+  <view class="journal-heading" wx:if="{{recordStage === 'capture'}}">
+    <view class="fn-kicker">COACH VOICE NOTE</view>
+    <view class="fn-title">先说出这节课。</view>
+  </view>
+  <view class="record-header" wx:else>
+    <view class="fn-kicker">STRUCTURED DRAFT</view><view class="fn-title draft-title">一节训练，<text class="journal-title-line"></text>整理成一份手记。</view>
+    <view class="sub">{{session.status === 'completed' ? '教练已确认发布' : '可编辑草稿 · 确认前不会发送给学员'}}</view>
   </view>
 
-  <view class="head">
+  <view class="head" wx:if="{{recordStage !== 'capture'}}">
     <view class="head-title">选择学员</view>
     <text class="tag">{{student || '请先选择'}}</text>
   </view>
-  <view class="student-picker" wx:if="{{students.length}}"><button class="secondary" bindtap="onToggleStudents">{{student || '选择学员'}} · 更换</button><view wx:if="{{showStudents || !studentId}}"><input class="field" placeholder="搜索学员姓名" value="{{studentSearch}}" bindinput="onStudentSearch"/><button class="student-result" wx:for="{{filteredStudents}}" wx:key="studentId" data-id="{{item.studentId}}" data-name="{{item.name}}" bindtap="onPickStudent">{{item.name}}</button></view></view>
+  <view class="student-picker" wx:if="{{students.length}}"><view class="journal-student-row"><button class="fn-text-action journal-student" bindtap="onToggleStudents">{{student ? student + (session.has_booking ? ' · 私教课' : '') : '选择学员'}} {{recordStage === 'capture' ? '⌄' : '· 更换'}}</button><text class="fn-meta" wx:if="{{recordStage === 'capture' && session}}">{{session.business_date}} · {{session.shared_at ? '已同步' : '草稿'}}</text></view><view wx:if="{{showStudents || !studentId}}"><input class="field" placeholder="搜索学员姓名" value="{{studentSearch}}" bindinput="onStudentSearch"/><button class="student-result" wx:for="{{filteredStudents}}" wx:key="studentId" data-id="{{item.studentId}}" data-name="{{item.name}}" bindtap="onPickStudent">{{item.name}}</button></view></view>
   <view class="card sub" wx:elif="{{studentLoading}}">正在读取学员…</view>
 
   <view class="ui-state ui-state-error" wx:if="{{studentError}}">{{studentError}}<button class="link" bindtap="onShow">重新加载</button></view>
@@ -18,17 +22,17 @@
   <view class="ui-state ui-state-error" wx:if="{{draftError}}">{{draftError}}<button class="link" bindtap="onRetryDraft">重新读取草稿</button></view>
   <view class="ui-state" wx:if="{{studentId && !session && !draftError}}">正在读取该学员的训练草稿…</view>
   <block wx:if="{{studentId && session}}">
-    <view class="head">
+    <view class="head" wx:if="{{recordStage !== 'capture'}}">
       <view class="head-title">{{session.title}}</view>
       <text class="tag">{{session.shared_at ? '已同步' : '草稿'}}</text>
     </view>
-    <view class="sub">已完成组 {{session.done_sets}}/{{session.total_sets}} · {{session.shared_at ? '已同步学员' : '草稿未共享'}}</view>
+    <view class="draft-metrics" wx:if="{{recordStage !== 'capture'}}"><view><text class="fn-numbers">{{session.exercises.length}}</text><text>训练动作</text></view><view><text class="fn-numbers">{{session.total_sets}}</text><text>记录组数</text></view><view><text class="fn-numbers">{{session.done_sets}}</text><text>已确认完成</text></view></view>
 
-    <view class="speech-banner state-{{speechState}}" wx:if="{{speechBanner}}">{{speechBanner}}<text wx:if="{{speechState === 'recording' || speechState === 'paused'}}"> · {{speechSeconds}}s</text></view>
+    <view class="speech-banner state-{{speechState}}" wx:if="{{speechBanner && (recordStage !== 'capture' || speechState === 'error')}}">{{speechBanner}}<text wx:if="{{speechState === 'recording' || speechState === 'paused'}}"> · {{speechSeconds}}s</text></view>
     <view hidden="{{recordStage !== 'capture'}}" class="record-section">
-    <voice-input label="训练内容" text="{{textInput}}" placeholder="例：卧推第一组50公斤5次，第二组45公斤5次" variant="capture" state="{{speechTarget === 'entry' ? speechState : 'idle'}}" seconds="{{speechTarget === 'entry' ? speechSeconds : 0}}" can-pause="{{canPause}}" mic-denied="{{micDenied}}" mock="{{asrProvider === 'mock'}}" reduced="{{reduced}}" disabled="{{session.status === 'completed' || syncing || noteRecording || (speechTarget === 'note' && speechState === 'requesting')}}" busy="{{voiceBusy && speechTarget === 'entry'}}" show-parse bind:textinput="onTextInput" bind:toggle="onVoiceToggle" bind:pause="onPauseSpeech" bind:stop="stopSpeech" bind:authorize="onRequestMic" bind:parse="onParseText"/>
+    <voice-input label="训练内容" text="{{textInput}}" placeholder="例：卧推第一组50公斤5次，第二组45公斤5次" variant="field-notes" state="{{speechTarget === 'entry' ? speechState : 'idle'}}" seconds="{{speechTarget === 'entry' ? speechSeconds : 0}}" can-pause="{{canPause}}" mic-denied="{{micDenied}}" mock="{{asrProvider === 'mock'}}" reduced="{{reduced}}" disabled="{{session.status === 'completed' || syncing || noteRecording || (speechTarget === 'note' && speechState === 'requesting')}}" busy="{{voiceBusy && speechTarget === 'entry'}}" show-parse bind:textinput="onTextInput" bind:toggle="onVoiceToggle" bind:pause="onPauseSpeech" bind:stop="stopSpeech" bind:authorize="onRequestMic" bind:parse="onParseText"/>
 
-      <button class="link manual-entry" bindtap="goRecordEdit">手动添加或编辑训练表</button>
+      <view class="journal-footer"><text class="fn-meta">核对后再发给学员</text><button class="fn-text-action" bindtap="goRecordEdit">手动编辑训练表 ↗</button></view>
     </view>
     <view hidden="{{recordStage === 'capture'}}" class="record-section">
     <!-- 任务状态 -->
@@ -92,7 +96,7 @@
     </view>
     <view hidden="{{recordStage === 'capture'}}" class="record-section">
     <view class="head">
-      <view class="head-title">手动添加动作</view><button class="link" bindtap="onLibraryToggle">{{showLibrary ? '收起' : '展开动作库'}}</button>
+      <view class="head-title">动作与组次</view><button class="link" bindtap="onLibraryToggle">{{showLibrary ? '收起' : '展开动作库'}}</button>
     </view>
     <view class="quick-row" wx:if="{{showLibrary}}">
       <button
@@ -115,12 +119,12 @@
         </view>
         <button class="link" data-id="{{item.id}}" bindtap="onRemoveEx" wx:if="{{session.status !== 'completed'}}">删除</button>
       </view>
-      <view class="aset" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
+      <view class="aset {{set.state === 'done' ? 'aset-done' : ''}}" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id">
         <view class="aset-line">
           <text class="aset-no">#{{set.setNo}}</text>
           <view class="record-number"><text>重量 kg</text><input aria-label="第{{set.setNo}}组重量，公斤" cursor-spacing="100" class="mini-field" type="digit" value="{{set.actualWeight}}" data-sid="{{set.id}}" data-field="actualWeight" bindinput="onFieldInput" bindblur="onSetField" disabled="{{session.status === 'completed' || syncing}}" /></view>
           <view class="record-number"><text>次数</text><input aria-label="第{{set.setNo}}组次数" cursor-spacing="100" class="mini-field" type="number" value="{{set.actualReps}}" data-sid="{{set.id}}" data-field="actualReps" bindinput="onFieldInput" bindblur="onSetField" disabled="{{session.status === 'completed' || syncing}}" /></view>
-          <button class="primary {{set.state === 'done' ? 'done' : ''}}" data-sid="{{set.id}}" bindtap="onMarkDone" disabled="{{session.status === 'completed' || syncing}}">{{set.state === 'done' ? '✓' : '完成'}}</button><button class="link" data-sid="{{set.id}}" bindtap="onMarkSkipped" disabled="{{session.status === 'completed' || syncing}}">{{set.state === 'skipped' ? '未做' : '标记未做'}}</button>
+          <button class="set-complete primary {{set.state === 'done' ? 'done' : ''}}" data-sid="{{set.id}}" bindtap="onMarkDone" disabled="{{session.status === 'completed' || syncing}}">{{set.state === 'done' ? '✓' : '完成'}}</button><button class="link" data-sid="{{set.id}}" bindtap="onMarkSkipped" disabled="{{session.status === 'completed' || syncing}}">{{set.state === 'skipped' ? '未做' : '标记未做'}}</button>
         </view>
       </view>
     </view>
@@ -156,6 +160,6 @@
     </view>
     </view>
   </block>
-  <view class="record-motion"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" color="#28744e" bindchange="onMotion"/></view>
-<bottom-nav active="home" />
+  <view class="record-motion"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" color="#AB584A" bindchange="onMotion"/></view>
+
 </view>

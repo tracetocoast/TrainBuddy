@@ -1,7 +1,7 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="ai-page {{reduced ? 'ui-reduced ix-reduced' : ''}} {{skinClass}}">
+<view class="ai-page {{reduced ? 'ui-reduced ix-reduced' : ''}} field-notes">
   <view class="top">
-    <view class="brand ai-brand"><brand-logo class="brand-emblem-slot" />练搭子 <text class="ai-brand-detail">INTELLIGENCE</text></view>
+    <view><view class="fn-kicker">TRAINING TOOLS</view><view class="title">让训练，多一份依据。</view></view>
   </view>
 
   <view class="ai-services-label">

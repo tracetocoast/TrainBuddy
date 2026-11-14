@@ -9,6 +9,7 @@ const interaction = require('../../utils/interaction')
 
 Page({
   data: {
+    visualTheme: 'fieldNotes',
     role: 'coach', showStudents: false, studentSearch: '', filteredStudents: [],
     students: [],
     student: '',

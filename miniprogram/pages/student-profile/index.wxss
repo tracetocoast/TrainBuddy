@@ -14,7 +14,7 @@
 .profile-avatar {
   width: 88rpx;
   height: 88rpx;
-  border-radius: 24rpx;
+  border-radius: 6rpx;
   background: var(--ix-soft);
   color: var(--accent);
   font-size: 34rpx;
@@ -42,11 +42,12 @@
 }
 
 .profile-card {
-  padding: 22rpx 20rpx;
+  padding: 22rpx 0;
   margin-bottom: 12rpx;
   background: var(--surface);
-  border: 1rpx solid var(--line);
-  border-radius: 24rpx;
+  border: 0;
+  border-bottom: 1rpx solid var(--line);
+  border-radius: 0;
 }
 
 .profile-card.soft {
@@ -75,8 +76,9 @@
   padding: 20rpx;
   margin-bottom: 12rpx;
   background: var(--tint-1);
-  border: 1rpx solid var(--line);
-  border-radius: 24rpx;
+  border: 0;
+  border-bottom: 1rpx solid var(--line);
+  border-radius: 0;
 }
 
 .prose-field {
@@ -112,7 +114,7 @@
   min-height: 110rpx;
   margin-right: 10rpx !important;
   padding: 16rpx 8rpx 12rpx;
-  border-radius: 18rpx;
+  border-radius: 6rpx;
   box-sizing: border-box;
 }
 
@@ -155,7 +157,7 @@
 
 .metric-card {
   padding: 18rpx 14rpx;
-  border-radius: 20rpx;
+  border-radius: 6rpx;
   background: var(--surface);
   border: 1rpx solid var(--line);
   min-width: 0;

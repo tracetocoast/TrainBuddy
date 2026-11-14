@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo {{skinClass}}" wx:if="{{ex}}">
+<view class="page page-solo field-notes" wx:if="{{ex}}">
   <view class="eyebrow">EXERCISE · DETAIL</view>
   <image wx:if="{{ex.imageUrl}}" class="detail-photo" src="{{ex.imageUrl}}" mode="aspectFit" />
   <view class="title">{{ex.name}}</view>

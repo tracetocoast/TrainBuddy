@@ -1,39 +1,8 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page growth-page {{skinClass}}">
-  <view class="growth-header">
-    <view class="growth-brand">
-      <brand-logo size="40" />
-      <view class="growth-brand-copy">
-        <text class="growth-brand-name">练搭子</text>
-        <text class="growth-brand-en">TRAIN BUDDY</text>
-      </view>
-    </view>
-    <view class="growth-title-row"><view><view class="title">训练进展</view><view class="sub">每一次训练，都在积累改变</view></view><view class="month-pill">{{monthLabel}}</view></view>
-  </view>
-
+<view class="page growth-page field-notes">
+  <view class="growth-header"><view class="fn-kicker">YOUR TRAINING JOURNAL</view><view class="title">{{historyTab === 'body' ? '身体数据，是长期的。' : historyTab === 'meal' ? '每一餐都有记录。' : '日子会记住每一次训练。'}}</view></view>
   <view class="ui-state" wx:if="{{loading}}">正在同步训练数据…</view>
   <view class="ui-state ui-state-error" wx:if="{{error}}">{{error}}<button class="link" bindtap="reload">重试加载</button></view>
-
-  <view class="goal-card">
-    <image class="goal-gym-art" src="/assets/gym-progress.svg" mode="aspectFill" aria-hidden="true" />
-    <view class="goal-card-content">
-      <view class="goal-heading"><view class="goal-kicker">WEEKLY GOAL</view><text class="goal-title">本周训练目标</text></view>
-      <view class="goal-main">
-        <view class="goal-ring-wrap"><view class="goal-ring {{chartReady ? 'goal-ring-ready' : ''}}" style="background: conic-gradient(var(--signal) {{weekGoal.ringDeg}}deg, rgba(255,255,255,.18) 0deg);"><view class="goal-ring-hole"><text class="goal-ring-value">{{weekGoal.hasRate ? weekGoal.rate + '%' : (weekGoal.sessions || '—')}}</text><text class="goal-ring-unit">{{weekGoal.hasRate ? '计划完成' : '本周次数'}}</text></view></view></view>
-        <view class="goal-copy"><view class="goal-line" wx:if="{{weekGoal.hasRate}}">计划完成率来自本周已到期计划</view><view class="goal-line" wx:else>本周暂无到期计划目标，圆环展示完成次数</view></view>
-      </view>
-      <view class="goal-bottom"><view><text class="goal-metric-value">{{weekGoal.sessions}}</text><text class="goal-metric-label">完成次数</text></view><view><text class="goal-metric-value">{{weekGoal.days}}</text><text class="goal-metric-label">训练天数</text></view><view><text class="goal-metric-value">{{weekGoal.streak || '—'}}</text><text class="goal-metric-label">连续记录</text></view></view>
-    </view>
-  </view>
-
-  <view class="section-head"><view class="section-title">训练节奏</view><text class="section-meta">本周</text></view>
-  <view class="chart-card" wx:if="{{weekBars.length}}">
-    <view class="chart-grid"><view class="chart-guides"><view></view><view></view><view></view></view><view class="bar-col" wx:for="{{weekBars}}" wx:key="date"><text class="bar-value" wx:if="{{item.valueLabel}}">{{item.valueLabel}}</text><view class="bar {{item.isZero ? 'bar-zero' : ''}} {{chartReady ? 'bar-ready' : ''}}" style="height: {{item.displayHeight}}rpx;"></view><text class="bar-label">{{item.label}}</text></view></view>
-    <view class="chart-summary"><text class="summary-dot"></text><text wx:if="{{summary && !summary.empty.sessionCount}}">本周 {{summary.sessionCount}} 次训练</text><text wx:else>本周暂无训练记录</text><text class="summary-separator">·</text><text wx:if="{{summary && !summary.empty.volume}}">训练量 {{summary.volumeKg}} kg×次</text><text wx:else>训练量暂无</text><text class="summary-rate" wx:if="{{summary && summary.planCompletionRate != null}}">{{summary.planCompletionRate}}%</text></view>
-  </view>
-  <view class="empty-card" wx:else>完成第一次训练后，就能看到你的训练节奏。</view>
-
-  <block wx:if="{{highlights.length}}"><view class="section-head compact-head"><view class="section-title">近期训练亮点</view></view><view class="highlight-row"><view class="highlight-card" wx:for="{{highlights}}" wx:key="id"><view class="highlight-mark"></view><view class="card-title">{{item.name}}</view><view class="highlight-value">{{item.weight}}<text>kg</text><text class="highlight-times">× {{item.reps}}</text></view><view class="highlight-date">{{item.date}}</view></view></view></block>
 
   <view class="section-head calendar-heading">
     <view class="section-title">训练日历</view>
@@ -75,6 +44,17 @@
     </block>
   </view>
 
+  <button class="link" bindtap="onToggleStatistics" aria-expanded="{{showStatistics}}">训练趋势与统计 {{showStatistics ? '收起' : '展开'}}</button>
+  <block wx:if="{{showStatistics}}">
+  <view class="section-head"><view class="section-title">训练节奏</view><text class="section-meta">本周</text></view>
+  <view class="chart-card" wx:if="{{weekBars.length}}">
+    <view class="chart-grid"><view class="chart-guides"><view></view><view></view><view></view></view><view class="bar-col" wx:for="{{weekBars}}" wx:key="date"><text class="bar-value" wx:if="{{item.valueLabel}}">{{item.valueLabel}}</text><view class="bar {{item.isZero ? 'bar-zero' : ''}} {{chartReady ? 'bar-ready' : ''}}" style="height: {{item.displayHeight}}rpx;"></view><text class="bar-label">{{item.label}}</text></view></view>
+    <view class="chart-summary"><text class="summary-dot"></text><text wx:if="{{summary && !summary.empty.sessionCount}}">本周 {{summary.sessionCount}} 次训练</text><text wx:else>本周暂无训练记录</text><text class="summary-separator">·</text><text wx:if="{{summary && !summary.empty.volume}}">训练量 {{summary.volumeKg}} kg×次</text><text wx:else>训练量暂无</text><text class="summary-rate" wx:if="{{summary && summary.planCompletionRate != null}}">{{summary.planCompletionRate}}%</text></view>
+  </view>
+  <view class="empty-card" wx:else>完成第一次训练后，就能看到你的训练节奏。</view>
+
+  <block wx:if="{{highlights.length}}"><view class="section-head compact-head"><view class="section-title">近期训练亮点</view></view><view class="highlight-row"><view class="highlight-card" wx:for="{{highlights}}" wx:key="id"><view class="highlight-mark"></view><view class="card-title">{{item.name}}</view><view class="highlight-value">{{item.weight}}<text>kg</text><text class="highlight-times">× {{item.reps}}</text></view><view class="highlight-date">{{item.date}}</view></view></view></block>
+
   <block wx:if="{{fourWeekSummary && !loading && !error}}">
     <view class="section-head"><view class="section-title">近四周训练概览</view></view>
     <view class="chart-card">
@@ -89,7 +69,8 @@
       <view wx:else class="day-empty">近四周暂无训练记录</view>
     </view>
   </block>
-  <button class="body-entry" bindtap="goBodyData"><view class="body-entry-icon"><view></view><view></view><view></view></view><view class="grow"><view class="body-entry-title">身体数据</view><view class="body-entry-sub">体重、围度与变化趋势</view></view><view class="mini-trend"><view></view><view></view><view></view><view></view><view></view></view><text class="entry-arrow">›</text></button>
+  </block>
+  <button class="body-entry" bindtap="goBodyData"><view class="body-entry-icon"><view></view><view></view><view></view></view><view class="grow"><view class="body-entry-title">身体数据</view><view class="body-entry-sub">体重、围度与变化趋势</view></view><text class="entry-arrow">›</text></button>
 
   <view class="section-head records-heading"><view class="section-title">训练记录</view><button class="link" bindtap="goWorkout">继续训练 <text>↗</text></button></view>
   <view class="record-list" wx:if="{{records.length}}"><view class="record-item" wx:for="{{records}}" wx:key="id"><view class="record-icon">↗</view><view class="grow"><view class="record-main">{{item.text}}</view></view></view></view><view class="empty-card" wx:else>完成一次训练后，你的记录会显示在这里。</view>

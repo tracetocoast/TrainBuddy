@@ -10,6 +10,7 @@ const { trainingOverview, upcoming } = require('../../utils/homePresenter')
 const { pickDailyQuote } = require('../../utils/quotes')
 
 Page({
+  onToggleHomeTools() { this.setData({ showHomeTools: !this.data.showHomeTools }) },
   data: {
     role: 'student',
     canSwitchCoach: false,

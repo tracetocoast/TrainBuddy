@@ -9,6 +9,7 @@ const time = require('../../utils/time')
 const { visible, trainingAreas, displayTrainingTitle } = require('../../utils/trainingReport')
 
 Page({
+  onToggleStatistics() { this.setData({ showStatistics: !this.data.showStatistics }) },
   data: {
     role: 'student',
     monthLabel: '',

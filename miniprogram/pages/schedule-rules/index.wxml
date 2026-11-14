@@ -1,8 +1,8 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo {{skinClass}}">
+<view class="page page-solo field-notes">
   <view class="eyebrow">AVAILABILITY · RULES</view>
-  <view class="title">周规则与例外</view>
-  <view class="sub">修改周规则只影响未预约空档；已确认课程保持不动。rev {{baseRevision}}</view>
+  <view class="title">把可上课的时间定下来。</view>
+  <view class="sub">修改周规则只影响未预约空档；已确认课程保持不动。</view>
 
   <view class="head">
     <view class="head-title">周规则</view>
@@ -36,6 +36,6 @@
   </button>
 
   <view class="card sub" style="margin-top:24rpx">
-    配置：提前 {{minBook}} 分钟可约 · 自行取消/改期提前 {{cancelH}} 小时 · pending {{pendingH}} 小时超时
+    配置：提前 {{minBook}} 分钟可约 · 自行取消/改期提前 {{cancelH}} 小时 · 待确认预约 {{pendingH}} 小时后超时
   </view>
 </view>

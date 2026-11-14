@@ -1,53 +1,53 @@
-/* 练搭子 · 暖白自然绿（保留 Interaction v2 / 全站落地所需语义 token） */
+/* Field Notes · semantic tokens; legacy aliases retained for existing components. */
 page {
-  /* 核心色板：勿另起霓虹/强渐变体系 */
-  --ink: #25352c;
-  --muted: #6e7c72;
-  --paper: #fafbf7;
-  --surface: #ffffff;
-  --surface-raised: #f1f5ed;
-  --soft: #eef4e9;
-  --line: #e0e7dc;
-  --accent: #28744e;
-  --lime: #28744e;
+
+  --ink: #282522;
+  --muted: #827A73;
+  --paper: #F8F5EF;
+  --surface: #F8F5EF;
+  --surface-raised: #F1ECE5;
+  --soft: #F3E8E1;
+  --line: #E1D8CE;
+  --accent: #AB584A;
+  --lime: #AB584A;
   --purple: #8478a5;
-  --signal: #c7e8a8;
-  --graphite: #1c3d2e;
-  --positive: #28744e;
+  --signal: #AB584A;
+  --graphite: #AB584A;
+  --positive: #507968;
   --danger: #b42332;
   --warning: #8a5a26;
 
-  /* 状态浅底：配合图标/文案，不只靠色块 */
-  --ok-soft: #e8f5ee;
-  --ok-ink: #19704c;
-  --ok-line: #b2d9c5;
+
+  --ok-soft: #E9ECE4;
+  --ok-ink: #507968;
+  --ok-line: #C5D2C6;
   --warn-soft: #fff3e3;
   --warn-ink: #8a5a26;
   --warn-line: #e6d0b0;
   --danger-soft: #fff1f2;
   --danger-line: #f1cbd0;
-  --disabled-bg: #e7eee4;
-  --disabled-line: #d7e0d4;
-  --disabled-ink: #7a8a7e;
-  --progress-track: #e0e7dc;
+  --disabled-bg: #ECE7DF;
+  --disabled-line: #E1D8CE;
+  --disabled-ink: #827A73;
+  --progress-track: #E1D8CE;
 
-  /* 圆角与阴影：卡片靠边框+轻阴影，教练域可关闭阴影 */
-  --radius-card: 36rpx;
-  --radius-ctl: 28rpx;
-  --radius-field: 14rpx;
-  --radius-pill: 999rpx;
-  --coach-radius: 20rpx;
-  --coach-control-radius: 14rpx;
+
+  --radius-card: 0;
+  --radius-ctl: 6rpx;
+  --radius-field: 6rpx;
+  --radius-pill: 6rpx;
+  --coach-radius: 0;
+  --coach-control-radius: 6rpx;
   --coach-space: 24rpx;
-  --shadow-soft: 0 8rpx 28rpx rgba(40, 116, 78, 0.08);
+  --shadow-soft: none;
 
-  /* 动效：减少动态效果时由 .ui-reduced / .ix-reduced 置零 */
-  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --ease-spring: ease;
   --ix-fast: 100ms;
   --ix-state: 200ms;
   --ix-panel: 280ms;
 
-  /* Interaction 作用域别名：指向同一套色板，避免第二套硬编码 */
+
   --ix-ink: var(--ink);
   --ix-muted: var(--muted);
   --ix-surface: var(--surface);
@@ -56,43 +56,43 @@ page {
   --ix-soft: var(--soft);
   --ix-error: var(--danger);
 
-  /* V1.13 皮肤系统补充 token（浅色值 = 原硬编码值，白色皮肤外观不变；与上游状态 token 同值的保留别名） */
+
   --on-accent: #ffffff;
-  --graphite-ink: #1c3d2e;
-  --pine-ink: #1e2a24;
+  --graphite-ink: #282522;
+  --pine-ink: #282522;
   --hero-ink: #f3f6f1;
   --hero-muted: #c5d6c8;
-  --ok-bg: #e8f5ee;
+  --ok-bg: #E9ECE4;
   --danger-bg: #fff1f2;
   --danger-ink: #a52b3b;
-  --tint-1: #f7f9f2;
-  --tint-2: #f1f4ee;
-  --green-soft: #e6f0e4;
-  --green-strong: #d4e3cc;
-  --deep-green: #486540;
-  --muted-2: #8a958b;
-  --ink-2: #3a4540;
-  --blue-tint: #f7f9fc;
-  --blue-tint-2: #dfe7ff;
-  --blue-line: #dce2e8;
-  --blue-soft: #b7c6f9;
-  --blue-muted: #738093;
-  --blue-ink: #526071;
+  --tint-1: #F8F5EF;
+  --tint-2: #F1ECE5;
+  --green-soft: #F3E8E1;
+  --green-strong: #E1D8CE;
+  --deep-green: #AB584A;
+  --muted-2: #827A73;
+  --ink-2: #504A44;
+  --blue-tint: #F1ECE5;
+  --blue-tint-2: #F3E8E1;
+  --blue-line: #E1D8CE;
+  --blue-soft: #E1D8CE;
+  --blue-muted: #827A73;
+  --blue-ink: #504A44;
   --warm-ink: #9a6b45;
   --warm-tint: #fff3e3;
 
-  /* V1.13 兼容上游 V1.6-V1.12 新设计色板 */
-  --linen-1: #f8f6ef;
-  --linen-2: #eeece4;
-  --linen-3: #e4e0d5;
-  --mint-1: #f4f9f1;
-  --mint-2: #dfeadb;
-  --mint-3: #dcead4;
-  --pine-1: #1e2a24;
-  --pine-2: #2d4036;
+
+  --linen-1: #F8F5EF;
+  --linen-2: #F1ECE5;
+  --linen-3: #E1D8CE;
+  --mint-1: #F3E8E1;
+  --mint-2: #F1ECE5;
+  --mint-3: #E1D8CE;
+  --pine-1: #282522;
+  --pine-2: #504A44;
   --rose-tint: #f6e4df;
   --rose-line: #e8cfc8;
-  --steel-ink: #5b7c99;
-  --glass-1: rgba(255, 255, 255, 0.86);
-  --glass-2: rgba(255, 255, 255, 0.72);
+  --steel-ink: #827A73;
+  --glass-1: #F8F5EF;
+  --glass-2: #F1ECE5;
 }

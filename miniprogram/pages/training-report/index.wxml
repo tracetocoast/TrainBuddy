@@ -1,23 +1,24 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="report-page {{skinClass}}">
+<view class="report-page field-notes">
  <view wx:if="{{loading}}" class="state">正在读取训练报告…</view>
  <view wx:elif="{{error}}" class="state"><text>{{error}}</text><button bindtap="reload">重新加载</button></view>
  <block wx:elif="{{report}}">
-  <view class="date">{{report.date}} · {{report.source}}</view><view class="title">{{report.title}}</view><view class="caption">{{report.coachReport ? '教练已确认发布' : '已完成训练'}}</view>
+  <view class="date fn-kicker">{{report.date}} · {{report.source}}</view><view class="title fn-title">{{report.title}}</view><view class="caption">{{report.coachReport ? '教练已确认发布' : '已完成训练'}}</view>
   <view class="overview"><view><text class="number">{{report.exerciseCount}}</text><text>训练动作</text></view><view><text class="number">{{report.completedSets}}</text><text>完成组数</text></view></view>
   <view wx:if="{{report.areas.length}}">
     <view class="section-title">训练部位</view>
     <view class="report-areas"><text wx:for="{{report.areas}}" wx:key="*this">{{item}}</text></view>
   </view>
-  <view class="section-title">训练明细</view>
-  <view wx:for="{{report.exercises}}" wx:key="id" class="exercise"><view class="exercise-name">{{item.number}} · {{item.name}}</view>
+  <view class="report-section-head"><view class="section-title">动作明细</view><button class="fn-text-action" bindtap="onToggleSets" aria-expanded="{{showSets}}">{{showSets ? '收起逐组数据' : '查看逐组数据 ↗'}}</button></view>
+  <view wx:for="{{report.exercises}}" wx:key="id" class="exercise"><view class="exercise-summary"><view class="exercise-name">{{item.number}} · {{item.name}}</view><text class="caption">{{item.sets.length}} 组</text></view>
+   <block wx:if="{{showSets}}">
    <view class="set heading"><text>组</text><text>重量</text><text>次数</text><text>状态</text></view>
    <view class="set" wx:for="{{item.sets}}" wx:for-item="set" wx:key="id"><view>{{set.number}}<text class="kind">{{set.kind}}</text></view><text>{{set.weight}}</text><text>{{set.reps}}</text><text class="{{set.done ? 'done' : 'muted'}}">{{set.state}}</text></view>
-   <view wx:if="{{!item.sets.length}}" class="caption">未记录训练组</view>
+   <view wx:if="{{!item.sets.length}}" class="caption">未记录训练组</view></block>
   </view>
   <view wx:if="{{!report.exercises.length}}" class="state">本次未记录动作明细</view>
   <view wx:if="{{report.publicNote}}" class="feedback"><view class="section-title">教练反馈</view><text selectable>{{report.publicNote}}</text></view>
   <view wx:else class="caption">暂无教练反馈</view>
-  <button class="back" bindtap="goHistory">查看训练历史</button>
+  <view class="report-footer caption">专业训练报告 · 只读</view><button class="back" bindtap="goHistory">查看训练历史</button>
  </block>
 </view>
