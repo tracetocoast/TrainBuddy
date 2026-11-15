@@ -16,7 +16,13 @@
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "file", "value": "assets/trainbuddy-logo-agamemnon-circle.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-agamemnon-side.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-black-gold-bronze.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-black-gold-bronze-v2.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-black-gold-bronze-icon.png" }
+    ],
     "include": []
   },
   "appid": "wx1f387199b6f69bf9",

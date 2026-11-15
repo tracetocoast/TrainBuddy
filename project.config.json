@@ -1,7 +1,13 @@
 {
   "description": "练搭子 - 健身房约课与训练计划小程序",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "file", "value": "assets/trainbuddy-logo-agamemnon-circle.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-agamemnon-side.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-black-gold-bronze.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-black-gold-bronze-v2.png" },
+      { "type": "file", "value": "assets/trainbuddy-logo-black-gold-bronze-icon.png" }
+    ],
     "include": []
   },
   "setting": {
