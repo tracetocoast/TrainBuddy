@@ -1,0 +1,10 @@
+.tb-row{display:grid;grid-template-columns:95rpx minmax(0,1fr) minmax(0,1fr) 64rpx;gap:10rpx;align-items:center;margin:0 -8rpx;padding:9rpx 8rpx;min-height:88rpx;border-bottom:1rpx solid #ecebed;border-radius:12rpx;transition:background-color 190ms ease}
+.tb-row-done{background:#e9f4ee;border-bottom-color:transparent}.tb-row-pending{opacity:.72}
+.tb-type{display:flex;justify-content:center;align-items:center;color:#898896;min-height:66rpx;padding:0 3rpx;background:transparent;border:0!important;font-weight:750;font-size:22rpx;white-space:nowrap}
+.tb-type:after,.tb-done:after{border:0!important}.tb-type.tb-warmup{color:#d16d54}
+.tb-field{border:1rpx solid #eeecee;background:#f7f6f6;border-radius:12rpx;min-width:0;height:65rpx;display:flex;justify-content:center;align-items:center}
+.tb-row-done .tb-field{border-color:transparent;background:transparent}
+.tb-field input{display:block;width:100%;text-align:center;font-size:28rpx;font-weight:750;line-height:62rpx;height:62rpx;color:#252638;font-variant-numeric:tabular-nums}
+.tb-done{height:52rpx;width:52rpx;border:2rpx solid #c4c5d1;border-radius:50%;padding:0;margin:auto;background:transparent;color:transparent;font-size:26rpx;display:flex;align-items:center;justify-content:center;transition:background-color 190ms,border-color 190ms,transform 190ms}
+.tb-done.tb-done-on{background:#358e72;border-color:#358e72;color:white;transform:scale(1.035)}
+.tb-hint,.tb-save{font-size:19rpx;color:#9e9ba4;padding:5rpx 11rpx 10rpx}.tb-save{color:#d66d54}

@@ -1,0 +1,8 @@
+<view class="tb-row {{set.state === 'done' ? 'tb-row-done' : ''}} {{pending ? 'tb-row-pending' : ''}}">
+  <button class="tb-type {{set.setType === 'warmup' ? 'tb-warmup' : ''}}" bindtap="onTypeTap" disabled="{{disabled || pending}}" aria-label="切换第{{set.setNo}}组类型">{{set.setType === 'warmup' ? '热身' : set.setNo}}</button>
+  <view class="tb-field"><input type="digit" value="{{set.actualWeight == null ? '' : set.actualWeight}}" placeholder="—" data-field="actualWeight" bindinput="onInput" bindblur="onCommit" bindconfirm="onCommit" disabled="{{disabled || set.state === 'done'}}" aria-label="第{{set.setNo}}组重量，公斤" /></view>
+  <view class="tb-field"><input type="number" value="{{set.actualReps == null ? '' : set.actualReps}}" placeholder="—" data-field="actualReps" bindinput="onInput" bindblur="onCommit" bindconfirm="onCommit" disabled="{{disabled || set.state === 'done'}}" aria-label="第{{set.setNo}}组次数" /></view>
+  <button class="tb-done {{set.state === 'done' ? 'tb-done-on' : ''}}" bindtap="onComplete" disabled="{{disabled || pending}}" aria-label="{{set.state === 'done' ? '撤销完成本组' : '完成本组'}}">{{set.state === 'done' ? '✓' : ''}}</button>
+</view>
+<view class="tb-hint" wx:if="{{showHint && weightHint}}">{{weightHint}}</view>
+<view class="tb-save" wx:if="{{saveState === 'pending' || saveState === 'failed'}}">{{saveState === 'pending' ? '正在同步…' : '未同步，请重试'}}</view>

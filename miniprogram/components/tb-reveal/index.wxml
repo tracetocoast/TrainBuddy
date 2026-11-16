@@ -1,0 +1,1 @@
+<view class="tb-reveal {{open ? 'is-open' : ''}} {{reduced ? 'no-motion' : ''}}" aria-hidden="{{!open}}"><view class="tb-reveal-inner"><slot></slot></view></view>
