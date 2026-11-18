@@ -68,6 +68,7 @@ test('real HTTP: native workout controller saves decimal sets, advances and fina
     })
     page.setData = function (values) { Object.assign(this.data, values) }
     page.applySession(started.body.data, true)
+    page.onStartSelectedExercise()
     const [first, second] = page.data.session.exercises[0].sets
     const event = (sid, field, value) => ({ currentTarget: { dataset: { sid, field } }, detail: { value } })
     page.onSetField(event(first.id, 'actualWeight', '52.35'))

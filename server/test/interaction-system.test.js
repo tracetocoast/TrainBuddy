@@ -121,6 +121,7 @@ test('workout typing persists locally with no request; double completion writes 
   let calls = 0, resolve
   const ctx = setup('workout', { updateActualSet(app, id, sid, patch) { calls++; return new Promise(r => { resolve = () => { const s = session(); Object.assign(s.exercises[0].sets[0], patch); s.revision = 2; r({ data: s }) } }) } }), p = ctx.page
   p.applySession(session(), true)
+  p.onStartSelectedExercise()
   p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '52.5'))
   assert.equal(calls, 0)
   assert.equal(ctx.app.globalData.drafts[p.draftKey(p.data.session)].payload.a.actualWeight, '52.5')
@@ -132,7 +133,7 @@ test('workout typing persists locally with no request; double completion writes 
 })
 test('failed set save retains raw draft and never advances or marks completion', async () => {
   const ctx = setup('workout', { updateActualSet: async () => { throw Error('网络中断') } }), p = ctx.page
-  p.applySession(session(), true); p.onSetField(event({ sid: 'a', field: 'actualReps' }, '8'))
+  p.applySession(session(), true); p.onStartSelectedExercise(); p.onSetField(event({ sid: 'a', field: 'actualReps' }, '8'))
   await p.onSetState(event({ sid: 'a', state: 'done' }))
   assert.equal(p.data.activeSid, 'a'); assert.equal(p.data.pending.a.actualReps, '8')
   assert.equal(p.data.session.exercises[0].sets[0].state, 'pending'); assert.match(p.data.saveError, /网络中断/)
@@ -141,13 +142,13 @@ test('failed set save retains raw draft and never advances or marks completion',
 test('invalid or empty completed set is rejected before HTTP; raw input remains', async () => {
   let calls = 0
   const p = setup('workout', { updateActualSet: async () => { calls++ } }).page
-  p.applySession(session(), true); p.onSetField(event({ sid: 'a', field: 'actualReps' }, '5.5'))
+  p.applySession(session(), true); p.onStartSelectedExercise(); p.onSetField(event({ sid: 'a', field: 'actualReps' }, '5.5'))
   await p.onSetState(event({ sid: 'a', state: 'done' }))
   assert.equal(calls, 0); assert.equal(p.data.pending.a.actualReps, '5.5')
 })
 test('workout reload restores drafts by account and session; previous set can be copied', () => {
   const { page: p, app } = setup('workout')
-  p.applySession(session(), true); p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '57.5'))
+  p.applySession(session(), true); p.onStartSelectedExercise(); p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '57.5'))
   p.applySession(session(), true); assert.equal(p.data.session.exercises[0].sets[0].actualWeight, '57.5')
   p.onCopyPrevious(event({ sid: 'b' })); assert.equal(p.data.pending.b.actualWeight, '57.5')
   app.globalData.session.user.userId = 's2'; p.applySession(session(), true)
@@ -160,6 +161,7 @@ test('finish flushes drafts sequentially and finalizes with latest returned revi
     async finalizeSession(app, id, opts) { order.push('finish'); assert.equal(opts.baseRevision, 3); return { data: { session: { done_sets: 0 } } } }
   }), p = ctx.page
   p.applySession(session(), true)
+  p.onStartSelectedExercise()
   p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '52.5')); p.onSetField(event({ sid: 'b', field: 'actualReps' }, '6'))
   p.onFinish(); ctx.modals[0].success({ confirm: true }); await tick(); await tick()
   assert.deepEqual(order, ['a', 'b', 'finish']); assert.equal(p.data.session, null)
@@ -233,6 +235,7 @@ test('workout autosaves edits in order and a delayed response preserves newer in
     return new Promise(resolve => replies.push({ setId, patch, resolve }))
   } }).page
   p.applySession(session(), true)
+  p.onStartSelectedExercise()
   p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '52.5'))
   const draining = p.onSetEditEnd(event({ sid: 'a' }))
   await tick()
@@ -260,6 +263,7 @@ test('workout opens another action without losing an unsynced set or interruptin
   const initial = session()
   initial.exercises.push({ id: 'ex2', name: '划船', sets: [{ id: 'c', state: 'pending' }] })
   p.applySession(initial, true)
+  p.onStartSelectedExercise()
   p.onSetField(event({ sid: 'a', field: 'actualWeight' }, '52.5'))
   p.openRest()
   p.onToggleExercise(event({ id: 'ex2' }))

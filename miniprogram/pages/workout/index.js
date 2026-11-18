@@ -69,6 +69,10 @@ Page({
     activeGroup: null,
     focusView: null,
     nextHint: null,
+    wheelItems: [],
+    selectedIndex: 0,
+    selectedCard: null,
+    planDots: [],
     pending: {},
     lockedExerciseId: '',
     saveError: '',
@@ -149,6 +153,7 @@ Page({
       payload: this.data.pending,
       lockedExerciseId: this.data.lockedExerciseId || '',
       phase: this.data.phase,
+      selectedIndex: this.data.selectedIndex,
       lastSetType: this._lastSetType || null,
       updatedAt: Date.now()
     }
@@ -164,16 +169,182 @@ Page({
       if (pending[set.id]) Object.assign(set, pending[set.id])
     }))
 
-    const previous = restore ? cached?.lockedExerciseId : this.data.lockedExerciseId
-    const expanded = session.exercises.find(ex => ex.id === previous) ||
-      session.exercises.find(ex => !exerciseProgress(ex).complete) || session.exercises[0]
-    const lockedExerciseId = expanded?.id || ''
     if (restore) {
       this._lastSetType = cached?.lastSetType || ''
       if (this.data.session?.session_id !== session.session_id) this.setData({ setSaveErrors: {}, setEditor: null, showHistory: false, exerciseHistory: [] })
     }
-    this.setData({ session, pending, lockedExerciseId, phase: expanded ? 'locked' : 'picker' })
-    this.selectActive('', lockedExerciseId)
+
+    let lockedExerciseId = restore ? ((cached && cached.lockedExerciseId) || '') : this.data.lockedExerciseId
+    let phase = restore ? ((cached && cached.phase) || '') : this.data.phase
+    let selectedIndex = restore && cached && Number.isInteger(cached.selectedIndex) ? cached.selectedIndex : this.data.selectedIndex
+
+    if (lockedExerciseId) {
+      const locked = session.exercises.find((ex) => ex.id === lockedExerciseId)
+      if (!locked || (exerciseProgress(locked).complete && phase !== 'locked')) {
+        lockedExerciseId = ''
+        phase = 'picker'
+      } else {
+        phase = 'locked'
+      }
+    }
+
+    if (!lockedExerciseId) {
+      const partial = session.exercises.find((ex) => {
+        const progress = exerciseProgress(ex)
+        return progress.done > 0 && !progress.complete
+      })
+      if (partial) {
+        lockedExerciseId = partial.id
+        phase = 'locked'
+      } else {
+        phase = 'picker'
+      }
+    }
+
+    if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= session.exercises.length) {
+      selectedIndex = Math.max(0, session.exercises.findIndex((ex) => !exerciseProgress(ex).complete))
+      if (selectedIndex < 0) selectedIndex = 0
+    }
+
+    this.setData({ session, pending, lockedExerciseId, phase: phase === 'exerciseDone' ? 'picker' : phase, selectedIndex })
+    this.refreshWheel(selectedIndex)
+
+    if (phase === 'locked' && lockedExerciseId) {
+      const locked = session.exercises.find((ex) => ex.id === lockedExerciseId)
+      const pendingSet = firstPendingSet(locked) || (locked.sets && locked.sets[locked.sets.length - 1])
+      this.selectActive(pendingSet ? pendingSet.id : '', lockedExerciseId)
+    } else {
+      this.selectActive('', '')
+    }
+  },
+
+  refreshWheel(selectedIndex) {
+    const current = this.data.session
+    if (!current) {
+      this.setData({ wheelItems: [], selectedCard: null, planDots: [] })
+      return
+    }
+    const exercises = current.exercises || []
+    const n = exercises.length
+    const selected = Math.max(0, Math.min(selectedIndex, Math.max(0, n - 1)))
+    const wheelItems = exercises.map((ex, i) => {
+      let d = i - selected
+      if (n > 0) {
+        if (d > n / 2) d -= n
+        if (d < -n / 2) d += n
+      }
+      const progress = exerciseProgress(ex)
+      const baseline = baselineOf(ex)
+      const abs = Math.abs(d)
+      return {
+        id: ex.id,
+        name: ex.name,
+        icon: ex.icon || '🏋️',
+        exerciseId: ex.exerciseId || '',
+        imageUrl: ex.imageUrl || '',
+        imageFailed: !!(this.data.imageFailed && this.data.imageFailed[ex.id]),
+        meta: loadBasisLabel(ex.loadBasis) + ' · ' + progress.total + '组',
+        complete: progress.complete,
+        baselineLabel: baseline.label,
+        selected: d === 0,
+        style:
+          'transform:translate3d(' + d * 94 + 'px,' + (abs * 16 + (d === 0 ? 0 : 10)) +
+          'px,0) scale(' + (d === 0 ? 1.22 : abs === 1 ? 0.88 : 0.64) + ') rotate(' +
+          d * 8 + 'deg);opacity:' + (d === 0 ? 1 : abs === 1 ? 0.78 : 0.38) + ';z-index:' + (20 - abs) + ';'
+      }
+    })
+    this.setData({
+      selectedIndex: selected,
+      wheelItems,
+      selectedCard: wheelItems[selected] || null,
+      planDots: exercises.map((_, i) => ({ active: i === selected }))
+    })
+  },
+
+  onWheelTouchStart(e) {
+    if (this.data.phase !== 'picker' || this.data.reduced) return
+    const t = e.changedTouches[0] || e.touches[0]
+    this._wheelStartX = t ? t.clientX : null
+  },
+  onWheelTouchEnd(e) {
+    if (this.data.phase !== 'picker' || this._wheelStartX == null) return
+    const t = e.changedTouches[0] || e.touches[0]
+    const dx = t ? t.clientX - this._wheelStartX : 0
+    this._wheelStartX = null
+    if (Math.abs(dx) < 28) return
+    this.cycleWheel(dx < 0 ? 1 : -1)
+  },
+  cycleWheel(dir) {
+    const n = (this.data.session && this.data.session.exercises.length) || 0
+    if (!n) return
+    this.refreshWheel((this.data.selectedIndex + dir + n) % n)
+    interaction.feedback()
+  },
+  onPickWheelCard(e) {
+    if (this.data.phase !== 'picker') return
+    const index = Number(e.currentTarget.dataset.index)
+    if (!Number.isInteger(index)) return
+    this.refreshWheel(index)
+    interaction.feedback()
+  },
+  onWheelImageError(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    this.setData({ imageFailed: Object.assign({}, this.data.imageFailed, { [id]: true }) })
+    this.refreshWheel(this.data.selectedIndex)
+  },
+  onStartSelectedExercise() {
+    if (!this.data.session || this.data.phase !== 'picker') return
+    const card = this.data.selectedCard
+    if (!card) return
+    if (card.complete) {
+      getApp().toast('该动作已完成，可选择其他动作')
+      return
+    }
+    const exercise = this.data.session.exercises.find((ex) => ex.id === card.id)
+    const pendingSet = firstPendingSet(exercise)
+    if (!pendingSet) {
+      getApp().toast('该动作没有待完成组')
+      return
+    }
+    this.setData({ phase: 'locked', lockedExerciseId: card.id, justCompleted: false })
+    this.selectActive(pendingSet.id, card.id)
+    this.cacheDraft()
+  },
+  onBackToPicker() {
+    if (this._writeBusy || this.data.finishing) return
+    this.closeRest(true)
+    this.setData({
+      phase: 'picker',
+      lockedExerciseId: '',
+      justCompleted: false,
+      focusView: null,
+      activeSid: '',
+      activeGroup: null,
+      nextHint: null,
+      setEditor: null,
+      showHistory: false
+    })
+    const incomplete = (this.data.session.exercises || []).findIndex((ex) => !exerciseProgress(ex).complete)
+    this.refreshWheel(incomplete >= 0 ? incomplete : this.data.selectedIndex)
+    this.cacheDraft()
+  },
+  onChooseNextExercise() {
+    if (this._writeBusy || this.data.finishing) return
+    this.closeRest(true)
+    this.setData({ phase: 'picker', lockedExerciseId: '', focusView: null, activeSid: '', activeGroup: null, nextHint: null, setEditor: null, showHistory: false })
+    const exercises = this.data.session.exercises || []
+    let next = this.data.selectedIndex
+    for (let i = 0; i < exercises.length; i++) {
+      const idx = (this.data.selectedIndex + 1 + i) % exercises.length
+      if (!exerciseProgress(exercises[idx]).complete) {
+        next = idx
+        break
+      }
+    }
+    this.refreshWheel(next)
+    this.cacheDraft()
+    getApp().toast('可以选择下一个动作了')
   },
 
   buildFocusView(session, activeSid, lockedExerciseId) {
@@ -261,6 +432,10 @@ Page({
   },
 
   onSessionBack() {
+    if (this.data.phase === 'locked') {
+      this.onBackToPicker()
+      return
+    }
     if (this._writeBusy || this.data.finishing) return
     wx.showModal({
       title: '返回训练首页？',
@@ -276,6 +451,9 @@ Page({
           phase: 'picker',
           focusView: null,
           nextHint: null,
+          wheelItems: [],
+          selectedCard: null,
+          planDots: [],
           activeSid: '',
           activeGroup: null,
           lockedExerciseId: '',
