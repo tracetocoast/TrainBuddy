@@ -640,7 +640,7 @@
   border-radius: 8px;
 }
 .compact-set-row .set-type { background: var(--surface-raised); color: var(--ink); font-size: 14px; }
-.compact-set-row .is-warmup { color: #b57618; }
+.compact-set-row .is-warmup { color: var(--warm-ink); }
 .compact-set-row .set-value {
   width: 100%;
   min-width: 0;
