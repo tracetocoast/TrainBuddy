@@ -84,3 +84,20 @@
   background: var(--paper);
   color: var(--ink);
 }
+
+/* V3.0 Field Notes 纸感主题（styles/field-notes.wxss）的暗色适配：该作用域在页面根节点重定义
+   --fn-* 变量且无暗色值，需与 .field-notes 同元素同优先级覆盖（.field-notes.skin-dark = 0,2,0）。 */
+.field-notes.skin-dark {
+  --fn-paper: #0f1512;
+  --fn-ink: #e6ede7;
+  --fn-clay: #cf8d7d;
+  --fn-muted: #9a9087;
+  --fn-line: #322b25;
+  --fn-done: #8fb8a0;
+  --fn-done-paper: #1e2d24;
+  --fn-inset: #1a201b;
+  --ok-line: #33513d;
+  --green-strong: #33513d;
+  --soft: #2a2621;
+  --ix-soft: #2a2621;
+}

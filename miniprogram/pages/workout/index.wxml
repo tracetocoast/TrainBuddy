@@ -1,5 +1,5 @@
 <page-meta background-color="{{session ? '#F8F5EF' : pageBg}}" />
-<view class="page interaction-scope workout-exec field-notes {{session ? 'is-session' : ''}} {{reduced ? 'ix-reduced' : ''}} field-notes">
+<view class="page interaction-scope workout-exec field-notes {{session ? 'is-session' : ''}} {{reduced ? 'ix-reduced' : ''}} field-notes {{skinClass}}">
   <view class="card sub" wx:if="{{loading}}">正在读取训练…</view>
   <view class="ix-error" wx:if="{{loadError}}">{{loadError}}<button class="secondary" bindtap="onRetryLoad">重试</button></view>
   <view class="ix-error" wx:if="{{saveError}}">{{saveError}}</view>

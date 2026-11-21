@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page growth-page field-notes">
+<view class="page growth-page field-notes {{skinClass}}">
   <view class="growth-header"><view class="fn-kicker">YOUR TRAINING JOURNAL</view><view class="title">{{historyTab === 'body' ? '身体数据，是长期的。' : historyTab === 'meal' ? '每一餐都有记录。' : '日子会记住每一次训练。'}}</view></view>
   <view class="ui-state" wx:if="{{loading}}">正在同步训练数据…</view>
   <view class="ui-state ui-state-error" wx:if="{{error}}">{{error}}<button class="link" bindtap="reload">重试加载</button></view>

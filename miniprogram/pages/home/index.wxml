@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page home-page {{role === 'coach' ? 'coach-scope workbench' : ''}} field-notes">
+<view class="page home-page {{role === 'coach' ? 'coach-scope workbench' : ''}} field-notes {{skinClass}}">
   <view class="top">
     <view class="home-greet">
       <view class="fn-kicker">{{role === 'coach' ? 'COACH DESK' : 'TRAINBUDDY / FIELD NOTES'}}</view>

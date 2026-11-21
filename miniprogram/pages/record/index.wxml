@@ -1,5 +1,5 @@
 <page-meta background-color="#F8F5EF" />
-<view class="page coach-scope field-notes journal-page {{reduced ? 'ui-reduced' : ''}} field-notes">
+<view class="page coach-scope field-notes journal-page {{reduced ? 'ui-reduced' : ''}} field-notes {{skinClass}}">
   <view class="journal-heading" wx:if="{{recordStage === 'capture'}}">
     <view class="fn-kicker">COACH VOICE NOTE</view>
     <view class="fn-title">先说出这节课。</view>
