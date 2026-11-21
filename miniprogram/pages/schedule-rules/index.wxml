@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo field-notes">
+<view class="page page-solo field-notes {{skinClass}}">
   <view class="eyebrow">AVAILABILITY · RULES</view>
   <view class="title">把可上课的时间定下来。</view>
   <view class="sub">修改周规则只影响未预约空档；已确认课程保持不动。</view>

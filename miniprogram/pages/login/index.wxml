@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="login-page field-notes">
+<view class="login-page field-notes {{skinClass}}">
   <view class="brand-block">
     <view class="fn-kicker">TRAINBUDDY / FIELD NOTES</view>
     <view class="brand-title">把训练，

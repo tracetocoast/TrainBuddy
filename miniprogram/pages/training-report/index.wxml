@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="report-page field-notes">
+<view class="report-page field-notes {{skinClass}}">
  <view wx:if="{{loading}}" class="state">正在读取训练报告…</view>
  <view wx:elif="{{error}}" class="state"><text>{{error}}</text><button bindtap="reload">重新加载</button></view>
  <block wx:elif="{{report}}">
