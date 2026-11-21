@@ -1,13 +1,10 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page home-page {{role === 'coach' ? 'coach-scope workbench' : ''}} {{skinClass}}">
+<view class="page home-page {{role === 'coach' ? 'coach-scope workbench' : ''}} field-notes">
   <view class="top">
     <view class="home-greet">
-      <view class="title">{{role === 'coach' ? '工作台' : '你好，' + greetName}}</view>
-      <view class="sub home-date">{{todayLabel}}</view>
-      <view class="home-quote" wx:if="{{role === 'student' && dailyQuote}}">
-        <view class="quote-cn"><text class="quote-mark">「</text>{{dailyQuote.cn}}<text class="quote-mark">」</text></view>
-        <view class="quote-by" wx:if="{{dailyQuote.by}}">{{dailyQuote.by}}</view>
-      </view>
+      <view class="fn-kicker">{{role === 'coach' ? 'COACH DESK' : 'TRAINBUDDY / FIELD NOTES'}}</view>
+      <view class="title">{{role === 'coach' ? '今天的课，按计划进行。' : '今天，好好练。'}}</view>
+      <view class="sub home-date">{{greetName}} · {{todayLabel}}</view>
     </view>
     <button class="msg-btn" bindtap="goProfile" aria-label="账户与身份设置">{{avatarChar}}</button>
   </view>
@@ -67,34 +64,8 @@
   </block>
 
   <block wx:elif="{{role === 'student'}}">
-    <button class="hero-goal card-press" bindtap="goGrowth" disabled="{{!hasStats && loading}}">
-      <view class="hero-goal-top">
-        <text class="eyebrow">本周训练</text>
-        <text class="tag {{planRate != null && planRate >= 100 ? 'tag-ok' : ''}}" wx:if="{{hasStats && planRate != null}}">计划 {{planRateText}}</text>
-      </view>
-      <block wx:if="{{hasStats}}">
-        <view class="hero-goal-metrics">
-          <view class="hero-metric">
-            <text class="hero-metric-value">{{weekCount}}</text>
-            <text class="hero-metric-label">已完成（次）</text>
-          </view>
-          <view class="hero-metric">
-            <text class="hero-metric-value">{{planRate != null ? planRateText : '—'}}</text>
-            <text class="hero-metric-label">计划完成率</text>
-          </view>
-          <view class="hero-metric">
-            <text class="hero-metric-value">{{trainingDays}}</text>
-            <text class="hero-metric-label">训练天数</text>
-          </view>
-        </view>
-        <view class="progress hero-progress" wx:if="{{planRate != null}}">
-          <view class="progress-bar" style="width: {{planRate}}%;"></view>
-        </view>
-        <view class="sub hero-goal-hint" wx:else>本周暂无到期计划目标，完成次数来自真实训练记录。</view>
-      </block>
-      <view class="quiet-empty hero-goal-empty" wx:else>训练统计加载后显示本周完成情况，不会展示虚假进度。</view>
-    </button>
 
+    <view class="editorial-photo"><image src="/assets/field-notes/editorial-barbell.jpg" mode="aspectFill"/><view class="editorial-caption"><text>下一次私教课</text><text class="editorial-date">{{nextBooking ? nextBooking.dateDisplay + ' ' + nextBooking.startLabel : '为下一次进步留好时间'}}</text></view></view>
     <view class="head"><view class="head-title">下一次课程</view></view>
     <button class="booking-card card-press" wx:if="{{nextBooking}}" bindtap="goNextBooking">
       <view class="booking-time-block">
@@ -129,14 +100,16 @@
         </view>
         <view class="sub" wx:if="{{activeSession && totalSets}}">已完成 {{doneSets}}/{{totalSets}} 组 · {{progressPercent}}%</view>
         <view class="sub" wx:elif="{{todayPlanDone}}">今日计划已完成</view>
-        <view class="sub" wx:elif="{{!todayPlan && !activeSession && !trainingError}}">选择计划后开始，不会显示虚假进度。</view>
+        <view class="sub" wx:elif="{{!todayPlan && !activeSession && !trainingError}}">自由练习，或从已有计划开始。</view>
         <view class="sub ui-state-inline-error" wx:if="{{trainingError}}">{{trainingError}}</view>
       </view>
       <text class="summary-cta">{{trainingAction}} ›</text>
     </button>
 
-    <view class="head"><view class="head-title">快捷入口</view></view>
-    <view class="quick-grid">
+    <report-history compact/>
+    <button class="week-note" bindtap="goGrowth"><view><text class="fn-kicker">THIS WEEK</text><view class="week-count">{{hasStats ? weekCount : '—'}}<text>本周完成训练</text></view></view><text class="summary-cta">训练进展 ↗</text></button>
+    <button class="link" bindtap="onToggleHomeTools" aria-expanded="{{showHomeTools}}">更多训练工具 {{showHomeTools ? '收起' : '展开'}}</button>
+    <view class="quick-grid" wx:if="{{showHomeTools}}">
       <button class="quick-card card-press" bindtap="goWorkout">
         <ui-icon name="play" tone="green" size="36"/>
         <view class="grow"><view class="card-title">开始训练</view><view class="sub">{{trainingAction}}</view></view>

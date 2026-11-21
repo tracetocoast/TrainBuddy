@@ -27,7 +27,7 @@ test('destroyed recorder callbacks never submit audio or update the unloaded pag
 })
 function page(){
  let p;const app={globalData:{session:{user:{userId:'coach'}},drafts:{}},persist(){},toast(){}}
- vm.runInNewContext(fs.readFileSync(path.join(root,'pages/record/index.js'),'utf8'),{Page:x=>p=x,require:()=>({EXERCISE_LIBRARY:[]}),getApp:()=>app,wx:{},console})
+ vm.runInNewContext(fs.readFileSync(path.join(root,'pages/record/index.js'),'utf8'),{Page:x=>p=x,require:()=>({EXERCISE_LIBRARY:[]}),getApp:()=>app,wx:{},console,setTimeout:()=>1,clearTimeout(){}})
  p.data=JSON.parse(JSON.stringify(p.data));p.setData=function(v){Object.assign(this.data,v)}
  return {p,app}
 }

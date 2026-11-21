@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="ops-hint {{skinClass}}">
+<view class="ops-hint field-notes">
   <view class="card">
     <view class="card-title">运营后台在浏览器中使用</view>
     <view class="sub">这个身份没有学员或教练导航。请用电脑浏览器打开下面的地址，管理账号、教练审核、权益、任务和通知。</view>

@@ -30,15 +30,15 @@ test('each role exposes exactly its three task-oriented primary tabs and profile
  assert.ok(home.includes('bindtap="goRecord"'))
  assert.ok(home.includes('bindtap="goProfile"'))
 })
-test('student selected nav uses the same green as coach',()=>{
+test('student and coach navigation share the Field Notes clay accent',()=>{
  const decode=uri=>Buffer.from(uri.split(',')[1],'base64').toString('utf8')
  const student=require(path.join(root,'assets/navigation-icons.js'))
  const coach=require(path.join(root,'assets/coach-icons.js'))
  for(const key of ['home','workout','growth']){
-  assert.match(decode(student.active[key]),/#28744e/i)
+  assert.match(decode(student.active[key]),/#AB584A/i)
   assert.doesNotMatch(decode(student.active[key]),/#214beb/i)
  }
- assert.match(decode(coach.green.home),/#28744e/i)
+ assert.match(decode(coach.green.home),/#AB584A/i)
  const css=fs.readFileSync(path.join(root,'components/bottom-nav/index.wxss'),'utf8')
  const active=css.split('.nav-coach')[0]
  assert.match(active,/\.nav-item\.active\s*\{[^}]*color:\s*var\(--accent\)/)
@@ -65,7 +65,7 @@ test('growth training records do not show a trailing chevron',()=>{
  assert.equal(chunk.includes('entry-arrow'),false)
  assert.equal(chunk.includes('›'),false)
 })
-test('native window colors follow the current skin',()=>{
+test('native window defaults to Field Notes despite a stored legacy dark preference',()=>{
   const theme=require('../../miniprogram/utils/theme')
   assert.equal(theme.colors('light').winBg,'#fafbf7')
   assert.equal(theme.colors('dark').winBg,'#0f1512')
@@ -78,8 +78,8 @@ test('native window colors follow the current skin',()=>{
   }
   try{
     theme.applyNativeWindow()
-    assert.deepEqual(calls[0],['nav','#0f1512'])
-    assert.deepEqual(calls[1],['win','#0f1512','#0f1512','#0f1512'])
+    assert.deepEqual(calls[0],['nav','#F8F5EF'])
+    assert.deepEqual(calls[1],['win','#F8F5EF','#F8F5EF','#F8F5EF'])
   }finally{
     if(prev===undefined) delete global.wx
     else global.wx=prev

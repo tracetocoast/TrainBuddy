@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page interaction-scope booking-page {{role === 'coach' ? 'coach-scope' : ''}} {{reduced ? 'ix-reduced' : ''}} {{skinClass}}">
+<view class="page interaction-scope booking-page {{role === 'coach' ? 'coach-scope' : ''}} {{reduced ? 'ix-reduced' : ''}} field-notes">
   <view class="ix-preference" wx:if="{{role === 'student'}}"><text>减少动态效果与触觉</text><switch checked="{{reduced}}" bindchange="onMotion" color="#28744e"/></view>
   <view class="top" wx:if="{{role === 'student'}}">
     <view class="brand">

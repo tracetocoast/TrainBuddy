@@ -5,6 +5,9 @@
 const STORAGE_KEY = 'lianzida_skin'
 
 const SKINS = {
+  fieldNotes: {
+    skinClass: '', navBg: '#F8F5EF', navFront: '#000000', winBg: '#F8F5EF'
+  },
   light: {
     skinClass: '',
     navBg: '#fafbf7',
@@ -38,12 +41,12 @@ function setSkin(skin) {
 }
 
 function colors(skin) {
-  return SKINS[skin === 'dark' || skin === 'light' ? skin : getSkin()]
+  return SKINS[Object.prototype.hasOwnProperty.call(SKINS, skin) ? skin : getSkin()]
 }
 
 /** 立刻改原生窗口/导航栏底色，不依赖页面 data。切页前调用，缩短露浅色底的空窗。 */
 function applyNativeWindow(skin) {
-  const conf = colors(skin)
+  const conf = colors(skin || 'fieldNotes')
   try {
     wx.setNavigationBarColor({
       frontColor: conf.navFront,
@@ -65,7 +68,7 @@ function applyNativeWindow(skin) {
 /** 在页面 onLoad / onShow 中调用：注入根节点 class 与 page-meta 背景色，并同步导航栏/窗口底色 */
 function applyToPage(page) {
   if (!page || !page.setData) return getSkin()
-  const skin = getSkin()
+  const skin = page.data.visualTheme === 'fieldNotes' ? 'fieldNotes' : getSkin()
   const conf = colors(skin)
   if (page.data.skinClass !== conf.skinClass || page.data.pageBg !== conf.winBg) {
     page.setData({ skinClass: conf.skinClass, pageBg: conf.winBg })

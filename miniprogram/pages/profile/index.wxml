@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo {{skinClass}}">
+<view class="page page-solo field-notes">
   <view class="eyebrow">ACCOUNT · PROFILE</view>
   <view class="title">{{displayName}}</view>
   <view class="sub">账号信息、服务关系与隐私设置</view>
@@ -57,21 +57,7 @@
   <view class="card menu" wx:if="{{role === 'student'}}" bindtap="goPoints">积分与成就</view>
   <view class="card menu" bindtap="goTools">辅助工具</view>
   <view class="card menu" wx:if="{{role === 'student'}}" bindtap="goFriends">朋友训练</view>
-  <view class="head"><view class="head-title">外观</view></view>
-  <view class="card">
-    <view class="skin-switch {{skin === 'dark' ? 'skin-switch-dark' : ''}}">
-      <view class="skin-thumb"></view>
-      <button class="skin-option {{skin === 'light' ? 'skin-option-on' : ''}}" bindtap="onSkinChange" data-skin="light">白色</button>
-      <button class="skin-option {{skin === 'dark' ? 'skin-option-on' : ''}}" bindtap="onSkinChange" data-skin="dark">黑色</button>
-    </view>
-  </view>
-
-  <!-- V1.5 皮肤切换圆形扩散遮罩：新皮肤底色从点击处 circle-blur 扩散，盖住全屏后换肤再淡出 -->
-  <view
-    wx:if="{{revealActive}}"
-    class="skin-reveal {{revealState === 'expand' ? 'skin-reveal-expand' : ''}} {{revealState === 'fade' ? 'skin-reveal-fade' : ''}}"
-    style="left:{{revealX}}px;top:{{revealY}}px;background:{{revealBg}};--reveal-scale:{{revealScale}};"
-  ></view>
+  <view class="info-row"><text>界面风格</text><text>Field Notes · 训练手记</text></view>
 
   <view class="head"><view class="head-title">更多</view></view>
   <view class="card menu" bindtap="goPrivacy">隐私与授权管理</view>

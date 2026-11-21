@@ -5,5 +5,6 @@ Page({
   onShow() { requireLogin(this) },
   onUnload() { this._unloaded=true },
   onTemplates() { if(!this.data.creating) wx.navigateTo({url:'/pages/plans/index'}) },
+  onHistory() { wx.navigateTo({ url: '/pages/growth/index' }) },
   onCustom() { wx.navigateTo({url:'/pages/workout/index?new=1'}) }
 })

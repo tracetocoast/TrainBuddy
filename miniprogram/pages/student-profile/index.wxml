@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo coach-scope profile-page {{skinClass}}">
+<view class="page page-solo coach-scope profile-page field-notes">
   <view class="profile-hero">
     <view class="profile-avatar">{{studentAvatar}}</view>
     <view class="profile-hero-main">

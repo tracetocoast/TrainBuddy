@@ -15,7 +15,7 @@
 
 .food-photo {
   height: 420rpx;
-  border-radius: 28rpx;
+  border-radius: 6rpx;
   background: var(--ix-soft);
   border: 1rpx solid var(--line);
   margin-top: 30rpx;
@@ -24,7 +24,7 @@
 }
 .food-photo-ready {
   border-color: var(--green-strong);
-  box-shadow: 0 12rpx 32rpx rgba(40, 116, 78, 0.1);
+  box-shadow: none;
 }
 .food-photo image {
   width: 100%;
@@ -48,7 +48,7 @@
 .food-phase-chip {
   font-size: 20rpx;
   padding: 6rpx 14rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   background: rgba(255, 255, 255, 0.18);
   color: var(--on-accent);
 }
@@ -97,7 +97,7 @@
 }
 .food-scan-bar {
   height: 6rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   margin-bottom: 12rpx;
   background: linear-gradient(90deg, var(--ix-soft), var(--accent), var(--ix-soft));
   background-size: 200% 100%;
@@ -152,7 +152,7 @@
 }
 .macro-card {
   padding: 22rpx 16rpx 20rpx;
-  border-radius: 24rpx;
+  border-radius: 6rpx;
   background: var(--surface);
   border: 1rpx solid var(--line);
   box-sizing: border-box;
@@ -185,7 +185,7 @@
   color: var(--muted-2);
   align-self: flex-start;
   padding: 2rpx 10rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   background: var(--tint-2);
 }
 .kind-value .macro-kind {
@@ -299,7 +299,7 @@
   line-height: 72rpx;
   background: var(--surface);
   border: 1rpx solid var(--line);
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   padding: 0 18rpx;
   font-size: 28rpx;
   color: var(--ink);
@@ -334,7 +334,7 @@
 }
 .food-meal {
   padding: 10rpx 18rpx;
-  border-radius: 999rpx;
+  border-radius: 6rpx;
   border: 1rpx solid var(--line);
   font-size: 24rpx;
   color: var(--muted);

@@ -13,21 +13,21 @@
   width: 100% !important;
   margin: 0 !important;
   padding: 18rpx 8rpx;
-  border-radius: 28rpx;
+  border-radius: 0;
   background: var(--surface);
-  border: 1rpx solid var(--line);
+  border: 0; border-bottom: 1rpx solid var(--line);
   box-sizing: border-box;
   font-size: 24rpx;
   font-weight: 600;
   color: var(--ink);
   text-align: center;
-  box-shadow: 0 4rpx 14rpx rgba(37, 53, 44, 0.04);
+  box-shadow: none;
 }
 
 .plan-filter-item-on {
   border-color: var(--accent);
   background: var(--mint-1);
-  box-shadow: 0 10rpx 28rpx rgba(40, 116, 78, 0.12);
+  box-shadow: none;
 }
 
 .plan-filter-item:active {
@@ -88,6 +88,7 @@
 
 .plan-card {
   margin-top: 0;
+  background: var(--paper);
 }
 
 .plan-cta {

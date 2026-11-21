@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page {{skinClass}}">
+<view class="page field-notes">
   <view class="card">
     <view class="sub">可用积分 {{available}}</view>
   </view>

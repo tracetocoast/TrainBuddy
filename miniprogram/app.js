@@ -11,8 +11,9 @@ const rawPage = Page
 Page = function (config) {
   if (config && typeof config === 'object') {
     if (!config.data) config.data = {}
+    config.data.visualTheme = 'fieldNotes'
     // 预载皮肤类与页面背景到初始 data：首次渲染即为当前皮肤，避免跳转/启动瞬间露出浅色内容再切换
-    const _conf = theme.colors()
+    const _conf = theme.colors(config.data.visualTheme)
     if (config.data.skinClass === undefined) {
       config.data.skinClass = _conf.skinClass
     }
@@ -21,7 +22,6 @@ Page = function (config) {
     }
     const rawOnLoad = config.onLoad
     config.onLoad = function () {
-      theme.applyNativeWindow()
       theme.applyToPage(this)
       return rawOnLoad ? rawOnLoad.apply(this, arguments) : undefined
     }
@@ -57,7 +57,7 @@ App({
   ),
 
   onLaunch() {
-    theme.applyNativeWindow()
+    theme.applyNativeWindow('fieldNotes')
     const cached = store.load()
     if (cached) {
       Object.assign(this.globalData, cached)
@@ -65,7 +65,7 @@ App({
   },
 
   onShow() {
-    theme.applyNativeWindow()
+    theme.applyNativeWindow('fieldNotes')
   },
 
   persist() {

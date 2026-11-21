@@ -24,7 +24,12 @@ test('voice UI preserves text and emits edits without clearing existing content'
 })
 test('voice input has a single stop action and fallback never renders a second finish button',()=>{
  const xml=fs.readFileSync(path.join(root,'components/voice-input/index.wxml'),'utf8')
- assert.equal([...xml.matchAll(/bindtap="onStop"/g)].length,1);assert.ok(xml.includes('wx:if="{{canPause}}"'))
+ const [journal, standard] = xml.split('<view wx:else class="voice-input')
+ assert.match(journal, /wx:if="{{variant === 'field-notes'}}"/)
+ assert.equal([...journal.matchAll(/bindtap="onStop"/g)].length,1)
+ assert.equal([...standard.matchAll(/bindtap="onStop"/g)].length,1)
+ assert.ok(journal.includes('wx:if="{{active && canPause}}"'))
+ assert.ok(standard.includes('wx:if="{{canPause}}"'))
  const record=fs.readFileSync(path.join(root,'pages/record/index.wxml'),'utf8')
  assert.ok(!record.includes('bindtap="stopSpeech"'));assert.equal([...record.matchAll(/<voice-input\b/g)].length,2)
 })
@@ -57,7 +62,7 @@ test('refined navigation retains learner icon assets when changing roles on the 
  let c;const file=path.join(root,'components/bottom-nav/index.js'),app={globalData:{role:'coach'}}
  vm.runInNewContext(fs.readFileSync(file,'utf8'),{require:createRequire(file),Component:x=>c=x,getApp:()=>app})
  const p={data:{},setData(v){Object.assign(this.data,v)}};c.methods.refresh.call(p);const coachIcon=p.data.activeIcons.home
- app.globalData.role='student';c.methods.refresh.call(p);assert.equal(p.data.items.map(x=>x.text).join(','),'首页,记录,进展');assert.notEqual(p.data.activeIcons.home,coachIcon)
+ app.globalData.role='student';c.methods.refresh.call(p);assert.equal(p.data.items.map(x=>x.text).join(','),'首页,训练,进展');assert.notEqual(p.data.activeIcons.home,coachIcon)
 })
 test('record reads current session after creation replay, so completed records never masquerade as editable drafts',async()=>{
  let p,reads=0;const file=path.join(root,'pages/record/index.js'),original=createRequire(file)

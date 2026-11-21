@@ -381,7 +381,11 @@ Page({
     else monthDays.push(value)
     this.change({ monthDays, scheduleType: 'monthly', scheduleMode: 'repeat', repeatKind: 'monthly' })
   },
-  onOpenExercise(e) { if (this.editable()) this.setData({ sheetIndex: Number(e.currentTarget.dataset.ei) }) },
+  onOpenExercise(e) {
+    if (!this.editable()) return
+    const index = Number(e.currentTarget.dataset.ei)
+    this.setData({ sheetIndex: this.data.sheetIndex === index ? -1 : index })
+  },
   onCloseSheet() { this.setData({ sheetIndex: -1 }); this.cache() },
   swallow() {},
   onDuplicateExercise(e) {

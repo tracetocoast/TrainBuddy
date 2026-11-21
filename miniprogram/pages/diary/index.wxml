@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo diary-page {{reduced ? 'ui-reduced ix-reduced' : ''}} {{skinClass}}">
+<view class="page page-solo diary-page {{reduced ? 'ui-reduced ix-reduced' : ''}} field-notes">
   <view class="diary-hero">
     <view class="diary-kicker">DAILY LOG</view>
     <view class="diary-title">每日记录</view>

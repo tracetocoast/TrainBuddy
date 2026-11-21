@@ -272,6 +272,11 @@ function findExercise(app, id) {
   return allExercises(app).find((row) => row.id === key || row.sourceId === key)
 }
 
+function publicExerciseById(id) {
+  if (typeof id !== 'string' || !id) return null
+  return loadPublicCatalog().find(row => row.id === id || row.sourceId === id) || null
+}
+
 function imageUrlForId(id) {
   const key = decodeURIComponent(String(id || ''))
   if (!key) return ''
@@ -342,6 +347,7 @@ module.exports = {
   listExercises,
   getExercise,
   imageUrlForId,
+  publicExerciseById,
   toggleFavorite,
   listFacets,
   seedExerciseCatalog,

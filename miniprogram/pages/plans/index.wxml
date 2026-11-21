@@ -93,7 +93,7 @@ module.exports.end = end
 
 </wxs>
 <page-meta background-color="{{pageBg}}" />
-<view class="page page-solo {{skinClass}}">
+<view class="page page-solo field-notes">
   <view class="eyebrow">TRAINING PLANS</view>
   <view class="title">计划列表</view>
   <view class="plan-filter">
@@ -151,6 +151,7 @@ module.exports.end = end
       style="transform: translateX({{item.offset}}px);"
     >
       <template is="planBody" data="{{item, isStudent}}"/>
+      <button class="link" wx:if="{{isStudent && item.canStartToday}}" data-id="{{item.plan_id}}" catchtap="goStart">开始训练 ›</button>
     </view>
   </view>
   <view class="card sub" wx:if="{{!loading && !error && hasPlans && !plans.length}}">当前分类暂无计划。</view>

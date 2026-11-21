@@ -1,5 +1,5 @@
 <page-meta background-color="{{pageBg}}" />
-<view class="page coach-scope students-page {{skinClass}}">
+<view class="page coach-scope students-page field-notes">
   <view class="students-header">
     <view>
       <view class="title">学员</view>

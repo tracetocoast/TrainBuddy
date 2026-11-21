@@ -1,4 +1,4 @@
-/* Opt-in Refined Green scope; learner defaults remain unchanged. */
+/* Coach layout scope shared with the Field Notes theme. */
 .coach-scope {
   --ix-accent: var(--accent);
   --ix-ink: var(--ink);
@@ -7,7 +7,7 @@
   --ix-error: var(--danger);
 }
 .coach-scope .title {
-  font-size: 44rpx;
+  font-size: 56rpx;
   letter-spacing: -1rpx;
   margin: 8rpx 0;
 }
